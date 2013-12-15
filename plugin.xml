@@ -8,8 +8,8 @@
   <author>Rand Dusing</author>
   <keywords>bluetooth,low energy,smart</keywords>
   <license>Apache 2.0 License</license>
-  <js-module src="bluetoothle.js" name="BluetoothLe">
-    <clobbers target="bluetoothle" />
+  <js-module src="www/bluetoothle.js" name="BluetoothLe">
+    <clobbers target="window.bluetoothle" />
   </js-module>
 
   <platform name="android">
