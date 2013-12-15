@@ -16,7 +16,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
     } else {
       return false;
     }
-    return true;
   }
 }
 
