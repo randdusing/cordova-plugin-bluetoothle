@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="com.randdusing.bluetoothle" version="1.1.1">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+  <name>Bluetooth LE</name>
+  <description>Use the Bluetooth Low Energy plugin to connect your Phonegap app to new Bluetooth devices like heart rate monitors, thermometers, etc...</description>
+  <author>Rand Dusing</author>
+  <keywords>bluetooth,low energy,smart</keywords>
+  <license>Apache 2.0 License</license>
+  <js-module src="bluetoothle.js" name="BluetoothLe">
+    <clobbers target="bluetoothle" />
+  </js-module>
+
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="BluetoothLePlugin">
+        <param name="android-package" value="com.randdusing.bluetoothle.BluetoothLePlugin" />
+      </feature>
+    </config-file>
+
+    <source-file src="src/android/BluetoothLePlugin.java" target-dir="src/com/randdusing/bluetoothle" />
+
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.BLUETOOTH"/>
+      <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    </config-file>
+  </platform>
+  <info>For more info: http://randdusing.com/</info>
+</plugin>
