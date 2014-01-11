@@ -10,7 +10,7 @@ Requires Android. Support for iOS coming soon.
 ### Installation ###
 
 Add the plugin to your app by running the command below:
-```phonegap local plugin add hhttps://github.com/randdusing/BluetoothLE```
+```phonegap local plugin add https://github.com/randdusing/BluetoothLE```
 
 Test Bluetooth LE using the script below:
 ```
