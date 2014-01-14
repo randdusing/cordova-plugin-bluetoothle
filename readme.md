@@ -3,8 +3,8 @@ Bluetooth LE PhoneGap Plugin
 ## Supported platforms ##
 
 * PhoneGap 3.0.0 or higher
-Android 4.3 or higher
-iOS support coming soon
+* Android 4.3 or higher
+* iOS support coming soon
 
 ## Current Limitations ##
 
@@ -120,7 +120,7 @@ Get a service's characteristics
 ```bluetoothle.characteristics(successCallback, errorCallback, serviceUuid);```
 
 #### Params ####
-serviceUuid = the service uuid like "0000180d-0000-1000-8000-00805f9b34fb" (Heart Rate Service)
+* serviceUuid = the service uuid like "0000180d-0000-1000-8000-00805f9b34fb" (Heart Rate Service)
 
 ### isConnected ###
 Determine whether the device is connected
