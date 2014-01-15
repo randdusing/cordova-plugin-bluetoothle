@@ -1120,16 +1120,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
     {
         if (status == BluetoothGatt.GATT_SUCCESS)
         {
-          // For all other profiles, writes the data formatted in HEX.
-          final byte[] data = characteristic.getValue();
-          if (data != null && data.length > 0) 
-          {
-            final StringBuilder stringBuilder = new StringBuilder(data.length);
-            for(byte byteChar : data)
-              stringBuilder.append(String.format("%02X ", byteChar));
-          }
-          
-          readCallbackContext.success(data);
+          //Return read bytes
+          final byte[] value = characteristic.getValue();
+
+          readCallbackContext.success(value);
         }
         else
         {
@@ -1146,18 +1140,18 @@ public class BluetoothLePlugin extends CordovaPlugin {
     {
         if (status == BluetoothGatt.GATT_SUCCESS)
         {
-          // For all other profiles, writes the data formatted in HEX.
-          final byte[] data = characteristic.getValue();
-          if (data != null && data.length > 0) 
+          //Return written bytes
+          final byte[] value = characteristic.getValue();
+          /*if (value != null && value.length > 0) 
           {
-            final StringBuilder stringBuilder = new StringBuilder(data.length);
-            for(byte byteChar : data)
+            final StringBuilder stringBuilder = new StringBuilder(value.length);
+            for(byte byteChar : value)
               stringBuilder.append(String.format("%02X ", byteChar));
-          }
+          }*/
           
           //TODO: Compare with write value
           
-          writeCallbackContext.success(data);
+          writeCallbackContext.success(value);
         }
         else
         {
@@ -1171,80 +1165,12 @@ public class BluetoothLePlugin extends CordovaPlugin {
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
     {
-      byte[] value = characteristic.getValue();
+      //Read subscribed bytes
+      final byte[] value = characteristic.getValue();
       
-      byte flag = value[0]; 
-      
-      Log.d(TAG, "Flag: " + flag);
-      Log.d(TAG, "Value size: " + value.length);
-      
-
-      int offset = 1;
-      int heartRate;
-      
-      if ((flag & 0x01) == 1)
-      {
-        heartRate = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
-        offset += 2;
-        Log.d(TAG, "Heart rate format UINT16.");
-      }
-      else
-      {
-        heartRate = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, offset);
-        offset += 1;
-        Log.d(TAG, "Heart rate format UINT8.");
-      }
-      
-      Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-      
-      if ((flag & 0x08) == 8)
-      {
-        Log.d(TAG, "Energy expended set");
-        offset += 2;
-      }
-      else
-      {
-        Log.d(TAG, "Energy expended not set");
-      }
-      
-      if ((flag & 0x10) == 16)
-      {
-        int rr = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, offset);
-        Log.d(TAG, "RR set: " + rr);
-      }
-      else
-      {
-        Log.d(TAG, "RR not set");
-      }
-      
-
-      if (value != null && value.length > 0) 
-      {
-        final StringBuilder stringBuilder = new StringBuilder(value.length);
-        for(byte byteChar : value)
-          stringBuilder.append(String.format("%02X ", byteChar));
-        
-        Log.d(TAG, "Hexastring: " + stringBuilder.toString());
-      }
-      
-      JSONObject output = new JSONObject();
-      try
-      {
-        JSONArray array = new JSONArray();
-        
-        for(byte byteChar : value)
-          array.put(byteChar);
-        
-        output.put("value", array); 
-        
-        PluginResult result = new PluginResult(PluginResult.Status.OK, output);
-        result.setKeepCallback(true);
-        subscribeCallbackContext.sendPluginResult(result);
-      }
-      catch (JSONException ex)
-      {
-        Log.d(TAG, "Error creating subscribe json object");
-      }
+      PluginResult result = new PluginResult(PluginResult.Status.OK, value);
+      result.setKeepCallback(true);
+      subscribeCallbackContext.sendPluginResult(result);
     }
   
     @Override
