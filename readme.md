@@ -18,24 +18,24 @@ Add the plugin to your app by running the command below:
 
 ## Methods ##
 
-bluetoothle.init
-bluetoothle.startScan
-bluetoothle.stopScan
-bluetoothle.connect
-bluetoothle.disconnect
-bluetoothle.close
-bluetoothle.discover
-bluetoothle.subscribe
-bluetoothle.unsubscribe
-bluetoothle.read
-bluetoothle.write
-bluetoothle.characteristics
-bluetoothle.isConnected
-bluetoothle.isDiscovered
+* bluetoothle.init
+* bluetoothle.startScan
+* bluetoothle.stopScan
+* bluetoothle.connect
+* bluetoothle.disconnect
+* bluetoothle.close
+* bluetoothle.discover
+* bluetoothle.subscribe
+* bluetoothle.unsubscribe
+* bluetoothle.read
+* bluetoothle.write
+* bluetoothle.characteristics
+* bluetoothle.isConnected
+* bluetoothle.isDiscovered
 
 
 ## init ##
-Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enabled it.
+Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it.
 
 ```javascript
 bluetoothle.init(successCallback, errorCallback);
@@ -134,8 +134,8 @@ bluetoothle.unsubscribe(successCallback, errorCallback, serviceUuid, characteris
 ```
 
 #### Params ####
-serviceUuid = See Bluetooth LE UUIDs section.
-characteristicUuid = See Bluetooth LE UUIDs section.
+* serviceUuid = See Bluetooth LE UUIDs section.
+* characteristicUuid = See Bluetooth LE UUIDs section.
 
 
 ### read ###
@@ -212,7 +212,7 @@ Device isn't discovered
 
 ## Bluetooth LE UUIDs ##
 * A list of Bluetooth LE Services can be found here: https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx. And within each service, the list of characteristics can be viewed.
-*All Bluetooth LE UUIDs have a base of 0000xxxx-0000-1000-8000-00805F9B34FB where xxxx is replaced by the service's assigned number. For example, the Heart Rate Service has a UUID of 0000180d-0000-1000-8000-00805f9b34fb. The Heart Rate Measurement charactersitic has a UUID of 00002a37-0000-1000-8000-00805f9b34fb.
+* All Bluetooth LE UUIDs have a base of 0000xxxx-0000-1000-8000-00805F9B34FB where xxxx is replaced by the service's assigned number. For example, the Heart Rate Service has a UUID of 0000180d-0000-1000-8000-00805f9b34fb. The Heart Rate Measurement charactersitic has a UUID of 00002a37-0000-1000-8000-00805f9b34fb.
 
 ## Example ##
 The following example demonstrates how to connect to a heart rate monitor and subscribe to the heart rate value. Caution: no clean up is done like manually stopping the scan, unsubscribing, disconnecting or closing the device, which should all be done in real scenarios.
@@ -337,8 +337,8 @@ function readError(msg)
 ```
 
 ## More information ##
-Author: Rand Dusing
-Website: http://www.randdusing.com/
+* Author: Rand Dusing
+* Website: http://www.randdusing.com/
 
 ## License ##
 The source files included in the repository are released under the Apache License, Version 2.0.
