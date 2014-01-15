@@ -4,12 +4,13 @@ Bluetooth LE PhoneGap Plugin
 
 * PhoneGap 3.0.0 or higher
 * Android 4.3 or higher
-* iOS support coming soon
 
 ## Current Limitations ##
 
-* Can only connect to a single device at a time
-* All read, write and subscribe operations must be done sequentially
+* Can only connect to a single device at a time, don't plan to support multiple devices in the near future
+* All read, write and subscribe operations must be done sequentially, don't plan to support parallel operations in the near future
+* Lacks support for writing descriptors unless using Heart Rate Services, changes coming soon
+* No iOS support, but coming soon
 
 ## Installation ##
 
