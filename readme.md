@@ -216,7 +216,7 @@ Device isn't discovered
 * All Bluetooth LE UUIDs have a base of 0000xxxx-0000-1000-8000-00805F9B34FB where xxxx is replaced by the service's assigned number. For example, the Heart Rate Service has a UUID of 0000180d-0000-1000-8000-00805f9b34fb. The Heart Rate Measurement charactersitic has a UUID of 00002a37-0000-1000-8000-00805f9b34fb.
 
 ## Example ##
-The following example demonstrates how to connect to a heart rate monitor and subscribe to the heart rate value. Caution: no clean up is done like manually stopping the scan, unsubscribing, disconnecting or closing the device, which should all be done in real scenarios.
+The following example demonstrates how to connect to a heart rate monitor and subscribe to the heart rate value. Caution: no clean up is done like unsubscribing, disconnecting or closing the device, which should all be done in real scenarios.
 
 ```javascript
 //Service and Characteristic UUIDs
