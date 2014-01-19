@@ -4,12 +4,12 @@ Bluetooth LE PhoneGap Plugin
 
 * PhoneGap 3.0.0 or higher
 * Android 4.3 or higher
+* Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 2012 doesn't support Bluetooth LE after upgrading to 4.3 or higher without a modification.
 
-## Current Limitations ##
+## Limitations ##
 
-* Can only connect to a single device at a time, don't plan to support multiple devices in the near future
-* All read, write and subscribe operations must be done sequentially, don't plan to support parallel operations in the near future
-* Lacks support for writing descriptors unless using Heart Rate Services, changes coming soon
+* Can only connect to a single device at a time. Eventually I'll test out the feasibility of multiple devices.
+* All read, write and subscribe operations must be done sequentially. Based on this thread (http://stackoverflow.com/questions/18011816/has-native-android-ble-gatt-implementation-synchronous-nature), Android Bluetooth LE support seems sychronous.
 * No iOS support, but coming soon
 
 ## Installation ##
@@ -30,7 +30,8 @@ Add the plugin to your app by running the command below:
 * bluetoothle.unsubscribe
 * bluetoothle.read
 * bluetoothle.write
-* bluetoothle.characteristics
+* bluetoothle.readDescriptor
+* bluetoothle.writeDescriptor
 * bluetoothle.isConnected
 * bluetoothle.isDiscovered
 
@@ -42,26 +43,39 @@ Initialize Bluetooth on the device. Must be called before anything else. If Blue
 bluetoothle.init(successCallback, errorCallback);
 ```
 
-
 ### startScan ###
 Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible.
 
 ```javascript
-bluetoothle.startScan(successCallback, errorCallback, uuids, scanLimit);
+bluetoothle.startScan(successCallback, errorCallback, paramsObj);
 ```
 
 ##### Params #####
-* uuids = An array of service UUIDs in string format to filter the scan by
-* scanLimit = How long to run the scan in milliseconds. Internal plugin default is 10,000 milliseconds.
+An object containing the follow field(s):
+* serviceUuids = An array of service UUIDs in string format to filter the scan by
+* scanLimit = How long to run the scan in milliseconds. Plugin default is 10,000 milliseconds.
 
 ##### Success Return #####
 An object containing the following field(s):
-* status = stopScan | device
+* status = scanStart, scanStop, scanResult
+**scanStart = Scan has started
+**scanStop = Scan has automatically stopped
+**scanResult = Scan has found a device
 
-Additionally if the status is "device", the object will contain:
+Additionally if the status is "scanResult", the object will contain device information:
 * name = the friendly name of the device
 * address = the MAC address of the device, which is needed to connect to the object
 * class = the class of the Device, see http://developer.android.com/reference/android/bluetooth/BluetoothClass.Device.html
+
+```javascript
+//Scan Start
+{"status":"scanStart"}
+//Scan Result
+{"status":"scanResult","class":7936,"address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
+//Scan Stop
+{"status":"scanStop"}
+```
+
 
 
 ### stopScan ###
@@ -76,16 +90,48 @@ bluetoothle.stopScan(successCallback, errorCallback);
 Connect to a Bluetooth LE device
 
 ```javascript
-bluetoothle.connect(successCallback, errorCallback, address, autoDiscover);
+bluetoothle.connect(successCallback, errorCallback, paramsObj);
 ```
 
-#### Params ####
+##### Params #####
+An object containing the follow field(s):
 * address = The address provided by the scan's return object
-* autoDiscover = Boolean to automatically discover the devices services or not
 
 ##### Success Return #####
 An object containing the following field(s):
 * status = connected | disconnected
+** connected = Device was connected
+** disconnected = Device was disconnected without user initiation
+
+```javascript
+//Connected
+{"status":"connected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
+//Disconnected
+{"status":"disconnected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
+```
+
+
+
+### reconnect ###
+Reconnect to a disconnected Bluetooth device
+
+```javascript
+bluetoothle.reconnect(successCallback, errorCallback);
+```
+
+##### Success Return #####
+An object containing the following field(s):
+* status = connected | disconnected
+** connected = Device was connected
+** disconnected = Device was disconnected without user initiation
+
+```javascript
+//Connected
+{"status":"connected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
+//Disconnected
+{"status":"disconnected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
+```
+
 
 
 ### disconnect ###
@@ -104,6 +150,7 @@ bluetoothle.close(successCallback, errorCallback);
 ```
 
 
+
 ### discover ###
 Discover the available characteristics on a Bluetooth LE device
 
@@ -111,42 +158,93 @@ Discover the available characteristics on a Bluetooth LE device
 bluetoothle.discover(successCallback, errorCallback);
 ```
 
+##### Success Return #####
+An object containing the follow field(s):
+* address = Device address
+* name = Device name
+* services = Array of service objects below
+
+Service Object:
+* uuid = Service's uuid
+* characteristics = Array of characteristic objects below
+
+Characteristic Object:
+* uuid = Characteristic's uuid
+* descriptors = Array of descriptor objects below
+
+Descriptor Object:
+* uuid = Descriptor's uuid
+
+```javascript
+{
+   "address":"xx:xx:xx:xx:xx:xx",
+   "services":[
+      {
+         "characteristics":[
+            {
+               "descriptors":[
+                  {
+                     "uuid":"00002902-0000-1000-8000-00805f9b34fb"
+                  }
+               ],
+               "uuid":"00002a37-0000-1000-8000-00805f9b34fb"
+            },
+            {
+               "descriptors":[
+
+               ],
+               "uuid":"00002a38-0000-1000-8000-00805f9b34fb"
+            }
+         ],
+         "uuid":"0000180d-0000-1000-8000-00805f9b34fb"
+      }
+   ],
+   "name":"Polar H7"
+}
+```
+
+
 
 ### subscribe ###
 Subscribe to a particular service's characteristic. Once a subscription is no longer needed, execute unsubscribe in a similar fashion.
 
 ```javascript
-bluetoothle.subscribe(successCallback, errorCallback, serviceUuid, characteristicUuid);
+bluetoothle.subscribe(successCallback, errorCallback, paramsObj);
 ```
 
-#### Params ####
+##### Params #####
+An object containing the follow field(s):
 * serviceUuid = See Bluetooth LE UUIDs section.
 * characteristicUuid = See Bluetooth LE UUIDs section.
 
 ##### Success Return #####
-Returns an array of bytes. See characteristic's specification on how to correctly parse this.
+Continously returns an array of bytes until unsubscription. See characteristic's specification on how to correctly parse this.
+
 
 
 ### unsubscribe ###
 Unsubscribe to a particular service's characteristic.
 
 ```javascript
-bluetoothle.unsubscribe(successCallback, errorCallback, serviceUuid, characteristicUuid);
+bluetoothle.unsubscribe(successCallback, errorCallback, paramsObj);
 ```
 
-#### Params ####
+##### Params #####
+An object containing the follow field(s):
 * serviceUuid = See Bluetooth LE UUIDs section.
 * characteristicUuid = See Bluetooth LE UUIDs section.
 
 
+
 ### read ###
-Read a particular service's characteristic (once).
+Read a particular service's characteristic once.
 
 ```javascript
-bluetoothle.read(successCallback, errorCallback, serviceUuid, characteristicUuid);
+bluetoothle.read(successCallback, errorCallback, paramsObj);
 ```
 
-#### Params ####
+##### Params #####
+An object containing the follow field(s):
 * serviceUuid = See Bluetooth LE UUIDs section.
 * characteristicUuid = See Bluetooth LE UUIDs section.
 
@@ -154,34 +252,60 @@ bluetoothle.read(successCallback, errorCallback, serviceUuid, characteristicUuid
 Returns an array of bytes. See characteristic's specification on how to correctly parse this.
 
 
+
 ### write ###
 Write a particular service's characteristic. ***Note, this hasn't been tested yet***
 
 ```javascript
-bluetoothle.write(successCallback, errorCallback, serviceUuid, characteristicUuid, write);
+bluetoothle.write(successCallback, errorCallback, paramsObj);
 ```
 
-#### Params ####
+##### Params #####
+An object containing the follow field(s):
 * serviceUuid = See Bluetooth LE UUIDs section.
 * characteristicUuid = See Bluetooth LE UUIDs section.
-* write = the value to write to the device
+* value = the value to write to the device
 
 ##### Success Return #####
 Returns an array of bytes that were written.
 
 
-### characteristics ###
-Get a service's characteristics
+
+### readDescriptor ### ***Note, tested with limited scenarios***
+Read a particular characterist's descriptor
 
 ```javascript
-bluetoothle.characteristics(successCallback, errorCallback, serviceUuid);
+bluetoothle.read(successCallback, errorCallback, paramsObj);
 ```
 
-#### Params ####
+##### Params #####
+An object containing the follow field(s):
 * serviceUuid = See Bluetooth LE UUIDs section.
+* characteristicUuid = See Bluetooth LE UUIDs section.
+* descriptorUuid = See Bluetooth LE UUIDs section.
 
 ##### Success Return #####
-An array of characteristic UUIDs as strings
+Returns an array of bytes. See descriptor's specification on how to correctly parse this.
+
+
+
+### writeDescriptor ###
+Write a particular characteristic's descriptor. ***Note, limited testing and likely needs to be made more generic***
+
+```javascript
+bluetoothle.write(successCallback, errorCallback, paramsObj);
+```
+
+##### Params #####
+An object containing the follow field(s):
+* serviceUuid = See Bluetooth LE UUIDs section.
+* characteristicUuid = See Bluetooth LE UUIDs section.
+* descriptorUuid = See Bluetooth LE UUIDs section.
+* value = the value to write to the device. Currently limited to the following strings: EnableNotification, EnableIndication, DisableNotification.
+
+##### Success Return #####
+Returns an array of bytes that were written.
+
 
 
 ### isConnected ###
@@ -198,6 +322,7 @@ Device is connected
 Device isn't connected
 
 
+
 ### isDiscovered ###
 Determine whether the device's characteristics have been discovered
 
@@ -211,9 +336,13 @@ Device is discovered
 ##### Error Return #####
 Device isn't discovered
 
+
+
 ## Bluetooth LE UUIDs ##
 * A list of Bluetooth LE Services can be found here: https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx. And within each service, the list of characteristics can be viewed.
 * All Bluetooth LE UUIDs have a base of 0000xxxx-0000-1000-8000-00805F9B34FB where xxxx is replaced by the service's assigned number. For example, the Heart Rate Service has a UUID of 0000180d-0000-1000-8000-00805f9b34fb. The Heart Rate Measurement charactersitic has a UUID of 00002a37-0000-1000-8000-00805f9b34fb.
+
+
 
 ## Example ##
 The following example demonstrates how to connect to a heart rate monitor and subscribe to the heart rate value. Caution: no clean up is done like unsubscribing, disconnecting or closing the device, which should all be done in real scenarios.
@@ -222,6 +351,7 @@ The following example demonstrates how to connect to a heart rate monitor and su
 //Service and Characteristic UUIDs
 var heartRateServiceUuid = "0000180d-0000-1000-8000-00805f9b34fb";
 var heartRateMeasurementCharacteristicUuid = "00002a37-0000-1000-8000-00805f9b34fb";
+var clientCharacteristicConfigDescriptorUuid = "00002902-0000-1000-8000-00805f9b34fb";
 var batteryServiceUuid = "0000180f-0000-1000-8000-00805f9b34fb";
 var batteryLevelCharacteristicUuid = "00002a19-0000-1000-8000-00805f9b34fb";
 
@@ -230,8 +360,11 @@ bluetoothle.init(initSuccess, initError);
 
 function initSuccess()
 {
+  console.log("Bluetooth initialized");
+  
   //Scan for devices that have the Heart Rate Service for up to 10 seconds
-  bluetoothle.startScan(startScanSuccess, startScanError, [heartRateServiceUuid], 10000);
+  var paramsObj = {"serviceUuids":[heartRateServiceUuid], "scanLimit":10000};
+  bluetoothle.startScan(startScanSuccess, startScanError, paramsObj);
 }
 
 function initError(msg)
@@ -242,14 +375,25 @@ function initError(msg)
 function startScanSuccess(obj)
 {
   //Scanning found a device
-  if (obj.name != undefined && obj.address != undefined)
+  if (obj.status == "scanResult")
   {
+    console.log("Device found");
+    
     //Stop the scan
     bluetoothle.stopScan(stopScanSuccess, stopScanError);
     
-    //Connect to recently scanned device and automatically discover available services
+    //Connect to recently scanned device
     //Note, if there are multiple devices, multiple connection attempts will be made, which isn't supported at the moment.
-    bluetoothle.connect(connectSuccess, connectError, obj.address, true);
+    var paramsObj = {"address":obj.address};
+    bluetoothle.connect(connectSuccess, connectError, paramsObj);
+  }
+  else if (obj.status == "scanStart")
+  {
+    console.log("Scan was started successfully");
+  }
+  else if (obj.status == "scanStop")
+  {
+    console.log("Scan was automatically stopped");
   }
 }
 
@@ -260,6 +404,7 @@ function startScanError(msg)
 
 function stopScanSuccess()
 {
+  console.log("Scan was manually stopped");
 }
 
 function stopScanError(msg)
@@ -272,12 +417,7 @@ function connectSuccess(obj)
   //Connected to a device
   if (obj.status == "connected")
   {
-    //Timeouts were added since discovery takes a while. No subscribe or read operations can begin until discovery is complete
-    //Subscribe to Heart Rate Measurement
-    setTimeout(function() {bluetoothle.subscribe(subscribeSuccess, subscribeError, heartRateServiceUuid, heartRateMeasurementCharacteristicUuid);}, 2000);
-    
-    //Read the Battery Level
-    //setTimeout(function() {bluetoothle.read(readSuccess, readError, batteryServiceUuid, batteryLevelCharacteristicUuid);}, 2000);
+    bluetoothle.discover(discoverSuccess, discoverError); 
   }
 }
 
@@ -286,8 +426,42 @@ function connectError(msg)
   console.log("Bluetooth unable to connect to device: " + msg);
 }
 
+function discoverSuccess(obj)
+{
+  console.log("Discovery completed");
+  
+  //Set Heart Rate Measurement Descriptor prior to Subscription
+  var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuid":heartRateMeasurementCharacteristicUuid, "descriptorUuid":clientCharacteristicConfigDescriptorUuid, "value":"EnableNotification"}
+  bluetoothle.writeDescriptor(writeDescriptorSuccess, writeDescriptorError, paramsObj);
+    
+  //Read the Battery Level
+  //var paramsObj = {"serviceUuid":batteryServiceUuid, "characteristicUuid":batteryLevelCharacteristicUuid};
+  //bluetoothle.read(readSuccess, readError, batteryServiceUuid, batteryLevelCharacteristicUuid);
+}
+
+function discoverError(msg)
+{
+  console.log("Discover error: " + msg);
+}
+
+function writeDescriptorSuccess(obj)
+{
+  console.log("Descriptor written");
+  
+  //Subscribe to Heart Rate Measurement
+  var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuid":heartRateMeasurementCharacteristicUuid};
+  bluetoothle.subscribe(subscribeSuccess, subscribeError, paramsObj);
+}
+
+function writeDescriptorError(msg)
+{
+  console.log("Descriptor not written: " + msg);
+}
+
 function subscribeSuccess(obj)
 {
+  console.log("Subscription data received");
+  
   //Parse array of int32 into uint8
   var bytes = new Uint8Array(obj);
 
@@ -333,6 +507,36 @@ function readSuccess(obj)
 function readError(msg)
 {
   console.log("Read error: " + msg);
+}
+
+//Eventually you want to disconnect or close the device
+
+function disconnectDevice()
+{
+  bluetoothle.disconnect(disconnectSuccess, disconnectError);
+}
+
+function disconnectSuccess()
+{
+  console.log("Device disconnected");
+}
+
+function disconnectError()
+{
+}
+
+function closeDevice()
+{
+  bluetoothle.close(closeSuccess, closeError);
+}
+
+function closeSuccess()
+{
+  console.log("Device closed");
+}
+
+function closeError()
+{
 }
 
 ```
