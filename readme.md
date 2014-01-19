@@ -278,8 +278,8 @@ Returns an array of bytes that were written.
 
 
 
-### readDescriptor ### ***Note, tested with limited scenarios***
-Read a particular characterist's descriptor
+### readDescriptor ###
+Read a particular characterist's descriptor ***Note, tested with limited scenarios***
 
 ```javascript
 bluetoothle.read(successCallback, errorCallback, paramsObj);
