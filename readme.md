@@ -23,6 +23,7 @@ Add the plugin to your app by running the command below:
 * bluetoothle.startScan
 * bluetoothle.stopScan
 * bluetoothle.connect
+* bluetoothle.reconnect
 * bluetoothle.disconnect
 * bluetoothle.close
 * bluetoothle.discover
@@ -100,13 +101,11 @@ An object containing the follow field(s):
 ##### Success Return #####
 An object containing the following field(s):
 * status = connected | disconnected
-** connected = Device was connected
-** disconnected = Device was disconnected without user initiation
 
 ```javascript
 //Connected
 {"status":"connected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
-//Disconnected
+//Disconnected without user initiation
 {"status":"disconnected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
 ```
 
@@ -122,13 +121,11 @@ bluetoothle.reconnect(successCallback, errorCallback);
 ##### Success Return #####
 An object containing the following field(s):
 * status = connected | disconnected
-** connected = Device was connected
-** disconnected = Device was disconnected without user initiation
 
 ```javascript
 //Connected
 {"status":"connected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
-//Disconnected
+//Disconnected without user initiation
 {"status":"disconnected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
 ```
 
@@ -140,6 +137,16 @@ Disconnect from a Bluetooth LE device
 ```javascript
 bluetoothle.disconnect(successCallback, errorCallback);
 ```
+
+##### Success Return #####
+An object containing the following field(s):
+* status = disconnected
+
+```javascript
+//Disconnected with user initiation
+{"status":"disconnected","address":"xx:xx:xx:xx:xx:xx","name":"Polar H7"}
+```
+
 
 
 ### close ###
