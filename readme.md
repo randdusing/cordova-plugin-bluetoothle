@@ -59,8 +59,8 @@ Read the documentation below.
 * bluetoothle.isScanning
 * bluetoothle.isConnected
 * bluetoothle.isDiscovered (Android only)
-* bluetoothle.getBytes //TODO
-* bluetoothle.getString //TODO
+* bluetoothle.getBytes
+* bluetoothle.getString
 
 
 ## Errors ##
@@ -92,7 +92,7 @@ For example:
 ```
 
 
-## General Device Life Cycle ##
+## Life Cycle ##
 
 1. initialize
 2. scan (if device address is unknown)
@@ -538,8 +538,8 @@ bluetoothle.getString(bytes);
 ## Example ##
 The following example demonstrates how to connect to a heart rate monitor, read the battery level and subscribe to the heart rate. The first execution will automatically scan and connect to the first device. The second execution will use the saved device address rather than scanning for devices.
 
-Workflow: Initialize -> Scan -> Connect -> Disconnect -> Reconnect -> Discover -> Read Battery -> Subscribe Heart Rate -> Wait -> Unsubscribe -> Disconnect -> Close
-Timeouts: scan, connect and reconnect.
+***Life Cycle***: Initialize -> Scan -> Connect -> Disconnect -> Reconnect -> Discover -> Read Battery -> Subscribe Heart Rate -> Wait -> Unsubscribe -> Disconnect -> Close
+***Timeouts***: scan, connect and reconnect.
 
 ```javascript
 var addressKey = "address";
@@ -554,7 +554,7 @@ var scanTimer = null;
 var connectTimer = null;
 var reconnectTimer = null;
 
-//bluetoothle.initialize(initializeSuccess, initializeError);
+bluetoothle.initialize(initializeSuccess, initializeError);
 
 function initializeSuccess(obj)
 {
@@ -1066,7 +1066,7 @@ function readDescriptorSuccess(obj)
 		var bytes = bluetoothle.getBytes(obj.value);
 		var u16Bytes = new Uint16Array(bytes.buffer);
 		console.log("Read descriptor value: " + u16Bytes[0]);
-    disconnectDevice();
+		disconnectDevice();
 	}
 	else
   {
