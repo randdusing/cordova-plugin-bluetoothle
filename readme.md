@@ -138,7 +138,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
   * address = the device's address / identifier for connecting to the object
 
 ```javascript
-{"status":"scanStart"};
+{"status":"scanStarted"};
 {"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7"}; /* Android */
 {"status":"scanResult","address":"123234","name":"Polar H7"}; /* iOS */
 ```
