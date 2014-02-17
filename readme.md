@@ -132,7 +132,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 ```
 
 ##### Success Return #####
-* scanStart = Scan has started
+* scanStarted = Scan has started
 * scanResult = Scan has found a device
   * name = the device's display name
   * address = the device's address / identifier for connecting to the object
@@ -155,7 +155,7 @@ bluetoothle.stopScan(stopScanSuccessCallback, stopScanErrorCallback);
 ##### Return #####
 * scanStop = Scan has stopped
 ```javascript
-{"status":"scanStop"};
+{"status":"scanStopped"};
 ```
 
 
