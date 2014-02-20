@@ -288,12 +288,24 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    connectCallback = command.callbackId;
-    
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnecting, keyStatus, activePeripheral.name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:true];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:connectCallback];
+    if (activePeripheral.state == CBPeripheralStateConnecting)
+    {
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnecting, keyStatus, activePeripheral.name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+        [pluginResult setKeepCallbackAsBool:false];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        
+        connectCallback = nil;
+    }
+    else
+    {
+        connectCallback = command.callbackId;
+        
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnecting, keyStatus, activePeripheral.name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+        [pluginResult setKeepCallbackAsBool:true];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:connectCallback];
+    }
     
     [centralManager cancelPeripheralConnection:activePeripheral];
 }
@@ -873,6 +885,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
+    NSLog(@"connected success");
     //Successfully connected, call back to end user
     if (connectCallback == nil)
     {

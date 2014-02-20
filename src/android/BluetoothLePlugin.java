@@ -571,17 +571,33 @@ public class BluetoothLePlugin extends CordovaPlugin
     BluetoothDevice device = bluetoothGatt.getDevice();
     
     //Return disconnecting status and keep callback
-    addProperty(returnObj, keyStatus, statusDisconnecting);
     addProperty(returnObj, keyName, device.getName());
     addProperty(returnObj, keyAddress, device.getAddress());
     
-    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-    pluginResult.setKeepCallback(true);
-    callbackContext.sendPluginResult(pluginResult);
+    //If it's connecting, cancel attempt and return disconnect
+    if (connectionState == BluetoothProfile.STATE_CONNECTING)
+    {
+    	addProperty(returnObj, keyStatus, statusDisconnected);
+    	connectionState = BluetoothProfile.STATE_DISCONNECTED;
+    	
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(false);
+      callbackContext.sendPluginResult(pluginResult);
+    }
+    //Very unlikely that this is DISCONNECTING
+    else
+    {
+      addProperty(returnObj, keyStatus, statusDisconnecting);
+      connectionState = BluetoothProfile.STATE_DISCONNECTING;
+      
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(true);
+      callbackContext.sendPluginResult(pluginResult);
+      
+      //Call disconnect and change connection station
+      connectCallbackContext = callbackContext;
+    }
     
-    //Call disconnect and change connection station
-    connectionState = BluetoothProfile.STATE_DISCONNECTING;
-    connectCallbackContext = callbackContext;
     bluetoothGatt.disconnect();
   }
 

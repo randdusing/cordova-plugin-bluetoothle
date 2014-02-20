@@ -136,6 +136,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 * scanResult = Scan has found a device
   * name = the device's display name
   * address = the device's address / identifier for connecting to the object
+  * rssi = signal strength
 
 ```javascript
 {"status":"scanStarted"};
