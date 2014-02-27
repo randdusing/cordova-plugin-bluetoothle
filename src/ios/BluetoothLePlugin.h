@@ -30,6 +30,7 @@
 - (void)write:(CDVInvokedUrlCommand *)command;
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command;
+- (void)rssi:(CDVInvokedUrlCommand *)command;
 - (void)isInitialized:(CDVInvokedUrlCommand *)command;
 - (void)isScanning:(CDVInvokedUrlCommand *)command;
 - (void)isConnected:(CDVInvokedUrlCommand *)command;

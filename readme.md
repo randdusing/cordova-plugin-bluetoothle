@@ -55,6 +55,7 @@ Read the documentation below.
 * bluetoothle.write
 * bluetoothle.readDescriptor
 * bluetoothle.writeDescriptor
+* bluetoothle.rssi
 * bluetoothle.isInitialized
 * bluetoothle.isScanning
 * bluetoothle.isConnected
@@ -80,6 +81,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * write - Failed to write (Was a write value provided?)
 * readDescriptor - Failed to read descriptor (Not sure what would cause this)
 * writeDescriptor - Failed to write descriptor (Was a write value provided?)
+* rssiError - Failed to read RSSI (Not sure what would cause this)
 * arguments - Invalid arguments (Check arguments)
 * neverConnected - Device never connected (Call connect, not reconnect)
 * isNotDisconnected - Device is not disconnected (Don't call connect, reconnect or close while connected)
@@ -140,8 +142,8 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 
 ```javascript
 {"status":"scanStarted"};
-{"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7"}; /* Android */
-{"status":"scanResult","address":"123234","name":"Polar H7"}; /* iOS */
+{"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7","rssi":-5}; /* Android */
+{"status":"scanResult","address":"123234","name":"Polar H7","rssi":-5}; /* iOS */
 ```
 
 
@@ -463,6 +465,19 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.getBytes(obj.
 {"status":"writeDescriptor","serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37", "descriptorAssignedNumber":"2902","value":"EnableNotification"};
 ```
 
+
+
+### rssi ###
+Read RSSI of a connected device. RSSI is also returned with scanning.
+
+```javascript
+bluetoothle.rssi(rssiSuccessCallback, rssiErrorCallback);
+```
+
+##### Success Return #####
+```javascript
+{"status":"rssi","rssi":-5};
+```
 
 
 ### isInitialized ###

@@ -51,6 +51,9 @@ var bluetoothle = {
   writeDescriptor: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "writeDescriptor", [params]);
   },
+  rssi: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "rssi", []);
+  },
   isInitialized: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isInitialized", []);
   },

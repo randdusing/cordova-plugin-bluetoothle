@@ -30,11 +30,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-//TODO Verify how onResume and onPause events work
-
 public class BluetoothLePlugin extends CordovaPlugin 
 {
-  //Logging related variables
   //private final static String TAG = BluetoothLePlugin.class.getSimpleName();
   
   //Callback variables
@@ -75,6 +72,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String writeActionName = "write";
   private final String readDescriptorActionName = "readDescriptor";
   private final String writeDescriptorActionName = "writeDescriptor";
+  private final String rssiActionName = "rssi";
   private final String isInitializedActionName = "isInitialized";
   private final String isScanningActionName = "isScanning";
   private final String isDiscoveredActionName = "isDiscovered";
@@ -119,6 +117,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String statusWritten = "written";
   private final String statusReadDescriptor = "readDescriptor";
   private final String statusWrittenDescriptor = "writtenDescriptor";
+  private final String statusRssi = "rssi";
   
   //Error Types
   private final String errorInitialize = "initialize";
@@ -133,6 +132,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String errorWrite = "write";
   private final String errorReadDescriptor = "readDescriptor";
   private final String errorWriteDescriptor = "writeDescriptor";
+  private final String errorRssi = "rssi";
   private final String errorNeverConnected = "neverConnected";
   private final String errorIsNotDisconnected = "isNotDisconnected";
   private final String errorIsNotConnected = "isNotConnected";
@@ -183,6 +183,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logWriteDescriptorValueNotFound = "Write descriptor value not found";
   private final String logWriteDescriptorValueNotSet = "Write descriptor value not set";
   private final String logWriteDescriptorFailReturn = "Descriptor not written on return";
+  private final String logRssiFail = "Unable to read RSSI";
+  private final Strnig logRssiFailReturn = "Unable to read RSSI on return";
   
   //Base for UUIDs
   private final String uuidBase = "0000%s-0000-1000-8000-00805f9b34fb";
@@ -282,6 +284,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     else if (writeDescriptorActionName.equals(action))
     {
       writeDescriptorAction(args, callbackContext);
+      return true;
+    }
+    else if (rssiActionName.equals(action))
+    {
+      rssi(callbackContext);
       return true;
     }
     else if (isInitializedActionName.equals(action))
@@ -684,6 +691,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
     	return;
     }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
+    }
   	
     if (isNotConnected(callbackContext))
     {
@@ -733,6 +745,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     if (isNotInitialized(callbackContext))
     {
     	return;
+    }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
     }
     
     if (isNotConnected(callbackContext))
@@ -786,7 +803,6 @@ public class BluetoothLePlugin extends CordovaPlugin
       return;
     }
     
-    
     //Set the descriptor for notification
     if (isNotification)
     {
@@ -828,11 +844,14 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void unsubscribeAction(JSONArray args, CallbackContext callbackContext)
   {
-  	JSONObject returnObj = new JSONObject();
-  	
   	if (isNotInitialized(callbackContext))
     {
     	return;
+    }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
     }
   	
     if (isNotConnected(callbackContext))
@@ -867,7 +886,9 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
     	return;
     }
-
+    
+    JSONObject returnObj = new JSONObject();
+  
   	addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
   	addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
   	
@@ -912,6 +933,11 @@ public class BluetoothLePlugin extends CordovaPlugin
   	if (isNotInitialized(callbackContext))
     {
     	return;
+    }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
     }
   	
     if (isNotConnected(callbackContext))
@@ -984,6 +1010,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
     	return;
     }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
+    }
   	
     if (isNotConnected(callbackContext))
     {
@@ -1041,6 +1072,11 @@ public class BluetoothLePlugin extends CordovaPlugin
   	if (isNotInitialized(callbackContext))
     {
     	return;
+    }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
     }
   	
     if (isNotConnected(callbackContext))
@@ -1119,6 +1155,38 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
     	addProperty(returnObj, keyError, errorWriteDescriptor);
     	addProperty(returnObj, keyMessage, logWriteDescriptorFail);
+      callbackContext.error(returnObj);
+      operationCallbackContext = null;
+      return;
+    }
+  }
+  
+  private void rssiAction(CallbackContext callbackContext)
+  {
+    if (isNotInitialized(callbackContext))
+    {
+    	return;
+    }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
+    }
+  	
+    if (isNotConnected(callbackContext))
+    {
+    	return;
+    }
+     
+    operationCallbackContext = callbackContext;
+    
+    boolean result = bluetoothGatt.readRemoteRssi();
+    
+    if (!result)
+    {
+      JSONObject returnObj = new JSONObject();
+    	addProperty(returnObj, keyError, errorRssi);
+    	addProperty(returnObj, keyMessage, logRssiFail);
       callbackContext.error(returnObj);
       operationCallbackContext = null;
       return;
@@ -1506,6 +1574,37 @@ public class BluetoothLePlugin extends CordovaPlugin
       //Clear callback
       operationCallbackContext = null;
     }
+  
+    @Override
+    public void onReadRemoteRssi (BluetoothGatt gatt, int rssi, int status)
+    {
+      //If no callback, just return
+      if (operationCallbackContext == null)
+      {
+        return;
+      }
+      
+      JSONObject returnObj = new JSONObject();
+      
+      //If successfully read RSSI, return value
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        addProperty(returnObj, keyStatus, statusRssi);
+        addProperty(returnObj, keyRssi, rssi);
+        operationCallbackContext.success(returnObj);
+      }
+      //Else it failed
+      else
+      {
+      	addProperty(returnObj, keyError, errorRssi);
+	      addProperty(returnObj, keyMessage, logRssiFailReturn);
+        operationCallbackContext.error(returnObj);
+      }
+      
+      //Clear callback
+      operationCallbackContext = null;
+    }
+  
   };
   
   //Helpers for BluetoothGatt classes

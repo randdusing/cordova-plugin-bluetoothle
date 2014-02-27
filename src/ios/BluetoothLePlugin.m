@@ -39,6 +39,7 @@ NSString *const statusUnsubscribed = @"unsubscribed";
 NSString *const statusWritten = @"written";
 NSString *const statusReadDescriptor = @"readDescriptor";
 NSString *const statusWrittenDescriptor = @"writtenDescriptor";
+NSString *const statusRssi = @"rssi";
 
 //Error Types
 NSString *const errorInitialize = @"initialize";
@@ -55,6 +56,7 @@ NSString *const errorSubscription = @"subscription";
 NSString *const errorWrite = @"write";
 NSString *const errorReadDescriptor = @"readDescriptor";
 NSString *const errorWriteDescriptor = @"writeDescriptor";
+NSString *const errorRssi = @"rssi";
 NSString *const errorNeverConnected = @"neverConnected";
 NSString *const errorIsNotDisconnected = @"isNotDisconnected";
 NSString *const errorIsNotConnected = @"isNotConnected";
@@ -506,9 +508,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    [activePeripheral readValueForCharacteristic:characteristic];
-    
     operationCallback = command.callbackId;
+    
+    [activePeripheral readValueForCharacteristic:characteristic]; 
 }
 
 - (void)subscribe:(CDVInvokedUrlCommand *)command
@@ -549,9 +551,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    [activePeripheral setNotifyValue:true forCharacteristic:characteristic];
-    
     operationCallback = command.callbackId;
+    
+    [activePeripheral setNotifyValue:true forCharacteristic:characteristic];
 }
 
 - (void)unsubscribe:(CDVInvokedUrlCommand *)command
@@ -593,9 +595,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    [activePeripheral setNotifyValue:false forCharacteristic:characteristic];
-    
     operationCallback = command.callbackId;
+    
+    [activePeripheral setNotifyValue:false forCharacteristic:characteristic]; 
 }
 
 - (void)write:(CDVInvokedUrlCommand *)command
@@ -648,9 +650,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    [activePeripheral writeValue:value forCharacteristic:characteristic type:CBCharacteristicWriteWithResponse];
-    
     operationCallback = command.callbackId;
+    
+    [activePeripheral writeValue:value forCharacteristic:characteristic type:CBCharacteristicWriteWithResponse];
 }
 
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command
@@ -699,9 +701,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    [activePeripheral readValueForDescriptor:descriptor];
-    
     operationCallback = command.callbackId;
+    
+    [activePeripheral readValueForDescriptor:descriptor];
 }
 
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command
@@ -761,9 +763,31 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
+    operationCallback = command.callbackId;
+    
     [activePeripheral writeValue:value forDescriptor:descriptor];
+}
+
+- (void)rssi:(CDVInvokedUrlCommand *)command
+{
+    if ([self isNotInitialized:command])
+    {
+        return;
+    }
+    
+    if ([self wasNeverConnected:command])
+    {
+        return;
+    }
+    
+    if ([self isNotConnected:command])
+    {
+        return;
+    }
     
     operationCallback = command.callbackId;
+    
+    [activePeripheral readRssi];
 }
 
 - (void)isInitialized:(CDVInvokedUrlCommand *)command
@@ -885,7 +909,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
-    NSLog(@"connected success");
     //Successfully connected, call back to end user
     if (connectCallback == nil)
     {
@@ -901,7 +924,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
-    NSLog(@"connected fail");
     if (connectCallback == nil)
     {
         return;
@@ -917,7 +939,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
-    NSLog(@"Disconnected");
     if (connectCallback == nil)
     {
         return;
@@ -934,7 +955,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 //Peripheral Delegates
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error
 {
-    NSLog(@"discovered service");
     if (operationCallback == nil)
     {
         return;
@@ -1218,6 +1238,31 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
         operationCallback = nil;
     }
+}
+
+- (void)peripheralDidUpdateRSSI:(CBPeripheral *)peripheral error:(NSError *)error
+{
+    if (operationCallback == nil)
+    {
+        return;
+    }
+    
+    if (error != nil)
+    {
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorRssi, keyError, error.description, keyMessage, nil];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        [pluginResult setKeepCallbackAsBool:false];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+        operationCallback = nil;
+        return;
+    }
+    
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: peripheral.RSSI, keyRssi, statusRssi, keyStatus, nil];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    
+    operationCallback = nil;
 }
 
 //Helpers to check conditions and send callbacks
