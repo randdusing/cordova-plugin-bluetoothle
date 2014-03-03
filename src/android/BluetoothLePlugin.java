@@ -184,7 +184,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logWriteDescriptorValueNotSet = "Write descriptor value not set";
   private final String logWriteDescriptorFailReturn = "Descriptor not written on return";
   private final String logRssiFail = "Unable to read RSSI";
-  private final Strnig logRssiFailReturn = "Unable to read RSSI on return";
+  private final String logRssiFailReturn = "Unable to read RSSI on return";
   
   //Base for UUIDs
   private final String uuidBase = "0000%s-0000-1000-8000-00805f9b34fb";
@@ -288,7 +288,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     else if (rssiActionName.equals(action))
     {
-      rssi(callbackContext);
+      rssiAction(callbackContext);
       return true;
     }
     else if (isInitializedActionName.equals(action))
