@@ -787,7 +787,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     operationCallback = command.callbackId;
     
-    [activePeripheral readRssi];
+    [activePeripheral readRSSI];
 }
 
 - (void)isInitialized:(CDVInvokedUrlCommand *)command
