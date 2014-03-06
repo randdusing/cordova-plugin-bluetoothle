@@ -570,6 +570,9 @@ var scanTimer = null;
 var connectTimer = null;
 var reconnectTimer = null;
 
+var iOSPlatform = "iOS";
+var androidPlatform = "Android";
+
 bluetoothle.initialize(initializeSuccess, initializeError);
 
 function initializeSuccess(obj)
