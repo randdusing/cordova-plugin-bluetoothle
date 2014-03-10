@@ -85,6 +85,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyName = "name";
   private final String keyAddress = "address";
   private final String keyRssi = "rssi";
+  private final String keyAdvertisement = "advertisement";
   private final String keyServiceAssignedNumbers = "serviceAssignedNumbers";
   private final String keyServiceAssignedNumber = "serviceAssignedNumber";
   private final String keyCharacteristicAssignedNumber = "characteristicAssignedNumber";
@@ -970,7 +971,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   	addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
   	addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
   	
-    byte[] value = getValue(obj);
+    byte[] value = getPropertyBytes(obj, keyValue);
     
     if (value == null)
     {
@@ -1127,7 +1128,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     	return;
     }
     
-    byte[] value = getValue(obj);
+    byte[] value = getPropertyBytes(obj, keyValue);
     
     if (value == null)
     {
@@ -1299,6 +1300,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       addProperty(returnObj, keyName, device.getName());
       addProperty(returnObj, keyAddress, device.getAddress());
       addProperty(returnObj, keyRssi, rssi);
+      addPropertyBytes(returnObj, keyAdvertisement, scanRecord);
       addProperty(returnObj, keyStatus, statusScanResult);
       
       PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
@@ -1413,7 +1415,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       if (status == BluetoothGatt.GATT_SUCCESS)
       {
 	      addProperty(returnObj, keyStatus, statusRead);
-	      addValue(returnObj, characteristic.getValue());
+	      addPropertyBytes(returnObj, keyValue, characteristic.getValue());
         operationCallbackContext.success(returnObj);
       }
       //Else it failed
@@ -1441,7 +1443,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(characteristic.getService().getUuid()));
       addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));   
       addProperty(returnObj, keyStatus, statusSubscribedResult);
-      addValue(returnObj, characteristic.getValue());
+      addPropertyBytes(returnObj, keyValue, characteristic.getValue());
 
       //Return the characteristic value
       PluginResult result = new PluginResult(PluginResult.Status.OK, returnObj);
@@ -1466,7 +1468,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       if (status == BluetoothGatt.GATT_SUCCESS)
       {
         addProperty(returnObj, keyStatus, statusWritten);
-        addValue(returnObj, characteristic.getValue());
+        addPropertyBytes(returnObj, keyValue, characteristic.getValue());
         operationCallbackContext.success(returnObj);
       }
       //Else it failed
@@ -1502,7 +1504,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       if (status == BluetoothGatt.GATT_SUCCESS)
       {
         addProperty(returnObj, keyStatus, statusReadDescriptor);
-        addValue(returnObj, descriptor.getValue());
+        addPropertyBytes(returnObj, keyValue, descriptor.getValue());
         operationCallbackContext.success(returnObj);
       }
       //Else it failed
@@ -1560,7 +1562,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       if (status == BluetoothGatt.GATT_SUCCESS)
       {
       	addProperty(returnObj, keyStatus, statusWrittenDescriptor);
-        addValue(returnObj, descriptor.getValue());
+      	addPropertyBytes(returnObj, keyValue, descriptor.getValue());
         operationCallbackContext.success(returnObj);
       }
       //Else it failed
@@ -1895,6 +1897,13 @@ public class BluetoothLePlugin extends CordovaPlugin
   	}
   }
   
+  private void addPropertyBytes(JSONObject obj, String key, byte[] bytes)
+  {
+  	String string = Base64.encodeToString(bytes, Base64.NO_WRAP);
+  	
+  	addProperty(obj, key, string);
+  }
+  
   private JSONObject getArgsObject(JSONArray args)
   {
     if (args.length() == 1)
@@ -1911,9 +1920,9 @@ public class BluetoothLePlugin extends CordovaPlugin
     return null;
   }
   
-  private byte[] getValue(JSONObject obj)
+  private byte[] getPropertyBytes(JSONObject obj, String key)
   {
-    String string = obj.optString(keyValue, null);
+    String string = obj.optString(key, null);
     
     if (string == null)
     {
@@ -1928,13 +1937,6 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     
     return bytes;
-  }
-  
-  private void addValue(JSONObject obj, byte[] bytes)
-  {
-    String string = Base64.encodeToString(bytes, Base64.NO_WRAP);
-    
-    addProperty(obj, keyValue, string);
   }
   
   private UUID[] getServiceUuids(JSONObject obj)
