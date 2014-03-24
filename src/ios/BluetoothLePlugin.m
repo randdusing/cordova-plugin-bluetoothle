@@ -138,13 +138,13 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     //Get an array of service assigned numbers to filter by
     NSDictionary *obj = [self getArgsObject:command.arguments];
     
-    if ([self isNotArgsObject:obj :command])
+    NSMutableArray* serviceUuids = nil;
+    
+    if (obj != nil)
     {
-        return;
+        serviceUuids = [self getUuids:obj forType:keyServiceAssignedNumbers];
     }
-    
-    NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceAssignedNumbers];
-    
+
     scanCallback = command.callbackId;
     
     //Send scan started status
@@ -1449,6 +1449,11 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     NSMutableArray* uuids = [[NSMutableArray alloc] init];
     
     NSArray* checkUuids = [dictionary objectForKey:type];
+    
+    if (checkUuids == nil)
+    {
+        return nil;
+    }
     
     for (NSString* checkUuid in checkUuids)
     {
