@@ -411,7 +411,7 @@ bluetoothle.write(writeSuccessCallback, writeErrorCallback, params);
 Value is a base64 encoded string of bytes to write. Use bluetoothle.getString(bytes) to convert to base64 encoded string from a unit8Array.
 ```javascript
 //Note, this example doesn't actually work since it's read only characteristic
-{"value":"","{"value":"","serviceAssignedNumber":"180F","characteristicAssignedNumber":"2A19"};":"180F","characteristicUuid":"2A19"};
+{"value":"","serviceAssignedNumber":"180F","characteristicAssignedNumber":"2A19"};
 ```
 
 ##### Success Return #####
