@@ -1415,11 +1415,16 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 -(NSData*) getValue:(NSDictionary *) obj
 {
-    NSString* string = [obj objectForKey:keyValue];
+    NSString* string = [obj valueForKey:keyValue];
     
     if (string == nil)
     {
       return nil;
+    }
+    
+    if (![string isKindOfClass:[NSString class]])
+    {
+        return nil;
     }
     
     NSData *data = [[NSData alloc] initWithBase64EncodedString:string options:0];
@@ -1448,9 +1453,14 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 {
     NSMutableArray* uuids = [[NSMutableArray alloc] init];
     
-    NSArray* checkUuids = [dictionary objectForKey:type];
+    NSArray* checkUuids = [dictionary valueForKey:type];
     
     if (checkUuids == nil)
+    {
+        return nil;
+    }
+    
+    if (![checkUuids isKindOfClass:[NSArray class]])
     {
         return nil;
     }
@@ -1482,6 +1492,11 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return nil;
     }
     
+    if (![addressString isKindOfClass:[NSString class]])
+    {
+        return nil;
+    }
+    
     return [[NSUUID UUID] initWithUUIDString:addressString];
 }
 
@@ -1492,11 +1507,16 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj objectForKey:keyServiceAssignedNumber];
+    NSString* uuidString = [obj valueForKey:keyServiceAssignedNumber];
     
     if (uuidString == nil)
     {
       return nil;
+    }
+    
+    if (![uuidString isKindOfClass:[NSString class]])
+    {
+        return nil;
     }
     
     CBUUID* uuid = [CBUUID UUIDWithString:uuidString];
@@ -1526,11 +1546,16 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj objectForKey:keyCharacteristicAssignedNumber];
+    NSString* uuidString = [obj valueForKey:keyCharacteristicAssignedNumber];
     
     if (uuidString == nil)
     {
       return nil;
+    }
+    
+    if (![uuidString isKindOfClass:[NSString class]])
+    {
+        return nil;
     }
     
     CBUUID* uuid = [CBUUID UUIDWithString:uuidString];
@@ -1560,11 +1585,16 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj objectForKey:keyDescriptorAssignedNumber];
+    NSString* uuidString = [obj valueForKey:keyDescriptorAssignedNumber];
     
     if (uuidString == nil)
     {
       return nil;
+    }
+    
+    if (![uuidString isKindOfClass:[NSString class]])
+    {
+        return nil;
     }
     
     CBUUID* uuid = [CBUUID UUIDWithString:uuidString];
