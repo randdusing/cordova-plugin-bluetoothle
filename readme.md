@@ -139,8 +139,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
   * name = the device's display name
   * address = the device's address / identifier for connecting to the object
   * rssi = signal strength
-  * advertisement = advertisement data in bytes, use bluetoothle.getBytes() - Currently Android only, but will release an untested iOS version if requested. Will be without an iOS device for a week or two.
-
+  * advertisement = advertisement data in bytes, use bluetoothle.getBytes() - Only tested in Android so far!
 ```javascript
 {"status":"scanStarted"};
 {"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7","rssi":-5}; /* Android */
