@@ -18,7 +18,7 @@ Bluetooth LE PhoneGap Plugin
 * Tested with a heart rate monitor, so some scenarios especially those involving writing characteristics may not work as I was unable to test it. If you run into an issue, log it and I'll try to fix it. If you let me borrow a device, I can probably fix it even quicker. :)
 * Limited to connecting to a single device at a time (Pretty sure it's feasible and not too difficult to implement, but a low priorty for my original project)
 * All discovery, read and write operations must be done sequentially. i.e read characteristic x1234, wait for read result, read characteristic x5678, wait for read result, etc. More info on http://stackoverflow.com/questions/18011816/has-native-android-ble-gatt-implementation-synchronous-nature (Eventually queuing could be added, but a low priority for my original project)
-* No support for Windows Phone (Initial research shows it's not fully support yet, but I plan to add it once it is supported. Perhaps Windows Phone 8.1?)
+* No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released
 * Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin or Android's Bluetooth LE implementation.
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
 * Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.
@@ -27,6 +27,13 @@ Bluetooth LE PhoneGap Plugin
 ## Discovery Android vs iOS ##
 
 Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The Device plugin (http://docs.phonegap.com/en/edge/cordova_device_device.md.html#Device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS.
+
+## UUIDs ##
+UUIDs can be 16 bits or 128 bits. The "out of the box" UUIDs from the link below are 16 bits.
+Since iOS returns the 16 bit version of the "out of the box" UUIDs even if a 128 bit UUID was used in the parameters, the 16 bit version should always be used for the "out of the box" UUIDs for consistency.
+Android on the other hand only uses the 128 bit version, but the plugin will automatically convert 16 bit UUIDs to the 128 bit version on input and output.
+
+https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
 
 ## Installation ##
 
@@ -60,8 +67,10 @@ Read the documentation below.
 * bluetoothle.isScanning
 * bluetoothle.isConnected
 * bluetoothle.isDiscovered (Android only)
-* bluetoothle.getBytes
-* bluetoothle.getString
+* bluetoothle.encodedStringToBytes
+* bluetoothle.bytesToEncodedString
+* bluetoothle.stringToBytes
+* bluetoothle.bytesToString
 
 
 ## Errors ##
@@ -73,9 +82,9 @@ Whenever the error callback is executed, the return object will contain the erro
 * connect - Connection attempt failed (Is the device address correct?)
 * reconnect - Reconnection attempt failed (Was the device ever connected?)
 * discover - Failed to discover device (Is the device already discovered or discovering? Is the device Android?)
-* service - Service doesn't exist (Was it discovered? Correct assigned number? Is the device iOS?)
-* characteristic - Characteristic doesn't exist (Was it discovered? Correct assigned number? Is the device iOS?)
-* descriptor - Descriptor doesn't exist (Was it discovered? Correct assigned number? Is the device iOS?)
+* service - Service doesn't exist (Was it discovered? Correct uuid? Is the device iOS?)
+* characteristic - Characteristic doesn't exist (Was it discovered? Correct uuid? Is the device iOS?)
+* descriptor - Descriptor doesn't exist (Was it discovered? Correct uuid? Is the device iOS?)
 * read - Failed to read (Not sure what would cause this)
 * subscription - Failed to subscribe or unsubscribe (Does the characteristic have the Client Configuration descriptor?)
 * write - Failed to write (Was a write value provided?)
@@ -127,10 +136,10 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 ```
 
 ##### Params #####
-* serviceAssignedNumbers = An array of service IDs to filter the scan or empty array / null
+* serviceUuids = An array of service IDs to filter the scan or empty array / null
 
 ```javascript
-{"serviceAssignedNumbers":["180D", "180F"]};
+{"serviceUuids":["180D", "180F"]};
 ```
 
 ##### Success Return #####
@@ -139,7 +148,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
   * name = the device's display name
   * address = the device's address / identifier for connecting to the object
   * rssi = signal strength
-  * advertisement = advertisement data in bytes, use bluetoothle.getBytes() - Only tested in Android so far!
+  * advertisement = advertisement data in encoded string of bytes, use bluetoothle.encodedStringToBytes() - Only tested in Android so far!
 ```javascript
 {"status":"scanStarted"};
 {"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7","rssi":-5}; /* Android */
@@ -240,15 +249,15 @@ Device Object:
 * services = Array of service objects below
 
 Service Object:
-* serviceAssignedNumber = Service's assignedNumber
+* serviceUuid = Service's uuid
 * characteristics = Array of characteristic objects below
 
 Characteristic Object:
-* characteristicAssignedNumber = Characteristic's assignedNumber
+* characteristicUuid = Characteristic's uuid
 * descriptors = Array of descriptor objects below
 
 Descriptor Object:
-* descriptorAssignedNumber = Descriptor's assignedNumber
+* descriptorUuid = Descriptor's uuid
 
 ```javascript
 {
@@ -256,18 +265,18 @@ Descriptor Object:
   "name":"Polar H7",
   "services":[
     {
-      "serviceAssignedNumber":"180d",
+      "serviceUuid":"180d",
       "characteristics":[
         {
-          "characteristicAssignedNumber":"2a37",
+          "characteristicUuid":"2a37",
           "descriptors":[
             {
-              "descriptorAssignedNumber":"2902"
+              "descriptorUuid":"2902"
             }
           ]
         },
         {
-          "characteristicAssignedNumber":"2a38",
+          "characteristicUuid":"2a38",
           "descriptors":[]
         }
       ]
@@ -286,15 +295,15 @@ bluetoothle.services(servicesSuccessCallback, servicesErrorCallback, params);
 ```
 
 ##### Params #####
-* serviceAssignedNumbers = An array of service IDs to filter the scan or empty array / null
+* serviceUuids = An array of service IDs to filter the scan or empty array / null
 
 ```javascript
-{"serviceAssignedNumbers":["180D","180F"]};
+{"serviceUuids":["180D","180F"]};
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverServices","serviceAssignedNumbers":["180D","180F"]};
+{"status":"discoverServices","serviceUuids":["180D","180F"]};
 ```
 
 
@@ -308,12 +317,12 @@ bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsError
 
 ##### Params #####
 ```javascript
-{"serviceAssignedNumber":"180D","characteristicAssignedNumbers":["2A37","2A38"]};
+{"serviceUuid":"180D","characteristicUuids":["2A37","2A38"]};
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverCharacteristics","serviceAssignedNumber":"180D","characteristicAssignedNumbers":["2A37","2A38"]};
+{"status":"discoverCharacteristics","serviceUuid":"180D","characteristicUuids":["2A37","2A38"]};
 ```
 
 
@@ -327,12 +336,12 @@ bluetoothle.characteristics(descriptorsSuccessCallback, descriptorsErrorCallback
 
 ##### Params #####
 ```javascript
-{"serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37"};
+{"serviceUuid":"180D","characteristicUuid":"2A37"};
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverDescriptors","serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37","descriptorAssignedNumbers":["2902"]};
+{"status":"discoverDescriptors","serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuids":["2902"]};
 ```
 
 
@@ -346,14 +355,14 @@ bluetoothle.read(readSuccessCallback, readErrorCallback, params);
 
 ##### Params #####
 ```javascript
-{"serviceAssignedNumber":"180F","characteristicAssignedNumber":"2A19"};
+{"serviceUuid":"180F","characteristicUuid":"2A19"};
 ```
 
 ##### Success Return #####
-Value is a base64 encoded string of read bytes. Use bluetoothle.getBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
+Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
-{"status":"read","serviceAssignedNumber":"180F","characteristicAssignedNumber":"2A19","value":""};
+{"status":"read","serviceUuid":"180F","characteristicUuid":"2A19","value":""};
 ```
 
 
@@ -366,12 +375,12 @@ bluetoothle.subscribe(subscribeSuccessCallback, subscribeErrorCallback, params);
 
 ##### Params #####
 ```javascript
-{"serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37","isNotification":true};
+{"serviceUuid":"180D","characteristicUuid":"2A37","isNotification":true};
 ```
 * isNotification is only required on Android. True (or null) means notification will be enabled. False means indication will be enabled.
 
 ##### Success Return #####
-Value is a base64 encoded string of read bytes. Use bluetoothle.getBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
+Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
 {"status":"subscribed","serviceUuid":"180D","characteristicUuid":"2A37"};
@@ -389,7 +398,7 @@ bluetoothle.unsubscribe(unsubscribeSuccessCallback, unsubscribeErrorCallback, pa
 
 ##### Params #####
 ```javascript
-{"serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37"};
+{"serviceUuid":"180D","characteristicUuid":"2A37"};
 ```
 
 ##### Success Return #####
@@ -407,14 +416,14 @@ bluetoothle.write(writeSuccessCallback, writeErrorCallback, params);
 ```
 
 ##### Params #####
-Value is a base64 encoded string of bytes to write. Use bluetoothle.getString(bytes) to convert to base64 encoded string from a unit8Array.
+Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 ```javascript
 //Note, this example doesn't actually work since it's read only characteristic
-{"value":"","serviceAssignedNumber":"180F","characteristicAssignedNumber":"2A19"};
+{"value":"","serviceUuid":"180F","characteristicUuid":"2A19"};
 ```
 
 ##### Success Return #####
-Value is a base64 encoded string of written bytes. Use bluetoothle.getBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
+Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
 //Write
@@ -432,14 +441,14 @@ bluetoothle.read(readDescriptorSuccessCallback, readDescriptorErrorCallback, par
 
 ##### Params #####
 ```javascript
-{"serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37","descriptorAssignedNumber":"2902"};
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902"};
 ```
 
 ##### Success Return #####
-Value is a base64 encoded string of read bytes. Use bluetoothle.getBytes(obj.value) to convert to a unit8Array.
+Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array.
 
 ```javascript
-{"status":"readDescriptor","serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37", "descriptorAssignedNumber":"2902","value":""};
+{"status":"readDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":""};
 ```
 
 
@@ -452,17 +461,17 @@ bluetoothle.write(writeDescriptorSuccessCallback, writeDescriptorErrorCallback, 
 ```
 
 ##### Params #####
-Value is a base64 encoded string of bytes to write. Use bluetoothle.getString(bytes) to convert to base64 encoded string from a unit8Array.
+Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 
 ```javascript
-{"serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37","descriptorAssignedNumber":"2902","value":"EnableNotification"};
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":"EnableNotification"};
 ```
 
 ##### Success Return #####
-Value is a base64 encoded string of written bytes. Use bluetoothle.getBytes(obj.value) to convert to a unit8Array. 
+Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. 
 
 ```javascript
-{"status":"writeDescriptor","serviceAssignedNumber":"180D","characteristicAssignedNumber":"2A37", "descriptorAssignedNumber":"2902","value":"EnableNotification"};
+{"status":"writeDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":"EnableNotification"};
 ```
 
 
@@ -528,26 +537,39 @@ True or false
 
 
 
-### getBytes ###
+### encodedStringToBytes ###
 Helper function to convert a base64 encoded string from a characteristic or descriptor value into a uint8Array object.
 
 ```javascript
-bluetoothle.getBytes(string);
+bluetoothle.encodedStringToBytes(string);
 ```
 
 
 
-### getString ###
+### bytesToEncodedString ###
 Helper function to convert a unit8Array to a base64 encoded string for a characteric or descriptor write.
 
 ```javascript
-bluetoothle.getString(bytes);
+bluetoothle.bytesToEncodedString(bytes);
 ```
 
 
 
-## Bluetooth LE Assigned Numbers ##
-* A list of Bluetooth LE Assigned Numbers can be found here: https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
+### stringToBytes ###
+Helper function to convert a string to bytes.
+
+```javascript
+bluetoothle.stringToBytes(string);
+```
+
+
+
+### bytesToString ###
+Helper function to convert bytes to a string.
+
+```javascript
+bluetoothle.bytesToString(bytes);
+```
 
 
 
@@ -560,11 +582,11 @@ The following example demonstrates how to connect to a heart rate monitor, read 
 ```javascript
 var addressKey = "address";
 
-var heartRateServiceAssignedNumber = "180d";
-var heartRateMeasurementCharacteristicAssignedNumber = "2a37";
-var clientCharacteristicConfigDescriptorAssignedNumber = "2902";
-var batteryServiceAssignedNumber = "180f";
-var batteryLevelCharacteristicAssignedNumber = "2a19";
+var heartRateServiceUuid = "180d";
+var heartRateMeasurementCharacteristicUuid = "2a37";
+var clientCharacteristicConfigDescriptorUuid = "2902";
+var batteryServiceUuid = "180f";
+var batteryLevelCharacteristicUuid = "2a19";
 
 var scanTimer = null;
 var connectTimer = null;
@@ -583,7 +605,7 @@ function initializeSuccess(obj)
   	if (address == null)
   	{
    		console.log("Bluetooth initialized successfully, starting scan for heart rate devices.");
-   		var paramsObj = {"serviceAssignedNumbers":[heartRateServiceAssignedNumber]};
+   		var paramsObj = {"serviceUuids":[heartRateServiceUuid]};
   		bluetoothle.startScan(startScanSuccess, startScanError, paramsObj);
   	}
   	else
@@ -756,7 +778,7 @@ function reconnectSuccess(obj)
     if (window.device.platform == iOSPlatform)
     {
       console.log("Discovering heart rate service");
-      var paramsObj = {"serviceAssignedNumbers":[heartRateServiceAssignedNumber]};
+      var paramsObj = {"serviceUuids":[heartRateServiceUuid]};
       bluetoothle.services(servicesHeartSuccess, servicesHeartError, paramsObj);
     }
     else if (window.device.platform == androidPlatform)
@@ -800,15 +822,15 @@ function servicesHeartSuccess(obj)
 {
   if (obj.status == "discoveredServices")
   {
-    var serviceAssignedNumbers = obj.serviceAssignedNumbers;
-    for (var i = 0; i < serviceAssignedNumbers.length; i++)
+    var serviceUuids = obj.serviceUuids;
+    for (var i = 0; i < serviceUuids.length; i++)
     {
-      var serviceAssignedNumber = serviceAssignedNumbers[i];
+      var serviceUuid = serviceUuids[i];
       
-      if (serviceAssignedNumber == heartRateServiceAssignedNumber)
+      if (serviceUuid == heartRateServiceUuid)
       {
         console.log("Finding heart rate characteristics");
-        var paramsObj = {"serviceAssignedNumber":heartRateServiceAssignedNumber, "characteristicAssignedNumbers":[heartRateMeasurementCharacteristicAssignedNumber]};
+        var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuids":[heartRateMeasurementCharacteristicUuid]};
         bluetoothle.characteristics(characteristicsHeartSuccess, characteristicsHeartError, paramsObj);
         return;
       }
@@ -832,15 +854,15 @@ function characteristicsHeartSuccess(obj)
 {
   if (obj.status == "discoveredCharacteristics")
   {
-    var characteristicAssignedNumbers = obj.characteristicAssignedNumbers;
-    for (var i = 0; i < characteristicAssignedNumbers.length; i++)
+    var characteristicUuids = obj.characteristicUuids;
+    for (var i = 0; i < characteristicUuids.length; i++)
     {
       console.log("Heart characteristics found, now discovering descriptor");
-      var characteristicAssignedNumber = characteristicAssignedNumbers[i];
+      var characteristicUuid = characteristicUuids[i];
       
-      if (characteristicAssignedNumber == heartRateMeasurementCharacteristicAssignedNumber)
+      if (characteristicUuid == heartRateMeasurementCharacteristicUuid)
       {
-        var paramsObj = {"serviceAssignedNumber":heartRateServiceAssignedNumber, "characteristicAssignedNumber":heartRateMeasurementCharacteristicAssignedNumber};
+        var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuid":heartRateMeasurementCharacteristicUuid};
         bluetoothle.descriptors(descriptorsHeartSuccess, descriptorsHeartError, paramsObj);
         return;
       }
@@ -865,7 +887,7 @@ function descriptorsHeartSuccess(obj)
   if (obj.status == "discoveredDescriptors")
   {
   	console.log("Discovered heart descriptors, now discovering battery service");
-    var paramsObj = {"serviceAssignedNumbers":[batteryServiceAssignedNumber]};
+    var paramsObj = {"serviceUuids":[batteryServiceUuid]};
     bluetoothle.services(servicesBatterySuccess, servicesBatteryError, paramsObj);
   }
 	else
@@ -885,15 +907,15 @@ function servicesBatterySuccess(obj)
 {
   if (obj.status == "discoveredServices")
   {
-    var serviceAssignedNumbers = obj.serviceAssignedNumbers;
-    for (var i = 0; i < serviceAssignedNumbers.length; i++)
+    var serviceUuids = obj.serviceUuids;
+    for (var i = 0; i < serviceUuids.length; i++)
     {
-      var serviceAssignedNumber = serviceAssignedNumbers[i];
+      var serviceUuid = serviceUuids[i];
       
-      if (serviceAssignedNumber == batteryServiceAssignedNumber)
+      if (serviceUuid == batteryServiceUuid)
       {
         console.log("Found battery service, now finding characteristic");
-        var paramsObj = {"serviceAssignedNumber":batteryServiceAssignedNumber, "characteristicAssignedNumbers":[batteryLevelCharacteristicAssignedNumber]};
+        var paramsObj = {"serviceUuid":batteryServiceUuid, "characteristicUuids":[batteryLevelCharacteristicUuid]};
         bluetoothle.characteristics(characteristicsBatterySuccess, characteristicsBatteryError, paramsObj);
         return;
       }
@@ -917,12 +939,12 @@ function characteristicsBatterySuccess(obj)
 {
   if (obj.status == "discoveredCharacteristics")
   {
-    var characteristicAssignedNumbers = obj.characteristicAssignedNumbers;
-    for (var i = 0; i < characteristicAssignedNumbers.length; i++)
+    var characteristicUuids = obj.characteristicUuids;
+    for (var i = 0; i < characteristicUuids.length; i++)
     {
-      var characteristicAssignedNumber = characteristicAssignedNumbers[i];
+      var characteristicUuid = characteristicUuids[i];
       
-      if (characteristicAssignedNumber == batteryLevelCharacteristicAssignedNumber)
+      if (characteristicUuid == batteryLevelCharacteristicUuid)
       {
         readBatteryLevel();
         return;
@@ -967,7 +989,7 @@ function discoverError(obj)
 function readBatteryLevel()
 {
   console.log("Reading battery level");
-  var paramsObj = {"serviceAssignedNumber":batteryServiceAssignedNumber, "characteristicAssignedNumber":batteryLevelCharacteristicAssignedNumber};
+  var paramsObj = {"serviceUuid":batteryServiceUuid, "characteristicUuid":batteryLevelCharacteristicUuid};
   bluetoothle.read(readSuccess, readError, paramsObj);
 }
 
@@ -975,11 +997,11 @@ function readSuccess(obj)
 {
 	if (obj.status == "read")
 	{
-		var bytes = bluetoothle.getBytes(obj.value);
+		var bytes = bluetoothle.encodedStringToBytes(obj.value);
 		console.log("Battery level: " + bytes[0]);
 		  
 		console.log("Subscribing to heart rate for 5 seconds");
-		var paramsObj = {"serviceAssignedNumber":heartRateServiceAssignedNumber, "characteristicAssignedNumber":heartRateMeasurementCharacteristicAssignedNumber};
+		var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuid":heartRateMeasurementCharacteristicUuid};
 		bluetoothle.subscribe(subscribeSuccess, subscribeError, paramsObj);
 		setTimeout(unsubscribeDevice, 5000);
 	}
@@ -1003,7 +1025,7 @@ function subscribeSuccess(obj)
 		console.log("Subscription data received");
 	
 		//Parse array of int32 into uint8
-		var bytes = bluetoothle.getBytes(obj.value);
+		var bytes = bluetoothle.encodedStringToBytes(obj.value);
 
 		//Check for data
 		if (bytes.length == 0)
@@ -1051,7 +1073,7 @@ function subscribeError(msg)
 function unsubscribeDevice()
 {
   console.log("Unsubscribing heart service");
-  var paramsObj = {"serviceAssignedNumber":heartRateServiceAssignedNumber, "characteristicAssignedNumber":heartRateMeasurementCharacteristicAssignedNumber};
+  var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuid":heartRateMeasurementCharacteristicUuid};
   bluetoothle.unsubscribe(unsubscribeSuccess, unsubscribeError, paramsObj);
 }
 
@@ -1062,7 +1084,7 @@ function unsubscribeSuccess(obj)
 		console.log("Unsubscribed device");
 		
 		console.log("Reading client configuration descriptor");
-		var paramsObj = {"serviceAssignedNumber":heartRateServiceAssignedNumber, "characteristicAssignedNumber":heartRateMeasurementCharacteristicAssignedNumber, "descriptorAssignedNumber":clientCharacteristicConfigDescriptorAssignedNumber};
+		var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuid":heartRateMeasurementCharacteristicUuid, "descriptorUuid":clientCharacteristicConfigDescriptorUuid};
 		bluetoothle.readDescriptor(readDescriptorSuccess, readDescriptorError, paramsObj);
 	}
 	else
@@ -1082,7 +1104,7 @@ function readDescriptorSuccess(obj)
 {
 	if (obj.status == "readDescriptor")
 	{
-		var bytes = bluetoothle.getBytes(obj.value);
+		var bytes = bluetoothle.encodedStringToBytes(obj.value);
 		var u16Bytes = new Uint16Array(bytes.buffer);
 		console.log("Read descriptor value: " + u16Bytes[0]);
 		disconnectDevice();

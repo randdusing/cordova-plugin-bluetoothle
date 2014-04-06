@@ -66,7 +66,7 @@ var bluetoothle = {
   isDiscovered: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isDiscovered", []);
   },
-  getBytes: function(string) {
+  encodedStringToBytes: function(string) {
     var data = atob(string);
     var bytes = new Uint8Array(data.length);
     for (var i = 0; i < bytes.length; i++)
@@ -75,8 +75,19 @@ var bluetoothle = {
     }
     return bytes;
   },
-  getString: function(bytes) {
+  bytesToEncodedString: function(bytes) {
     return btoa(String.fromCharCode.apply(null, bytes));
+  },
+  stringToBytes: function(string) {
+  	var bytes = new ArrayBuffer(string.length * 2);
+		var bytesUint16 = new Uint16Array(bytes);
+		for (var i = 0; i < string.length; i++) {
+			bytesUint16[i] = string.charCodeAt(i);
+		}
+		return new Uint8Array(bytesUint16);
+  },
+  bytesToString: function(bytes) {
+  	return String.fromCharCode.apply(null, new Uint16Array(bytes));
   }
 }
 module.exports = bluetoothle;

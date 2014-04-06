@@ -8,8 +8,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-//import android.util.Log;
 import android.util.Base64;
+import android.util.Log;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -22,6 +22,8 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -86,10 +88,10 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyAddress = "address";
   private final String keyRssi = "rssi";
   private final String keyAdvertisement = "advertisement";
-  private final String keyServiceAssignedNumbers = "serviceAssignedNumbers";
-  private final String keyServiceAssignedNumber = "serviceAssignedNumber";
-  private final String keyCharacteristicAssignedNumber = "characteristicAssignedNumber";
-  private final String keyDescriptorAssignedNumber = "descriptorAssignedNumber";
+  private final String keyServiceUuids = "serviceUuids";
+  private final String keyServiceUuid = "serviceUuid";
+  private final String keyCharacteristicUuid = "characteristicUuid";
+  private final String keyDescriptorUuid = "descriptorUuid";
   private final String keyServices = "services";
   private final String keyCharacteristics = "characteristics";
   private final String keyDescriptors = "descriptors";
@@ -187,8 +189,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logRssiFail = "Unable to read RSSI";
   private final String logRssiFailReturn = "Unable to read RSSI on return";
   
-  //Base for UUIDs
-  private final String uuidBase = "0000%s-0000-1000-8000-00805f9b34fb";
+  private final String baseUuidStart = "0000";
+  private final String baseUuidEnd = "-0000-1000-8000-00805f9b34fb";
   
   //Client Configuration UUID for notifying/indicating
   private final UUID clientConfigurationDescriptorUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -731,8 +733,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     if (!result)
     {
     	JSONObject returnObj = new JSONObject();
-    	addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
-    	addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
+    	addProperty(returnObj, keyServiceUuid, formatUuid(service.getUuid()));
+    	addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
     	addProperty(returnObj, keyError, errorRead);
     	addProperty(returnObj, keyMessage, logReadFail);
       callbackContext.error(returnObj);
@@ -790,8 +792,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     
   	JSONObject returnObj = new JSONObject();
   	
-  	addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
-  	addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
+  	addProperty(returnObj, keyServiceUuid, formatUuid(service.getUuid()));
+  	addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
   	
   	//Subscribe to the characteristic
     boolean result = bluetoothGatt.setCharacteristicNotification(characteristic, true);
@@ -890,8 +892,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     
     JSONObject returnObj = new JSONObject();
   
-  	addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
-  	addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
+  	addProperty(returnObj, keyServiceUuid, formatUuid(service.getUuid()));
+  	addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
   	
   	//Unsubscribe to the characteristic
     boolean result = bluetoothGatt.setCharacteristicNotification(characteristic, false);
@@ -968,8 +970,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     
   	JSONObject returnObj = new JSONObject();
-  	addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
-  	addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
+  	addProperty(returnObj, keyServiceUuid, formatUuid(service.getUuid()));
+  	addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
   	
     byte[] value = getPropertyBytes(obj, keyValue);
     
@@ -1057,9 +1059,9 @@ public class BluetoothLePlugin extends CordovaPlugin
     if (!result)
     {
       JSONObject returnObj = new JSONObject();
-      addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
-      addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
-      addProperty(returnObj, keyDescriptorAssignedNumber, getAssignedNumber(descriptor.getUuid()));
+      addProperty(returnObj, keyServiceUuid, formatUuid(service.getUuid()));
+      addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
+      addProperty(returnObj, keyDescriptorUuid, formatUuid(descriptor.getUuid()));
     	addProperty(returnObj, keyError, errorReadDescriptor);
     	addProperty(returnObj, keyMessage, logReadDescriptorFail);
       callbackContext.error(returnObj);
@@ -1115,9 +1117,9 @@ public class BluetoothLePlugin extends CordovaPlugin
     
   	JSONObject returnObj = new JSONObject();
     
-    addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
-  	addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
-  	addProperty(returnObj, keyDescriptorAssignedNumber, getAssignedNumber(descriptor.getUuid()));
+    addProperty(returnObj, keyServiceUuid, formatUuid(service.getUuid()));
+  	addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
+  	addProperty(returnObj, keyDescriptorUuid, formatUuid(descriptor.getUuid()));
   	
   	//Let subscribe/unsubscribe take care of it
     if (descriptor.getUuid().equals(clientConfigurationDescriptorUuid))
@@ -1408,8 +1410,8 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
       
       JSONObject returnObj = new JSONObject();
-      addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(characteristic.getService().getUuid()));
-      addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
+      addProperty(returnObj, keyServiceUuid, formatUuid(characteristic.getService().getUuid()));
+      addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
       
       //If successfully read, return value
       if (status == BluetoothGatt.GATT_SUCCESS)
@@ -1440,8 +1442,8 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
       
       JSONObject returnObj = new JSONObject();
-      addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(characteristic.getService().getUuid()));
-      addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));   
+      addProperty(returnObj, keyServiceUuid, formatUuid(characteristic.getService().getUuid()));
+      addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));   
       addProperty(returnObj, keyStatus, statusSubscribedResult);
       addPropertyBytes(returnObj, keyValue, characteristic.getValue());
 
@@ -1461,8 +1463,8 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
       
       JSONObject returnObj = new JSONObject();
-      addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(characteristic.getService().getUuid()));
-      addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
+      addProperty(returnObj, keyServiceUuid, formatUuid(characteristic.getService().getUuid()));
+      addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
       
       //If write was successful, return the written value
       if (status == BluetoothGatt.GATT_SUCCESS)
@@ -1496,9 +1498,9 @@ public class BluetoothLePlugin extends CordovaPlugin
       
       JSONObject returnObj = new JSONObject();
       
-      addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(characteristic.getService().getUuid()));
-      addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));   
-      addProperty(returnObj, keyDescriptorAssignedNumber, getAssignedNumber(descriptor.getUuid()));
+      addProperty(returnObj, keyServiceUuid, formatUuid(characteristic.getService().getUuid()));
+      addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));   
+      addProperty(returnObj, keyDescriptorUuid, formatUuid(descriptor.getUuid()));
       
       //If descriptor was successful, return the written value
       if (status == BluetoothGatt.GATT_SUCCESS)
@@ -1532,8 +1534,8 @@ public class BluetoothLePlugin extends CordovaPlugin
       
       JSONObject returnObj = new JSONObject();
       
-      addProperty(returnObj, keyServiceAssignedNumber, getAssignedNumber(characteristic.getService().getUuid()));
-      addProperty(returnObj, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));  
+      addProperty(returnObj, keyServiceUuid, formatUuid(characteristic.getService().getUuid()));
+      addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));  
       
       //See if notification/indication is enabled or disabled and use subscribe/unsubscribe callback instead
       if (descriptor.getUuid().equals(clientConfigurationDescriptorUuid))
@@ -1556,7 +1558,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     	  return;
       }
       
-      addProperty(returnObj, keyDescriptorAssignedNumber, getAssignedNumber(descriptor.getUuid()));
+      addProperty(returnObj, keyDescriptorUuid, formatUuid(descriptor.getUuid()));
       
 			//If descriptor was written, return written value
       if (status == BluetoothGatt.GATT_SUCCESS)
@@ -1609,23 +1611,38 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   };
   
+  private String formatUuid(UUID uuid)
+  {
+  	String uuidString = uuid.toString();
+  	
+  	if (uuidString.startsWith(baseUuidStart) && uuidString.endsWith(baseUuidEnd))
+  	{
+  		return uuidString.substring(4, 8);
+  	}
+  	
+  	return uuidString;
+  }
+  
   //Helpers for BluetoothGatt classes
   private BluetoothGattService getService(JSONObject obj)
   {
-    String uuidServiceValue = obj.optString(keyServiceAssignedNumber, null);
+    String uuidServiceValue = obj.optString(keyServiceUuid, null);
     
     if (uuidServiceValue == null)
     {
       return null;
     }
     
-    String uuidServiceString = String.format(uuidBase, uuidServiceValue);
+    if (uuidServiceValue.length() == 4)
+    {
+    	uuidServiceValue = baseUuidStart + uuidServiceValue + baseUuidEnd;
+    }
     
     UUID uuidService = null;
     
     try
     {
-      uuidService = UUID.fromString(uuidServiceString);
+      uuidService = UUID.fromString(uuidServiceValue);
     }
     catch (Exception ex)
     {
@@ -1644,20 +1661,23 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private BluetoothGattCharacteristic getCharacteristic(JSONObject obj, BluetoothGattService service)
   { 
-    String uuidCharacteristicValue = obj.optString(keyCharacteristicAssignedNumber, null);
+    String uuidCharacteristicValue = obj.optString(keyCharacteristicUuid, null);
     
     if (uuidCharacteristicValue == null)
     {
       return null;
     }
     
-    String uuidCharacteristicString = String.format(uuidBase, uuidCharacteristicValue);
+    if (uuidCharacteristicValue.length() == 4)
+    {
+    	uuidCharacteristicValue = baseUuidStart + uuidCharacteristicValue + baseUuidEnd;
+    }
     
     UUID uuidCharacteristic = null;
     
     try
     {
-      uuidCharacteristic = UUID.fromString(uuidCharacteristicString);
+      uuidCharacteristic = UUID.fromString(uuidCharacteristicValue);
     }
     catch (Exception ex)
     {
@@ -1676,20 +1696,23 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private BluetoothGattDescriptor getDescriptor(JSONObject obj, BluetoothGattCharacteristic characteristic)
   {
-    String uuidDescriptorValue = obj.optString(keyDescriptorAssignedNumber, null);
+    String uuidDescriptorValue = obj.optString(keyDescriptorUuid, null);
     
     if (uuidDescriptorValue == null)
     {
       return null;
     }
     
-    String uuidDescriptorString = String.format(uuidBase, uuidDescriptorValue);
+    if (uuidDescriptorValue.length() == 4)
+    {
+    	uuidDescriptorValue = baseUuidStart + uuidDescriptorValue + baseUuidEnd;
+    }
     
     UUID uuidDescriptor = null;
     
     try
     {
-      uuidDescriptor = UUID.fromString(uuidDescriptorString);
+      uuidDescriptor = UUID.fromString(uuidDescriptorValue);
     }
     catch (Exception ex)
     {
@@ -1941,7 +1964,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private UUID[] getServiceUuids(JSONObject obj)
   {
-    JSONArray array = obj.optJSONArray(keyServiceAssignedNumbers);
+    JSONArray array = obj.optJSONArray(keyServiceUuids);
     
     if (array == null)
     {
@@ -1961,12 +1984,16 @@ public class BluetoothLePlugin extends CordovaPlugin
 	      continue;
 	    }
 	    
-	    String uuidString = String.format(uuidBase, value);
-	       
+	    if (value.length() == 4)
+	    {
+	    	value = baseUuidStart + value + baseUuidEnd;
+	    }
+	    
+	    
 	    //Try converting string to UUID and add to list
 	    try
 	    {
-	      UUID uuid = UUID.fromString(uuidString);
+	      UUID uuid = UUID.fromString(value);
 	      arrayList.add(uuid);
 	    }
 	    catch (Exception ex)
@@ -2024,7 +2051,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
       JSONObject serviceObject = new JSONObject();
       
-      addProperty(serviceObject, keyServiceAssignedNumber, getAssignedNumber(service.getUuid()));
+      addProperty(serviceObject, keyServiceUuid, formatUuid(service.getUuid()));
       
       JSONArray characteristicsArray = new JSONArray();
       
@@ -2034,7 +2061,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       {
         JSONObject characteristicObject = new JSONObject();
         
-        addProperty(characteristicObject, keyCharacteristicAssignedNumber, getAssignedNumber(characteristic.getUuid()));
+        addProperty(characteristicObject, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
         
         JSONArray descriptorsArray = new JSONArray();
         
@@ -2044,7 +2071,7 @@ public class BluetoothLePlugin extends CordovaPlugin
         {
           JSONObject descriptorObject = new JSONObject();
           
-          addProperty(descriptorObject, keyDescriptorAssignedNumber, getAssignedNumber(descriptor.getUuid()));
+          addProperty(descriptorObject, keyDescriptorUuid, formatUuid(descriptor.getUuid()));
           
           descriptorsArray.put(descriptorObject); 
         }
@@ -2062,12 +2089,5 @@ public class BluetoothLePlugin extends CordovaPlugin
     addProperty(deviceObject, keyServices, servicesArray);
     
     return deviceObject;
-  }
-  
-  private String getAssignedNumber(UUID input)
-  {
-  	String output = input.toString();
-  	
-  	return output.substring(4, 8);
   }
 }

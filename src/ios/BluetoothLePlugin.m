@@ -10,12 +10,12 @@ NSString *const keyName = @"name";
 NSString *const keyAddress = @"address";
 NSString *const keyRssi = @"rssi";
 NSString *const keyAdvertisement = @"advertisement";
-NSString *const keyServiceAssignedNumbers = @"serviceAssignedNumbers";
-NSString *const keyCharacteristicAssignedNumbers = @"characteristicAssignedNumbers";
-NSString *const keyDescriptorAssignedNumbers = @"descriptorAssignedNumbers";
-NSString *const keyServiceAssignedNumber = @"serviceAssignedNumber";
-NSString *const keyCharacteristicAssignedNumber = @"characteristicAssignedNumber";
-NSString *const keyDescriptorAssignedNumber = @"descriptorAssignedNumber";
+NSString *const keyServiceUuids = @"serviceUuids";
+NSString *const keyCharacteristicUuids = @"characteristicUuids";
+NSString *const keyDescriptorUuids = @"descriptorUuids";
+NSString *const keyServiceUuid = @"serviceUuid";
+NSString *const keyCharacteristicUuid = @"characteristicUuid";
+NSString *const keyDescriptorUuid = @"descriptorUuid";
 NSString *const keyValue = @"value";
 NSString *const keyIsInitialized = @"isInitalized";
 NSString *const keyIsScanning = @"isScanning";
@@ -145,7 +145,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     if (obj != nil)
     {
-        serviceUuids = [self getUuids:obj forType:keyServiceAssignedNumbers];
+        serviceUuids = [self getUuids:obj forType:keyServiceUuids];
     }
 
     scanCallback = command.callbackId;
@@ -387,7 +387,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceAssignedNumbers];
+    NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceUuids];
     
     operationCallback = command.callbackId;
     
@@ -427,7 +427,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableArray* characteristicUuids = [self getUuids:obj forType:keyCharacteristicAssignedNumbers];
+    NSMutableArray* characteristicUuids = [self getUuids:obj forType:keyCharacteristicUuids];
     
     operationCallback = command.callbackId;
     
@@ -998,7 +998,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredServices, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, services, keyServiceAssignedNumbers, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredServices, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, services, keyServiceUuids, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1033,7 +1033,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredCharacteristics, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, characteristics, keyCharacteristicAssignedNumbers, [service.UUID representativeString], keyServiceAssignedNumber, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredCharacteristics, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, characteristics, keyCharacteristicUuids, [service.UUID representativeString], keyServiceUuid, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1068,7 +1068,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredDescriptors, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, descriptors, keyDescriptorAssignedNumbers, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, [characteristic.service.UUID representativeString], keyServiceAssignedNumber, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredDescriptors, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, descriptors, keyDescriptorUuids, [characteristic.UUID representativeString], keyCharacteristicUuid, [characteristic.service.UUID representativeString], keyServiceUuid, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1083,7 +1083,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
     
     if (error != nil)
     {
@@ -1135,7 +1135,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     CBCharacteristic* characteristic = descriptor.characteristic;
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, [descriptor.UUID representativeString], keyDescriptorAssignedNumber, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, [descriptor.UUID representativeString], keyDescriptorUuid, nil];
     
     if (error != nil)
     {
@@ -1168,7 +1168,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
     
     if (error != nil)
     {
@@ -1202,7 +1202,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     CBCharacteristic* characteristic = descriptor.characteristic;
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, [descriptor.UUID representativeString], keyDescriptorAssignedNumber, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, [descriptor.UUID representativeString], keyDescriptorUuid, nil];
     
     if (error != nil)
     {
@@ -1233,7 +1233,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
     
     if (error != nil)
     {
@@ -1473,118 +1473,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     [obj setValue:string forKey:keyValue];
 }
 
-/*-(void) addAdvertisementData:(NSDictionary *) advertisementData toDictionary:(NSMutableDictionary *) obj
-{
-    NSMutableDictionary* dataOut = [NSMutableDictionary dictionaryWithObjectsAndKeys: nil];
-    
-    NSString* localName = [advertisementData valueForKey: CBAdvertisementDataLocalNameKey];
-    
-    if (localName != nil)
-    {
-        [dataOut setValue:localName forKey:CBAdvertisementDataLocalNameKey];
-    }
-    
-    NSData* manufacturerData = [advertisementData valueForKey:CBAdvertisementDataManufacturerDataKey];
-    
-    if (manufacturerData != nil)
-    {
-        NSString* string = [manufacturerData  base64EncodedStringWithOptions:0];
-        
-        if (string != nil && string.length > 0)
-        {
-            [dataOut setValue:string forKey:CBAdvertisementDataManufacturerDataKey];
-        }
-    }
-    
-    NSDictionary* serviceData = [advertisementData valueForKey:CBAdvertisementDataServiceDataKey];
-    
-    if (serviceData != nil)
-    {
-        NSMutableDictionary* serviceDataOut = [NSMutableDictionary dictionaryWithObjectsAndKeys: nil];
-        
-        for (id key in serviceData)
-        {
-            CBUUID* keyUuid = (CBUUID*) key;
-            NSString* keyString = [keyUuid UUIDString];
-            NSData* value = [serviceData objectForKey:key];
-            
-            NSString* string = [value  base64EncodedStringWithOptions:0];
-            
-            if (string != nil && string.length > 0)
-            {
-                [serviceDataOut setValue:string forKey:keyString];
-            }
-            
-        }
-        
-        [dataOut setValue:serviceDataOut forKey:CBAdvertisementDataServiceDataKey];
-    }
-    
-    NSArray* serviceUuids = [advertisementData valueForKey:CBAdvertisementDataServiceUUIDsKey];
-    
-    if (serviceUuids != nil)
-    {
-        NSMutableArray* serviceUuidsOut = [[NSMutableArray alloc] init];
-        
-        for (CBUUID* serviceUuid in serviceUuids)
-        {
-            NSString* serviceUuidString = [serviceUuid UUIDString];
-            
-            [serviceUuidsOut addObject:serviceUuidString];
-        }
-        
-        [dataOut setValue:serviceUuidsOut forKey:CBAdvertisementDataServiceUUIDsKey];
-    }
-    
-    NSArray* overflowServiceUuids = [advertisementData valueForKey:CBAdvertisementDataOverflowServiceUUIDsKey];
-    
-    if (overflowServiceUuids != nil)
-    {
-        NSMutableArray* serviceUuidsOut = [[NSMutableArray alloc] init];
-        
-        for (CBUUID* serviceUuid in overflowServiceUuids)
-        {
-            NSString* serviceUuidString = [serviceUuid UUIDString];
-            
-            [serviceUuidsOut addObject:serviceUuidString];
-        }
-        
-        [dataOut setValue:serviceUuidsOut forKey:CBAdvertisementDataOverflowServiceUUIDsKey];
-    }
-    
-    NSNumber* txPowerLevel = [advertisementData valueForKey:CBAdvertisementDataTxPowerLevelKey];
-    
-    if (txPowerLevel != nil)
-    {
-        [dataOut setValue:txPowerLevel forKey:CBAdvertisementDataTxPowerLevelKey];
-    }
-    
-    NSNumber* isConnectable = [advertisementData valueForKey:CBAdvertisementDataIsConnectable];
-    
-    if (isConnectable != nil)
-    {
-        [dataOut setValue:isConnectable forKey:CBAdvertisementDataIsConnectable];
-    }
-    
-    NSArray* solicitedServiceUuids = [advertisementData valueForKey:CBAdvertisementDataSolicitedServiceUUIDsKey];
-    
-    if (solicitedServiceUuids != nil)
-    {
-        NSMutableArray* serviceUuidsOut = [[NSMutableArray alloc] init];
-        
-        for (CBUUID* serviceUuid in solicitedServiceUuids)
-        {
-            NSString* serviceUuidString = [serviceUuid UUIDString];
-            
-            [serviceUuidsOut addObject:serviceUuidString];
-        }
-        
-        [dataOut setValue:serviceUuidsOut forKey:CBAdvertisementDataSolicitedServiceUUIDsKey];
-    }
-    
-    [obj setValue:dataOut forKey:keyAdvertisement];
-}*/
-
 -(NSMutableArray*) getUuids:(NSDictionary *) dictionary forType:(NSString*) type
 {
     NSMutableArray* uuids = [[NSMutableArray alloc] init];
@@ -1653,7 +1541,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj valueForKey:keyServiceAssignedNumber];
+    NSString* uuidString = [obj valueForKey:keyServiceUuid];
     
     if (uuidString == nil)
     {
@@ -1692,7 +1580,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj valueForKey:keyCharacteristicAssignedNumber];
+    NSString* uuidString = [obj valueForKey:keyCharacteristicUuid];
     
     if (uuidString == nil)
     {
@@ -1731,7 +1619,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj valueForKey:keyDescriptorAssignedNumber];
+    NSString* uuidString = [obj valueForKey:keyDescriptorUuid];
     
     if (uuidString == nil)
     {
