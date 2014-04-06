@@ -43,6 +43,17 @@ Add the plugin to your app by running the command below:
 Read the documentation below.
 
 
+## Updating ##
+
+Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries.
+To fix:
+- Click your project to open the "properties" window
+- Click your target
+- Click Build Phases
+- Ensure BluetoothLePlugin.m is added to the Compile Sources
+- Ensure CoreBluetooth.framework is added to the Link Binary with Libraries
+
+
 ## Methods ##
 
 * bluetoothle.initialize
