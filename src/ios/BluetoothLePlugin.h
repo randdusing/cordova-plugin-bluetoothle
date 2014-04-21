@@ -7,10 +7,12 @@
     NSString* scanCallback;
     NSString* connectCallback;
     NSString* operationCallback;
+    NSString* operationWriteCallback;
     
     CBCentralManager *centralManager;
     
     CBPeripheral* activePeripheral;
+    BOOL isSubscribed;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;
