@@ -6,7 +6,7 @@ Bluetooth LE PhoneGap Plugin
 
 * PhoneGap 3.0.0 or higher
 * Android 4.3 or higher
-* iOS 5 or higher
+* iOS 7 or higher
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
 * List of devices: http://www.bluetooth.com/Pages/Bluetooth-Smart-Devices-List.aspx
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
@@ -15,16 +15,19 @@ Bluetooth LE PhoneGap Plugin
 ## Limitations / Issues ##
 
 * Warning: Phonegap, Android, iOS and Objective C are all very new to me.
-* iOS doesn't prompt user to enable Bluetooth if disabled like Android does. It's probably possible, but I just forgot until right before comitting the latest changes.
+* <del>iOS doesn't prompt user to enable Bluetooth if disabled like Android does. It's probably possible, but I just forgot until right before comitting the latest changes.</del> This is now configurable using the "request" property in initialize.
 * Tested with a heart rate monitor, so some scenarios especially those involving writing characteristics may not work as I was unable to test it. If you run into an issue, log it and I'll try to fix it. If you let me borrow a device, I can probably fix it even quicker. :)
-* Limited to connecting to a single device at a time (Pretty sure it's feasible and not too difficult to implement, but a low priorty for my original project)
-* All discovery, read and write operations must be done sequentially. i.e read characteristic x1234, wait for read result, read characteristic x5678, wait for read result, etc. More info on http://stackoverflow.com/questions/18011816/has-native-android-ble-gatt-implementation-synchronous-nature (Eventually queuing could be added, but a low priority for my original project)
-* No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released
+* Limited to connecting to a single device at a time (Pretty sure it's feasible and not too difficult to implement, but a low priorty for my original project) ** Hope to begin working on this starting in July
+* <del>All discovery, read and write operations must be done sequentially. i.e read characteristic x1234, wait for read result, read characteristic x5678, wait for read result, etc. More info on http://stackoverflow.com/questions/18011816/has-native-android-ble-gatt-implementation-synchronous-nature (Eventually queuing could be added, but a low priority for my original project)</del> There's now support for multiple operations. For example, you can write characteristic A or read characteristic B while subscribed to characteristic C.
+* <del>No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released. Originally planned to buy a Windows 8.1 Phone before moving to Korea, but the one I wanted did come out in time. Still deciding what to do.
 * Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin or Android's Bluetooth LE implementation.
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
 * Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android. iOS doesn't appear to use permissions.
-* To build wp8.1 app need some changes.
+
+##How to start with Windows Phone 8.1##
+
+
 
 ## Discovery Android vs iOS ##
 
@@ -39,8 +42,14 @@ https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
 
 ## Installation ##
 
-Add the plugin to your app by running the command below:
+If you are using phonegap add the plugin to your app by running the command below:
+
 ```phonegap local plugin add https://github.com/randdusing/BluetoothLE```
+
+If you are using apache cordova use this instead:
+
+```cordova plugin add https://github.com/randdusing/BluetoothLE```
+
 
 Read the documentation below.
 
@@ -77,6 +86,7 @@ To fix:
 * bluetoothle.writeDescriptor
 * bluetoothle.rssi
 * bluetoothle.isInitialized
+* bluetoothle.isEnabled
 * bluetoothle.isScanning
 * bluetoothle.isConnected
 * bluetoothle.isDiscovered (Android only)
@@ -89,7 +99,8 @@ To fix:
 ## Errors ##
 
 Whenever the error callback is executed, the return object will contain the error type and a message.
-* initialize - Bluetooth is not initialized (Try initializing Bluetooth)
+* initialize - Bluetooth isn't initialized (Try initializing Bluetooth)
+* enable - Bluetooth isn't enabled (Request user to enable Bluetooth)
 * startScan - Scan couldn't be started (Is the scan already running?)
 * stopScan - Scan couldn't be stopped (Is the scan already stopped?)
 * connect - Connection attempt failed (Is the device address correct?)
@@ -112,7 +123,7 @@ Whenever the error callback is executed, the return object will contain the erro
 
 For example:
 ```javascript
-{"error":"startScan", "message":"Scanning already started"};
+{"error":"startScan", "message":"Scanning already started"}
 ```
 
 
@@ -128,15 +139,22 @@ For example:
 
 
 ## initialize ##
-Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it on Android devices. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc.
+Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false.
 
 ```javascript
-bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback);
+bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, params);
+```
+
+##### Params #####
+* request = true/false
+
+```javascript
+{"request":true};
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"initialized"};
+{"status":"enabled"};
 ```
 
 
@@ -152,7 +170,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 * serviceUuids = An array of service IDs to filter the scan or empty array / null
 
 ```javascript
-{"serviceUuids":["180D", "180F"]};
+{"serviceUuids":["180D", "180F"]}
 ```
 
 ##### Success Return #####
@@ -165,7 +183,8 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 ```javascript
 {"status":"scanStarted"};
 {"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7","rssi":-5}; /* Android */
-{"status":"scanResult","address":"123234","name":"Polar H7","rssi":-5}; /* iOS */
+{"status":"scanResult","address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX","name":"Polar H7","rssi":-5}; /* iOS */
+{"status":"scanResult","address":"0123456789AB","name":"Polar H7"}; /* WP8.1 */
 ```
 
 
@@ -180,7 +199,7 @@ bluetoothle.stopScan(stopScanSuccessCallback, stopScanErrorCallback);
 ##### Return #####
 * scanStop = Scan has stopped
 ```javascript
-{"status":"scanStopped"};
+{"status":"scanStopped"}
 ```
 
 
@@ -196,16 +215,16 @@ bluetoothle.connect(connectSuccessCallback, connectErrorCallback, params);
 * address = The address/identifier provided by the scan's return object
 
 ```javascript
-{"address":"01:23:45:67:89:AB"}; /* Android */
-{"address":"123234"}; /* iOS */
+{"address":"01:23:45:67:89:AB"} /* Android */
+{"address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"} /* iOS */
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"connecting","address":"01:23:45:67:89:AB","name":"Polar H7"};
-{"status":"connected","address":"01:23:45:67:89:AB","name":"Polar H7"};
-{"status":"disconnecting","address":"01:23:45:67:89:AB","name":"Polar H7"};
-{"status":"disconnected","address":"01:23:45:67:89:AB","name":"Polar H7"};
+{"status":"connecting","address":"01:23:45:67:89:AB","name":"Polar H7"}
+{"status":"connected","address":"01:23:45:67:89:AB","name":"Polar H7"}
+{"status":"disconnecting","address":"01:23:45:67:89:AB","name":"Polar H7"}
+{"status":"disconnected","address":"01:23:45:67:89:AB","name":"Polar H7"}
 ```
 
 
@@ -243,7 +262,7 @@ bluetoothle.close(closeSuccessCallback, closeErrorCallback);
 
 ##### Success Return #####
 ```javascript
-{"status":"closed","address":"01:23:45:67:89:AB","name":"Polar H7"};
+{"status":"closed","address":"01:23:45:67:89:AB","name":"Polar H7"}
 ```
 
 
@@ -274,6 +293,7 @@ Descriptor Object:
 
 ```javascript
 {
+  "status" : "discovered",
   "address":"xx:xx:xx:xx:xx:xx",
   "name":"Polar H7",
   "services":[
@@ -316,7 +336,7 @@ bluetoothle.services(servicesSuccessCallback, servicesErrorCallback, params);
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverServices","serviceUuids":["180D","180F"]};
+{"status":"discoverServices","serviceUuids":["180D","180F"]}
 ```
 
 
@@ -330,12 +350,12 @@ bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsError
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuids":["2A37","2A38"]};
+{"serviceUuid":"180D","characteristicUuids":["2A37","2A38"]}
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverCharacteristics","serviceUuid":"180D","characteristicUuids":["2A37","2A38"]};
+{"status":"discoverCharacteristics","serviceUuid":"180D","characteristicUuids":["2A37","2A38"]}
 ```
 
 
@@ -354,7 +374,7 @@ bluetoothle.characteristics(descriptorsSuccessCallback, descriptorsErrorCallback
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverDescriptors","serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuids":["2902"]};
+{"status":"discoverDescriptors","serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuids":["2902"]}
 ```
 
 
@@ -368,14 +388,14 @@ bluetoothle.read(readSuccessCallback, readErrorCallback, params);
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180F","characteristicUuid":"2A19"};
+{"serviceUuid":"180F","characteristicUuid":"2A19"}
 ```
 
 ##### Success Return #####
 Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
-{"status":"read","serviceUuid":"180F","characteristicUuid":"2A19","value":""};
+{"status":"read","serviceUuid":"180F","characteristicUuid":"2A19","value":""}
 ```
 
 
@@ -388,7 +408,7 @@ bluetoothle.subscribe(subscribeSuccessCallback, subscribeErrorCallback, params);
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37","isNotification":true};
+{"serviceUuid":"180D","characteristicUuid":"2A37","isNotification":true}
 ```
 * isNotification is only required on Android. True (or null) means notification will be enabled. False means indication will be enabled.
 
@@ -396,8 +416,8 @@ bluetoothle.subscribe(subscribeSuccessCallback, subscribeErrorCallback, params);
 Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
-{"status":"subscribed","serviceUuid":"180D","characteristicUuid":"2A37"};
-{"status":"subscribedResult","serviceUuid":"180D","characteristicUuid":"2A37","value":""};
+{"status":"subscribed","serviceUuid":"180D","characteristicUuid":"2A37"}
+{"status":"subscribedResult","serviceUuid":"180D","characteristicUuid":"2A37","value":""}
 ```
 
 
@@ -411,12 +431,12 @@ bluetoothle.unsubscribe(unsubscribeSuccessCallback, unsubscribeErrorCallback, pa
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37"};
+{"serviceUuid":"180D","characteristicUuid":"2A37"}
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"unsubscribed","serviceUuid":"180D","characteristicUuid":"2A37"};
+{"status":"unsubscribed","serviceUuid":"180D","characteristicUuid":"2A37"}
 ```
 
 
@@ -432,7 +452,7 @@ bluetoothle.write(writeSuccessCallback, writeErrorCallback, params);
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 ```javascript
 //Note, this example doesn't actually work since it's read only characteristic
-{"value":"","serviceUuid":"180F","characteristicUuid":"2A19"};
+{"value":"","serviceUuid":"180F","characteristicUuid":"2A19"}
 ```
 
 ##### Success Return #####
@@ -440,7 +460,7 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.encodedString
 
 ```javascript
 //Write
-{"status":"written","serviceUuid":"180F","characteristicUuid":"2A19","value":""};
+{"status":"written","serviceUuid":"180F","characteristicUuid":"2A19","value":""}
 ```
 
 
@@ -454,14 +474,14 @@ bluetoothle.read(readDescriptorSuccessCallback, readDescriptorErrorCallback, par
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902"};
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902"}
 ```
 
 ##### Success Return #####
 Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array.
 
 ```javascript
-{"status":"readDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":""};
+{"status":"readDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":""}
 ```
 
 
@@ -477,14 +497,14 @@ bluetoothle.write(writeDescriptorSuccessCallback, writeDescriptorErrorCallback, 
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":"EnableNotification"};
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":"EnableNotification"}
 ```
 
 ##### Success Return #####
 Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. 
 
 ```javascript
-{"status":"writeDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":"EnableNotification"};
+{"status":"writeDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":"EnableNotification"}
 ```
 
 
@@ -503,10 +523,23 @@ bluetoothle.rssi(rssiSuccessCallback, rssiErrorCallback);
 
 
 ### isInitialized ###
-Determine whether the adapter is initialized. No error callback
+Determine whether the adapter is initialized. No error callback. Returns true or false
 
 ```javascript
 bluetoothle.isInitialized(isInitializedCallback);
+```
+
+##### Success Return #####
+```javascript
+{"isInitialized" : true }
+```
+
+
+### isEnabled ###
+Determine whether the adapter is enabled. No error callback
+
+```javascript
+bluetoothle.isEnabled(isEnabledCallback);
 ```
 
 ##### Success Return #####
@@ -515,27 +548,29 @@ True or false
 
 
 ### isScanning ###
-Determine whether the adapter is initialized. No error callback
+Determine whether the adapter is initialized. No error callback. Returns true or false
 
 ```javascript
 bluetoothle.isScanning(isScanningCallback);
 ```
 
 ##### Return #####
-True or false
-
+```javascript
+{"isScanning" : true }
+```
 
 
 ### isConnected ###
-Determine whether the device is connected. No error callback
+Determine whether the device is connected. No error callback. Returns true or false
 
 ```javascript
 bluetoothle.isConnected(isConnectedCallback);
 ```
 
 ##### Return #####
-True or false
-
+```javascript
+{"isConnected" : true }
+```
 
 
 ### isDiscovered ###
@@ -546,7 +581,10 @@ bluetoothle.isDiscovered(isDiscoveredCallback);
 ```
 
 ##### Success Return #####
-True or false
+```javascript
+{"isDiscovered" : true }
+```
+
 
 
 
@@ -589,7 +627,10 @@ bluetoothle.bytesToString(bytes);
 ## Example ##
 The following example demonstrates how to connect to a heart rate monitor, read the battery level and subscribe to the heart rate. The first execution will automatically scan and connect to the first device. The second execution will use the saved device address rather than scanning for devices.
 
+***Dependencies***: Example depends on the device plugin to detect whether Phonegap is running on Android or iOS. Run "cordova plugin add org.apache.cordova.device" from the CLI to install the device plugin. 
+
 ***Life Cycle***: Initialize -> Scan -> Connect -> Disconnect -> Reconnect -> Discover -> Read Battery -> Subscribe Heart Rate -> Wait -> Unsubscribe -> Disconnect -> Close
+
 ***Timeouts***: scan, connect and reconnect.
 
 ```javascript
