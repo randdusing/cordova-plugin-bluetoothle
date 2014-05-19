@@ -116,7 +116,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil];
+    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin" }];
     initCallback = command.callbackId;
 }
 
@@ -1649,6 +1649,10 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     return descriptor;
+}
+
+-(void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict{
+    
 }
 
 @end

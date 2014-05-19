@@ -32,6 +32,11 @@
                 <param name="ios-package" value="BluetoothLePlugin" />
             </feature>
         </config-file>
+        <config-file target="*-Info.plist" parent="UIBackgroundModes">
+            <array>
+              <string>bluetooth-central</string>
+            </array>
+        </config-file>
         <header-file src="src/ios/BluetoothLePlugin.h" />
         <source-file src="src/ios/BluetoothLePlugin.m" />
         <framework src="CoreBluetooth.framework" />
