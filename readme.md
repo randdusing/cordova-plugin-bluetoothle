@@ -587,7 +587,10 @@ bluetoothle.bytesToString(bytes);
 ## Example ##
 The following example demonstrates how to connect to a heart rate monitor, read the battery level and subscribe to the heart rate. The first execution will automatically scan and connect to the first device. The second execution will use the saved device address rather than scanning for devices.
 
+***Dependencies***: Example depends on the device plugin to detect whether Phonegap is running on Android or iOS. Run "cordova plugin add org.apache.cordova.device" from the CLI to install the device plugin. 
+
 ***Life Cycle***: Initialize -> Scan -> Connect -> Disconnect -> Reconnect -> Discover -> Read Battery -> Subscribe Heart Rate -> Wait -> Unsubscribe -> Disconnect -> Close
+
 ***Timeouts***: scan, connect and reconnect.
 
 ```javascript
