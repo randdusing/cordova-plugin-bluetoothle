@@ -609,6 +609,8 @@ var reconnectTimer = null;
 var iOSPlatform = "iOS";
 var androidPlatform = "Android";
 
+var bluetoothle;
+
 bluetoothle.initialize(initializeSuccess, initializeError);
 
 function initializeSuccess(obj)
