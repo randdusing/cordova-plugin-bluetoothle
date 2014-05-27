@@ -95,6 +95,12 @@ NSString *const logNoDescriptor = @"Descriptor not found";
 NSString *const logWriteValueNotFound = @"Write value not found";
 NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not found";
 
+NSString *const operationRead = @"read";
+NSString *const operationSubscribe = @"subscribe";
+NSString *const operationUnsubscribe = @"unsubscribe";
+NSString *const operationWrite = @"write";
+
+
 @implementation BluetoothLePlugin
 
 - (void)pluginInitialize
@@ -116,7 +122,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin" }];
+    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin", CBCentralManagerOptionShowPowerAlertKey:[NSNumber numberWithBool:YES] }];
     initCallback = command.callbackId;
 }
 
@@ -346,8 +352,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
     activePeripheral = nil;
     connectCallback = nil;
-    operationCallback = nil;
     
+    [self clearOperationCallbacks];
+
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -389,7 +396,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceUuids];
     
-    operationCallback = command.callbackId;
+    discoverCallback = command.callbackId;
     
     [activePeripheral discoverServices:serviceUuids];
 }
@@ -429,7 +436,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     NSMutableArray* characteristicUuids = [self getUuids:obj forType:keyCharacteristicUuids];
     
-    operationCallback = command.callbackId;
+    discoverCallback = command.callbackId;
     
     [activePeripheral discoverCharacteristics:characteristicUuids forService:service];
 }
@@ -474,7 +481,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    discoverCallback = command.callbackId;
     
     [activePeripheral discoverDescriptorsForCharacteristic:characteristic];
 }
@@ -519,7 +526,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    [self addCallback:characteristic.UUID forOperationType:operationRead forCallback:command.callbackId];
     
     [activePeripheral readValueForCharacteristic:characteristic]; 
 }
@@ -562,7 +569,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    [self addCallback:characteristic.UUID forOperationType:operationSubscribe forCallback:command.callbackId];
     
     [activePeripheral setNotifyValue:true forCharacteristic:characteristic];
 }
@@ -606,7 +613,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    [self addCallback:characteristic.UUID forOperationType:operationUnsubscribe forCallback:command.callbackId];
     
     [activePeripheral setNotifyValue:false forCharacteristic:characteristic]; 
 }
@@ -661,7 +668,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    [self addCallback:characteristic.UUID forOperationType:operationWrite forCallback:command.callbackId];
     
     [activePeripheral writeValue:value forCharacteristic:characteristic type:CBCharacteristicWriteWithResponse];
 }
@@ -712,7 +719,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    descriptorCallback = command.callbackId;
     
     [activePeripheral readValueForDescriptor:descriptor];
 }
@@ -774,7 +781,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    descriptorCallback = command.callbackId;
     
     [activePeripheral writeValue:value forDescriptor:descriptor];
 }
@@ -796,7 +803,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    rssiCallback = command.callbackId;
     
     [activePeripheral readRSSI];
 }
@@ -905,6 +912,11 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     initCallback = nil;
 }
 
+- (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict
+{
+    
+}
+
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
 {
     if (scanCallback == nil)
@@ -923,6 +935,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
+    operationCallbacks = [NSMutableDictionary dictionary];
+    
     //Successfully connected, call back to end user
     if (connectCallback == nil)
     {
@@ -955,6 +969,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
+    [self clearOperationCallbacks];
+    
     if (connectCallback == nil)
     {
         return;
@@ -973,7 +989,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 //Peripheral Delegates
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error
 {
-    if (operationCallback == nil)
+    if (discoverCallback == nil)
     {
         return;
     }
@@ -985,8 +1001,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverServices, keyError, name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverCallback];
+        discoverCallback = nil;
         return;
     }
     
@@ -1001,14 +1017,14 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredServices, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, services, keyServiceUuids, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverCallback];
     
-    operationCallback = nil;
+    discoverCallback = nil;
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error
 {
-    if (operationCallback == nil)
+    if (discoverCallback == nil)
     {
         return;
     }
@@ -1020,8 +1036,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverCharacteristics, keyError, name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverCallback];
+        discoverCallback = nil;
         return;
     }
     
@@ -1036,14 +1052,14 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredCharacteristics, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, characteristics, keyCharacteristicUuids, [service.UUID representativeString], keyServiceUuid, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverCallback];
     
-    operationCallback = nil;
+    discoverCallback = nil;
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
 {
-    if (operationCallback == nil)
+    if (discoverCallback == nil)
     {
         return;
     }
@@ -1055,8 +1071,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverDescriptors, keyError, name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverCallback];
+        discoverCallback = nil;
         return;
     }
     
@@ -1071,36 +1087,48 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredDescriptors, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, descriptors, keyDescriptorUuids, [characteristic.UUID representativeString], keyCharacteristicUuid, [characteristic.service.UUID representativeString], keyServiceUuid, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverCallback];
     
-    operationCallback = nil;
+    discoverCallback = nil;
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
 {
-    if (operationCallback == nil)
-    {
-        return;
-    }
-    
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
     
     if (error != nil)
     {
+        NSString* callback = nil;
         if (characteristic.isNotifying)
         {
+            callback = [self getCallback:characteristic.UUID forOperationType:operationSubscribe];
             [returnObj setValue:errorSubscription forKey:keyError];
         }
         else
         {
+            callback = [self getCallback:characteristic.UUID forOperationType:operationRead];
             [returnObj setValue:errorRead forKey:keyError];
+        }
+        
+        if (callback == nil)
+        {
+            return;
         }
         
         [returnObj setValue:error.description forKey:keyMessage];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+        
+        if (characteristic.isNotifying)
+        {
+            [self removeCallback:characteristic.UUID forOperationType:operationSubscribe];
+        }
+        else
+        {
+            [self removeCallback:characteristic.UUID forOperationType:operationRead];
+        }
+        
         return;
     }
     
@@ -1108,27 +1136,41 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     if (characteristic.isNotifying)
     {
+        NSString* callback = [self getCallback:characteristic.UUID forOperationType:operationSubscribe];
+        
+        if (callback == nil)
+        {
+            return;
+        }
+        
         [returnObj setValue:statusSubscribedResult forKey:keyStatus];
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:true];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
     }
     else
     {
+        NSString* callback = [self getCallback:characteristic.UUID forOperationType:operationRead];
+       
+        if (callback == nil)
+        {
+            return;
+        }
+        
         [returnObj setValue:statusRead forKey:keyStatus];
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
         
-        operationCallback = nil;
+        [self removeCallback:characteristic.UUID forOperationType:operationRead];
     }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error
 {
-    if (operationCallback == nil)
+    if (descriptorCallback == nil)
     {
         return;
     }
@@ -1143,8 +1185,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         [returnObj setValue:error.description forKey:keyMessage];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:descriptorCallback];
+        descriptorCallback = nil;
         return;
     }
 
@@ -1156,14 +1198,16 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:descriptorCallback];
     
-    operationCallback = nil;
+    descriptorCallback = nil;
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
 {
-    if (operationCallback == nil)
+    NSString* callback = [self getCallback:characteristic.UUID forOperationType:operationWrite];
+    
+    if (callback == nil)
     {
         return;
     }
@@ -1177,8 +1221,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+        [self removeCallback:characteristic.UUID forOperationType:operationWrite];
         return;
     }
     
@@ -1188,14 +1232,14 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
     
-    operationCallback = nil;
+    [self removeCallback:characteristic.UUID forOperationType:operationWrite];
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error
 {
-    if (operationCallback == nil)
+    if (descriptorCallback == nil)
     {
         return;
     }
@@ -1210,8 +1254,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         [returnObj setValue:error.description forKey:keyMessage];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:descriptorCallback];
+        descriptorCallback = nil;
         return;
     }
     
@@ -1221,52 +1265,73 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:descriptorCallback];
     
-    operationCallback = nil;
+    descriptorCallback = nil;
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
 {
-    if (operationCallback == nil)
-    {
-        return;
-    }
-    
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
     
     if (error != nil)
     {
+        //Usually I would use characteristic.isNotifying to determine which callback to use
+        //But that probably isn't accurate if there's an error, so just use subscribe
+        NSString* callback = [self getCallback:characteristic.UUID forOperationType:operationSubscribe];
+        
+        if (callback == nil)
+        {
+            return;
+        }
+        
         [returnObj setValue:errorSubscription forKey:keyError];
         [returnObj setValue:error.description forKey:keyMessage];
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+        
+        [self removeCallback:characteristic.UUID forOperationType:operationSubscribe];
+
         return;
     }
     
     if (characteristic.isNotifying)
     {
+        NSString* callback = [self getCallback:characteristic.UUID forOperationType:operationSubscribe];
+        
+        if (callback == nil)
+        {
+            return;
+        }
+        
         [returnObj setValue:statusSubscribed forKey:keyStatus];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:true];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
     }
     else
     {
+        NSString* callback = [self getCallback:characteristic.UUID forOperationType:operationUnsubscribe];
+        
+        if (callback == nil)
+        {
+            return;
+        }
+        
         [returnObj setValue:statusUnsubscribed forKey:keyStatus];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+        
+        [self removeCallback:characteristic.UUID forOperationType:operationUnsubscribe];
     }
 }
 
 - (void)peripheralDidUpdateRSSI:(CBPeripheral *)peripheral error:(NSError *)error
 {
-    if (operationCallback == nil)
+    if (rssiCallback == nil)
     {
         return;
     }
@@ -1276,17 +1341,72 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorRssi, keyError, error.description, keyMessage, nil];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:rssiCallback];
+        rssiCallback = nil;
         return;
     }
     
     NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: peripheral.RSSI, keyRssi, statusRssi, keyStatus, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:rssiCallback];
     
-    operationCallback = nil;
+    rssiCallback = nil;
+}
+
+//Helpers for Callbacks
+- (NSMutableDictionary*) ensureCallback: (CBUUID *) characteristicUuid
+{
+    NSMutableDictionary* characteristicCallbacks = [operationCallbacks objectForKey:characteristicUuid];
+    
+    if (characteristicCallbacks != nil)
+    {
+        return characteristicCallbacks;
+    }
+    
+    NSMutableDictionary* newCharacteristicCallbacks = [NSMutableDictionary dictionary];
+    [operationCallbacks setObject:newCharacteristicCallbacks forKey:characteristicUuid];
+    return newCharacteristicCallbacks;
+}
+
+- (void) addCallback: (CBUUID *) characteristicUuid forOperationType:(NSString*) operationType forCallback:(NSString*) callback
+{
+    NSMutableDictionary* characteristicCallbacks = [self ensureCallback:characteristicUuid];
+    
+    [characteristicCallbacks setObject:callback forKey:operationType];
+}
+
+- (NSString*) getCallback: (CBUUID *) characteristicUuid forOperationType:(NSString*) operationType
+{
+    NSMutableDictionary* characteristicCallbacks = [operationCallbacks objectForKey:characteristicUuid];
+
+  	if (characteristicCallbacks == nil)
+  	{
+  		return nil;
+  	}
+  	
+  	//This may return nil
+    return [characteristicCallbacks objectForKey:operationType];
+}
+
+- (void) removeCallback: (CBUUID *) characteristicUuid forOperationType:(NSString*) operationType
+{
+    NSMutableDictionary* characteristicCallbacks = [operationCallbacks objectForKey:characteristicUuid];
+    
+  	if (characteristicCallbacks == nil)
+  	{
+  		return;
+  	}
+    
+    [characteristicCallbacks removeObjectForKey:operationType];
+}
+
+- (void) clearOperationCallbacks
+{
+    operationCallbacks = [NSMutableDictionary dictionary];
+    discoverCallback = nil;
+    descriptorCallback = nil;
+    rssiCallback = nil;
 }
 
 //Helpers to check conditions and send callbacks
@@ -1300,6 +1420,14 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        
+        initCallback = nil;
+        scanCallback = nil;
+        connectCallback = nil;
+        [self clearOperationCallbacks];
+        
+        activePeripheral = nil;
+        
         return true;
     }
     
@@ -1649,10 +1777,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     return descriptor;
-}
-
--(void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict{
-    
 }
 
 @end

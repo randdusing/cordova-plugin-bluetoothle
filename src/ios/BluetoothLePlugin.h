@@ -6,7 +6,10 @@
     NSString* initCallback;
     NSString* scanCallback;
     NSString* connectCallback;
-    NSString* operationCallback;
+    NSString* discoverCallback;
+    NSString* descriptorCallback;
+    NSString* rssiCallback;
+    NSMutableDictionary* operationCallbacks;
     
     CBCentralManager *centralManager;
     
