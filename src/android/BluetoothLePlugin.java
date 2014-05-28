@@ -39,9 +39,9 @@ public class BluetoothLePlugin extends CordovaPlugin
   private CallbackContext scanCallbackContext;
   private CallbackContext connectCallbackContext;
   private CallbackContext discoverCallbackContext;
-  private Map<UUID, HashMap<String, CallbackContext>> operationCallbackContexts = new HashMap<UUID, HashMap<String, CallbackContext>>();
   private CallbackContext descriptorCallbackContext;
   private CallbackContext rssiCallbackContext;
+  private HashMap<UUID, HashMap<String, CallbackContext>> operationCallbackContexts;
   
   //Initialization related variables
   private final int REQUEST_BT_ENABLE = 59627; /*Random integer*/
@@ -735,10 +735,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     
     UUID characteristicUuid = characteristic.getUuid();
     
-    EnsureCallback(characteristicUuid);
+    AddCallback(characteristicUuid, operationRead, callbackContext);
     
-    operationCallbackContexts.get(characteristicUuid).put(operationRead, callbackContext);
-
     boolean result = bluetoothGatt.readCharacteristic(characteristic);
     
     if (!result)
@@ -749,8 +747,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     	addProperty(returnObj, keyError, errorRead);
     	addProperty(returnObj, keyMessage, logReadFail);
       callbackContext.error(returnObj);
-      operationCallbackContexts.get(characteristicUuid).remove(operationRead);
-      return;
+      RemoveCallback(characteristicUuid, operationRead);
     }
   }
    
@@ -841,10 +838,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   		return;
   	}
   	
-    EnsureCallback(characteristicUuid);
+    AddCallback(characteristicUuid, operationSubscribe, callbackContext);
     
-    operationCallbackContexts.get(characteristicUuid).put(operationSubscribe, callbackContext);
-
     //Write the descriptor value
   	result = bluetoothGatt.writeDescriptor(descriptor);
   	
@@ -856,7 +851,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   		addProperty(returnObj, keyError, errorWriteDescriptor);
   		addProperty(returnObj, keyMessage, logWriteDescriptorFail);
   		callbackContext.error(returnObj);
-  		operationCallbackContexts.get(characteristicUuid).remove(operationSubscribe);
+  		RemoveCallback(characteristicUuid, operationSubscribe);
   	}
   }
   
@@ -934,10 +929,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   		return;
   	}
   	
-  	EnsureCallback(characteristicUuid);
+  	AddCallback(characteristicUuid, operationUnsubscribe, callbackContext);
     
-    operationCallbackContexts.get(characteristicUuid).put(operationUnsubscribe, callbackContext);
-
     //Write the actual descriptor value
   	result = bluetoothGatt.writeDescriptor(descriptor);
   	
@@ -946,7 +939,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   		addProperty(returnObj, keyError, errorWriteDescriptor);
   		addProperty(returnObj, keyMessage, logWriteDescriptorFail);
   		callbackContext.error(returnObj);
-  		operationCallbackContexts.get(characteristicUuid).remove(operationUnsubscribe);
+  		RemoveCallback(characteristicUuid, operationUnsubscribe);
   	}
   }
 
@@ -1014,9 +1007,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       return;
     }
     
-  	EnsureCallback(characteristicUuid);
-    
-    operationCallbackContexts.get(characteristicUuid).put(operationWrite, callbackContext);
+    AddCallback(characteristicUuid, operationWrite, callbackContext);
     
     result = bluetoothGatt.writeCharacteristic(characteristic);
     
@@ -1025,8 +1016,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     	addProperty(returnObj, keyError, errorWrite);
     	addProperty(returnObj, keyMessage, logWriteFail);
       callbackContext.error(returnObj);
-      operationCallbackContexts.get(characteristicUuid).remove(operationWrite);
-      return;
+      RemoveCallback(characteristicUuid, operationWrite);
     }
   }
   
@@ -1335,6 +1325,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   };
   
   //Bluetooth callback for connecting, discovering, reading and writing
+  
   private final BluetoothGattCallback gattCallback =  new BluetoothGattCallback()
   {
     @Override
@@ -1348,6 +1339,8 @@ public class BluetoothLePlugin extends CordovaPlugin
       //Device was connected
       if (newState == BluetoothProfile.STATE_CONNECTED)
       {
+      	operationCallbackContexts = new HashMap<UUID, HashMap<String, CallbackContext>>();
+      	
         //This shouldn't happen
         if (connectCallbackContext == null)
         {
@@ -1784,13 +1777,22 @@ public class BluetoothLePlugin extends CordovaPlugin
   }
 
   //Helpers for Callbacks
-  private void EnsureCallback(UUID characteristicUuid)
+  private HashMap<String, CallbackContext> EnsureCallback(UUID characteristicUuid)
   {
   	//Ensure the callback map has an entry for the characteristic
   	if (!operationCallbackContexts.containsKey(characteristicUuid))
     {
     	operationCallbackContexts.put(characteristicUuid, new HashMap<String, CallbackContext>());
     }
+  	
+  	return operationCallbackContexts.get(characteristicUuid);
+  }
+  
+  private void AddCallback(UUID characteristicUuid, String operationType, CallbackContext callbackContext)
+  {
+  	HashMap<String, CallbackContext> characteristicCallbackContexts = EnsureCallback(characteristicUuid);
+  	
+  	characteristicCallbackContexts.put(operationType, callbackContext);
   }
   
   private CallbackContext GetCallback(UUID characteristicUuid, String operationType)
@@ -1823,7 +1825,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   	operationCallbackContexts = new HashMap<UUID, HashMap<String, CallbackContext>>();
     discoverCallbackContext = null;
     descriptorCallbackContext = null;
-    rssiCallbackContext = null;
+    rssiCallbackContext = null;	
   }
   
   //Helpers to Check Conditions
