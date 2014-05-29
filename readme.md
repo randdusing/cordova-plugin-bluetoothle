@@ -37,8 +37,14 @@ https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
 
 ## Installation ##
 
-Add the plugin to your app by running the command below:
+If you are using phonegap add the plugin to your app by running the command below:
+
 ```phonegap local plugin add https://github.com/randdusing/BluetoothLE```
+
+If you are using apache cordova use this instead:
+
+```cordova plugin add https://github.com/randdusing/BluetoothLE```
+
 
 Read the documentation below.
 
