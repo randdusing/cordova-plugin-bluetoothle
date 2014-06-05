@@ -116,7 +116,7 @@ Whenever the error callback is executed, the return object will contain the erro
 
 For example:
 ```javascript
-{"error":"startScan", "message":"Scanning already started"};
+{"error":"startScan", "message":"Scanning already started"}
 ```
 
 
@@ -140,7 +140,7 @@ bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback);
 
 ##### Success Return #####
 ```javascript
-{"status":"initialized"};
+{"status":"initialized"}
 ```
 
 
@@ -156,7 +156,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 * serviceUuids = An array of service IDs to filter the scan or empty array / null
 
 ```javascript
-{"serviceUuids":["180D", "180F"]};
+{"serviceUuids":["180D", "180F"]}
 ```
 
 ##### Success Return #####
@@ -184,7 +184,7 @@ bluetoothle.stopScan(stopScanSuccessCallback, stopScanErrorCallback);
 ##### Return #####
 * scanStop = Scan has stopped
 ```javascript
-{"status":"scanStopped"};
+{"status":"scanStopped"}
 ```
 
 
@@ -200,16 +200,16 @@ bluetoothle.connect(connectSuccessCallback, connectErrorCallback, params);
 * address = The address/identifier provided by the scan's return object
 
 ```javascript
-{"address":"01:23:45:67:89:AB"}; /* Android */
-{"address":"123234"}; /* iOS */
+{"address":"01:23:45:67:89:AB"} /* Android */
+{"address":"123234"} /* iOS */
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"connecting","address":"01:23:45:67:89:AB","name":"Polar H7"};
-{"status":"connected","address":"01:23:45:67:89:AB","name":"Polar H7"};
-{"status":"disconnecting","address":"01:23:45:67:89:AB","name":"Polar H7"};
-{"status":"disconnected","address":"01:23:45:67:89:AB","name":"Polar H7"};
+{"status":"connecting","address":"01:23:45:67:89:AB","name":"Polar H7"}
+{"status":"connected","address":"01:23:45:67:89:AB","name":"Polar H7"}
+{"status":"disconnecting","address":"01:23:45:67:89:AB","name":"Polar H7"}
+{"status":"disconnected","address":"01:23:45:67:89:AB","name":"Polar H7"}
 ```
 
 
@@ -247,7 +247,7 @@ bluetoothle.close(closeSuccessCallback, closeErrorCallback);
 
 ##### Success Return #####
 ```javascript
-{"status":"closed","address":"01:23:45:67:89:AB","name":"Polar H7"};
+{"status":"closed","address":"01:23:45:67:89:AB","name":"Polar H7"}
 ```
 
 
@@ -320,7 +320,7 @@ bluetoothle.services(servicesSuccessCallback, servicesErrorCallback, params);
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverServices","serviceUuids":["180D","180F"]};
+{"status":"discoverServices","serviceUuids":["180D","180F"]}
 ```
 
 
@@ -334,12 +334,12 @@ bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsError
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuids":["2A37","2A38"]};
+{"serviceUuid":"180D","characteristicUuids":["2A37","2A38"]}
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverCharacteristics","serviceUuid":"180D","characteristicUuids":["2A37","2A38"]};
+{"status":"discoverCharacteristics","serviceUuid":"180D","characteristicUuids":["2A37","2A38"]}
 ```
 
 
@@ -358,7 +358,7 @@ bluetoothle.characteristics(descriptorsSuccessCallback, descriptorsErrorCallback
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverDescriptors","serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuids":["2902"]};
+{"status":"discoverDescriptors","serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuids":["2902"]}
 ```
 
 
@@ -372,14 +372,14 @@ bluetoothle.read(readSuccessCallback, readErrorCallback, params);
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180F","characteristicUuid":"2A19"};
+{"serviceUuid":"180F","characteristicUuid":"2A19"}
 ```
 
 ##### Success Return #####
 Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
-{"status":"read","serviceUuid":"180F","characteristicUuid":"2A19","value":""};
+{"status":"read","serviceUuid":"180F","characteristicUuid":"2A19","value":""}
 ```
 
 
@@ -392,7 +392,7 @@ bluetoothle.subscribe(subscribeSuccessCallback, subscribeErrorCallback, params);
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37","isNotification":true};
+{"serviceUuid":"180D","characteristicUuid":"2A37","isNotification":true}
 ```
 * isNotification is only required on Android. True (or null) means notification will be enabled. False means indication will be enabled.
 
@@ -400,8 +400,8 @@ bluetoothle.subscribe(subscribeSuccessCallback, subscribeErrorCallback, params);
 Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
-{"status":"subscribed","serviceUuid":"180D","characteristicUuid":"2A37"};
-{"status":"subscribedResult","serviceUuid":"180D","characteristicUuid":"2A37","value":""};
+{"status":"subscribed","serviceUuid":"180D","characteristicUuid":"2A37"}
+{"status":"subscribedResult","serviceUuid":"180D","characteristicUuid":"2A37","value":""}
 ```
 
 
@@ -415,12 +415,12 @@ bluetoothle.unsubscribe(unsubscribeSuccessCallback, unsubscribeErrorCallback, pa
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37"};
+{"serviceUuid":"180D","characteristicUuid":"2A37"}
 ```
 
 ##### Success Return #####
 ```javascript
-{"status":"unsubscribed","serviceUuid":"180D","characteristicUuid":"2A37"};
+{"status":"unsubscribed","serviceUuid":"180D","characteristicUuid":"2A37"}
 ```
 
 
@@ -436,7 +436,7 @@ bluetoothle.write(writeSuccessCallback, writeErrorCallback, params);
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 ```javascript
 //Note, this example doesn't actually work since it's read only characteristic
-{"value":"","serviceUuid":"180F","characteristicUuid":"2A19"};
+{"value":"","serviceUuid":"180F","characteristicUuid":"2A19"}
 ```
 
 ##### Success Return #####
@@ -444,7 +444,7 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.encodedString
 
 ```javascript
 //Write
-{"status":"written","serviceUuid":"180F","characteristicUuid":"2A19","value":""};
+{"status":"written","serviceUuid":"180F","characteristicUuid":"2A19","value":""}
 ```
 
 
@@ -458,14 +458,14 @@ bluetoothle.read(readDescriptorSuccessCallback, readDescriptorErrorCallback, par
 
 ##### Params #####
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902"};
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902"}
 ```
 
 ##### Success Return #####
 Value is a base64 encoded string of read bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array.
 
 ```javascript
-{"status":"readDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":""};
+{"status":"readDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":""}
 ```
 
 
@@ -481,14 +481,14 @@ bluetoothle.write(writeDescriptorSuccessCallback, writeDescriptorErrorCallback, 
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":"EnableNotification"};
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":"EnableNotification"}
 ```
 
 ##### Success Return #####
 Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. 
 
 ```javascript
-{"status":"writeDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":"EnableNotification"};
+{"status":"writeDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":"EnableNotification"}
 ```
 
 
@@ -507,39 +507,42 @@ bluetoothle.rssi(rssiSuccessCallback, rssiErrorCallback);
 
 
 ### isInitialized ###
-Determine whether the adapter is initialized. No error callback
+Determine whether the adapter is initialized. No error callback. Returns true or false
 
 ```javascript
 bluetoothle.isInitialized(isInitializedCallback);
 ```
 
 ##### Success Return #####
-True or false
-
+```javascript
+{"isInitialized" : true }
+```
 
 
 ### isScanning ###
-Determine whether the adapter is initialized. No error callback
+Determine whether the adapter is initialized. No error callback. Returns true or false
 
 ```javascript
 bluetoothle.isScanning(isScanningCallback);
 ```
 
 ##### Return #####
-True or false
-
+```javascript
+{"isScanning" : true }
+```
 
 
 ### isConnected ###
-Determine whether the device is connected. No error callback
+Determine whether the device is connected. No error callback. Returns true or false
 
 ```javascript
 bluetoothle.isConnected(isConnectedCallback);
 ```
 
 ##### Return #####
-True or false
-
+```javascript
+{"isConnected" : true }
+```
 
 
 ### isDiscovered ###
@@ -550,7 +553,10 @@ bluetoothle.isDiscovered(isDiscoveredCallback);
 ```
 
 ##### Success Return #####
-True or false
+```javascript
+{"isDiscovered" : true }
+```
+
 
 
 
