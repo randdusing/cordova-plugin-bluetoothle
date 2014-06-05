@@ -5,6 +5,7 @@
 //Object Keys
 NSString *const keyStatus = @"status";
 NSString *const keyError = @"error";
+NSString *const keyRequest = @"request";
 NSString *const keyMessage = @"message";
 NSString *const keyName = @"name";
 NSString *const keyAddress = @"address";
@@ -122,7 +123,16 @@ NSString *const operationWrite = @"write";
         return;
     }
     
-    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin", CBCentralManagerOptionShowPowerAlertKey:[NSNumber numberWithBool:YES] }];
+    NSNumber* request = [NSNumber numberWithBool:NO];
+    
+    NSDictionary* obj = [self getArgsObject:command.arguments];
+    
+    if (obj != nil)
+    {
+        request = [self getRequest:obj];
+    }
+    
+    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin", CBCentralManagerOptionShowPowerAlertKey:request }];
     initCallback = command.callbackId;
 }
 
@@ -897,7 +907,7 @@ NSString *const operationWrite = @"write";
 
     if (error != nil)
     {
-        returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorInitialize, keyStatus, error, keyError, nil];
+        returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorInitialize, keyError, error, keyMessage, nil];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
     }
     else
@@ -1414,10 +1424,10 @@ NSString *const operationWrite = @"write";
 {
     if (centralManager == nil || centralManager.state != CBCentralManagerStatePoweredOn)
     {
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorInitialize, keyStatus, logNotInit, keyError, nil];
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorInitialize, keyError, logNotInit, keyMessage, nil];
         
         CDVPluginResult *pluginResult = nil;
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         
@@ -1637,7 +1647,7 @@ NSString *const operationWrite = @"write";
 
 -(NSUUID*) getAddress:(NSDictionary *)obj
 {
-    NSString* addressString = [obj valueForKey:(keyAddress)];
+    NSString* addressString = [obj valueForKey:keyAddress];
     
     if (addressString == nil)
     {
@@ -1650,6 +1660,23 @@ NSString *const operationWrite = @"write";
     }
     
     return [[NSUUID UUID] initWithUUIDString:addressString];
+}
+
+-(NSNumber*) getRequest:(NSDictionary *)obj
+{
+    NSNumber* request = [obj valueForKey:keyRequest];
+    
+    if (request == nil)
+    {
+        return [NSNumber numberWithBool:NO];
+    }
+    
+    if (![request isKindOfClass:[NSNumber class]])
+    {
+        return [NSNumber numberWithBool:NO];
+    }
+    
+    return request;
 }
 
 -(NSObject*) formatName:(NSString*)name

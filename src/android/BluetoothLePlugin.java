@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.util.Base64;
-import android.util.Log;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -25,7 +24,6 @@ import android.bluetooth.BluetoothProfile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.json.JSONArray;
@@ -85,6 +83,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyStatus = "status";
   private final String keyError = "error";
   private final String keyMessage = "message";
+  private final String keyRequest = "request";
   private final String keyName = "name";
   private final String keyAddress = "address";
   private final String keyRssi = "rssi";
@@ -210,7 +209,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
       cordova.getThreadPool().execute(new Runnable() {
         public void run() {
-          initializeAction(callbackContext);
+          initializeAction(args, callbackContext);
         }
       });
       return true;
@@ -323,8 +322,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     return false;
   }
   
-  private void initializeAction(CallbackContext callbackContext)
-  {
+  private void initializeAction(JSONArray args, CallbackContext callbackContext)
+  { 
     JSONObject returnObj = new JSONObject();
     
     //If Bluetooth is already enabled, return success
@@ -352,10 +351,29 @@ public class BluetoothLePlugin extends CordovaPlugin
     //If adapter is null or disabled...
     if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled())
     {
-      //Request Bluetooth to be enabled
-      initCallbackContext = callbackContext;
-      Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-      cordova.startActivityForResult(this, enableBtIntent, REQUEST_BT_ENABLE);
+      JSONObject obj = getArgsObject(args);
+      
+      boolean request = false;
+      
+      if (obj != null)
+      {
+      	request = getRequest(obj);
+      }
+      
+    	if (request)
+    	{
+	      //Request Bluetooth to be enabled
+	      initCallbackContext = callbackContext;
+	      Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+	      cordova.startActivityForResult(this, enableBtIntent, REQUEST_BT_ENABLE);
+    	}
+    	else
+    	{
+    		addProperty(returnObj, keyError, errorInitialize);
+      	addProperty(returnObj, keyMessage, logNotEnabled);
+        
+  	    callbackContext.error(returnObj);
+    	}
     }
     //Else successful
     else
@@ -2136,6 +2154,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     
     return address;
+  }
+  
+  private boolean getRequest(JSONObject obj)
+  {
+  	return obj.optBoolean(keyRequest, false);
   }
   
   private JSONObject getDiscovery()

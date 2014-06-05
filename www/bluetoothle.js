@@ -1,7 +1,7 @@
 var bluetoothleName = "BluetoothLePlugin";
 var bluetoothle = {
-  initialize: function(successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "initialize", []); 
+  initialize: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "initialize", [params]); 
   },
   startScan: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]); 
