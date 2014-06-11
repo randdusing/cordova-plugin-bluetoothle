@@ -132,10 +132,10 @@ For example:
 
 
 ## initialize ##
-Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it on Android devices. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true.
+Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it on Android devices. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `params` argument is optional and defaults to false.
 
 ```javascript
-bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback);
+bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, params);
 ```
 
 ##### Params #####
