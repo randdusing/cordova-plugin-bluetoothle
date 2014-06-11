@@ -132,7 +132,7 @@ For example:
 
 
 ## initialize ##
-Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it on Android devices. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `params` argument is optional and defaults to false.
+Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it on Android devices. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false.
 
 ```javascript
 bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, params);
@@ -176,7 +176,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 ```javascript
 {"status":"scanStarted"};
 {"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7","rssi":-5}; /* Android */
-{"status":"scanResult","address":"123234","name":"Polar H7","rssi":-5}; /* iOS */
+{"status":"scanResult","address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX","name":"Polar H7","rssi":-5}; /* iOS */
 ```
 
 
@@ -208,7 +208,7 @@ bluetoothle.connect(connectSuccessCallback, connectErrorCallback, params);
 
 ```javascript
 {"address":"01:23:45:67:89:AB"} /* Android */
-{"address":"123234"} /* iOS */
+{"address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"} /* iOS */
 ```
 
 ##### Success Return #####
