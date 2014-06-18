@@ -6,13 +6,14 @@
     NSString* initCallback;
     NSString* scanCallback;
     NSString* connectCallback;
-    NSString* operationCallback;
-    NSString* operationWriteCallback;
+    NSString* discoverCallback;
+    NSString* descriptorCallback;
+    NSString* rssiCallback;
+    NSMutableDictionary* operationCallbacks;
     
     CBCentralManager *centralManager;
     
     CBPeripheral* activePeripheral;
-    BOOL isSubscribed;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;
