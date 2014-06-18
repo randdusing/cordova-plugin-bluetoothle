@@ -10,16 +10,11 @@ using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Enumeration.Pnp;
-
-
 using Windows.Storage.Streams;
-
-
 namespace Cordova.Extension.Commands
 {
     class BluetoothLePlugin : BaseCommand
     {
-
         string deviceName;
         async void Initialize()
         {
@@ -42,18 +37,13 @@ namespace Cordova.Extension.Commands
                 deviceName = Encoding.UTF8.GetString(sensorData, 0, sensorData.Length);
             }
         }
-        
-
           public void services(string options)
-        {
-            
+        { 
           Initialize();
           while(deviceName==null)
           {
           }
             DispatchCommandResult(new PluginResult(PluginResult.Status.OK, deviceName));
         }
-
-
     }
 }
