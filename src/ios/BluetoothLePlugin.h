@@ -7,12 +7,10 @@
     NSString* scanCallback;
     NSString* connectCallback;
     NSString* operationCallback;
-    NSString* operationWriteCallback;
     
     CBCentralManager *centralManager;
     
     CBPeripheral* activePeripheral;
-    BOOL isSubscribed;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;
@@ -32,7 +30,6 @@
 - (void)write:(CDVInvokedUrlCommand *)command;
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command;
-- (void)rssi:(CDVInvokedUrlCommand *)command;
 - (void)isInitialized:(CDVInvokedUrlCommand *)command;
 - (void)isScanning:(CDVInvokedUrlCommand *)command;
 - (void)isConnected:(CDVInvokedUrlCommand *)command;

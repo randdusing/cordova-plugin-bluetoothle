@@ -1,7 +1,5 @@
 #import "BluetoothLePlugin.h"
 
-//TODO Allow for custom IDs, determine how UUIDs are returned
-
 //Object Keys
 NSString *const keyStatus = @"status";
 NSString *const keyError = @"error";
@@ -9,13 +7,12 @@ NSString *const keyMessage = @"message";
 NSString *const keyName = @"name";
 NSString *const keyAddress = @"address";
 NSString *const keyRssi = @"rssi";
-NSString *const keyAdvertisement = @"advertisement";
-NSString *const keyServiceUuids = @"serviceUuids";
-NSString *const keyCharacteristicUuids = @"characteristicUuids";
-NSString *const keyDescriptorUuids = @"descriptorUuids";
-NSString *const keyServiceUuid = @"serviceUuid";
-NSString *const keyCharacteristicUuid = @"characteristicUuid";
-NSString *const keyDescriptorUuid = @"descriptorUuid";
+NSString *const keyServiceAssignedNumbers = @"serviceAssignedNumbers";
+NSString *const keyCharacteristicAssignedNumbers = @"characteristicAssignedNumbers";
+NSString *const keyDescriptorAssignedNumbers = @"descriptorAssignedNumbers";
+NSString *const keyServiceAssignedNumber = @"serviceAssignedNumber";
+NSString *const keyCharacteristicAssignedNumber = @"characteristicAssignedNumber";
+NSString *const keyDescriptorAssignedNumber = @"descriptorAssignedNumber";
 NSString *const keyValue = @"value";
 NSString *const keyIsInitialized = @"isInitalized";
 NSString *const keyIsScanning = @"isScanning";
@@ -42,7 +39,6 @@ NSString *const statusUnsubscribed = @"unsubscribed";
 NSString *const statusWritten = @"written";
 NSString *const statusReadDescriptor = @"readDescriptor";
 NSString *const statusWrittenDescriptor = @"writtenDescriptor";
-NSString *const statusRssi = @"rssi";
 
 //Error Types
 NSString *const errorInitialize = @"initialize";
@@ -59,7 +55,6 @@ NSString *const errorSubscription = @"subscription";
 NSString *const errorWrite = @"write";
 NSString *const errorReadDescriptor = @"readDescriptor";
 NSString *const errorWriteDescriptor = @"writeDescriptor";
-NSString *const errorRssi = @"rssi";
 NSString *const errorNeverConnected = @"neverConnected";
 NSString *const errorIsNotDisconnected = @"isNotDisconnected";
 NSString *const errorIsNotConnected = @"isNotConnected";
@@ -141,13 +136,13 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     //Get an array of service assigned numbers to filter by
     NSDictionary *obj = [self getArgsObject:command.arguments];
     
-    NSMutableArray* serviceUuids = nil;
-    
-    if (obj != nil)
+    if ([self isNotArgsObject:obj :command])
     {
-        serviceUuids = [self getUuids:obj forType:keyServiceUuids];
+        return;
     }
-
+    
+    NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceAssignedNumbers];
+    
     scanCallback = command.callbackId;
     
     //Send scan started status
@@ -237,11 +232,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     activePeripheral = peripherals[0];
     [activePeripheral setDelegate:self];
     
-    NSObject* name = [self formatName:activePeripheral.name];
-    
     connectCallback = command.callbackId;
     
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusConnecting, keyStatus, name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusConnecting, keyStatus, activePeripheral.name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:true];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:connectCallback];
@@ -269,9 +262,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     connectCallback = command.callbackId;
     
-    NSObject* name = [self formatName:activePeripheral.name];
-    
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusConnecting, keyStatus, name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusConnecting, keyStatus, activePeripheral.name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:true];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:connectCallback];
@@ -297,26 +288,12 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSObject* name = [self formatName:activePeripheral.name];
+    connectCallback = command.callbackId;
     
-    if (activePeripheral.state == CBPeripheralStateConnecting)
-    {
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnecting, keyStatus, name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-        [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        
-        connectCallback = nil;
-    }
-    else
-    {
-        connectCallback = command.callbackId;
-        
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnecting, keyStatus, name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-        [pluginResult setKeepCallbackAsBool:true];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:connectCallback];
-    }
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnecting, keyStatus, activePeripheral.name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:true];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:connectCallback];
     
     [centralManager cancelPeripheralConnection:activePeripheral];
 }
@@ -339,10 +316,8 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSObject* name = [self formatName:activePeripheral.name];
-    
     //Create dictionary with status message and optionally add device information
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: statusClosed, keyStatus, name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: statusClosed, keyStatus, activePeripheral.name, keyName, [activePeripheral.identifier UUIDString], keyAddress, nil];
 
     activePeripheral = nil;
     connectCallback = nil;
@@ -387,7 +362,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceUuids];
+    NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceAssignedNumbers];
     
     operationCallback = command.callbackId;
     
@@ -427,7 +402,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableArray* characteristicUuids = [self getUuids:obj forType:keyCharacteristicUuids];
+    NSMutableArray* characteristicUuids = [self getUuids:obj forType:keyCharacteristicAssignedNumbers];
     
     operationCallback = command.callbackId;
     
@@ -519,9 +494,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
+    [activePeripheral readValueForCharacteristic:characteristic];
     
-    [activePeripheral readValueForCharacteristic:characteristic]; 
+    operationCallback = command.callbackId;
 }
 
 - (void)subscribe:(CDVInvokedUrlCommand *)command
@@ -561,10 +536,10 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     {
         return;
     }
-    isSubscribed = YES;
-    operationCallback = command.callbackId;
     
     [activePeripheral setNotifyValue:true forCharacteristic:characteristic];
+    
+    operationCallback = command.callbackId;
 }
 
 - (void)unsubscribe:(CDVInvokedUrlCommand *)command
@@ -605,10 +580,10 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     {
         return;
     }
-    isSubscribed = NO;
-    operationCallback = command.callbackId;
     
-    [activePeripheral setNotifyValue:false forCharacteristic:characteristic]; 
+    [activePeripheral setNotifyValue:false forCharacteristic:characteristic];
+    
+    operationCallback = command.callbackId;
 }
 
 - (void)write:(CDVInvokedUrlCommand *)command
@@ -661,10 +636,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
-    operationWriteCallback= command.callbackId;
-    
     [activePeripheral writeValue:value forCharacteristic:characteristic type:CBCharacteristicWriteWithResponse];
+    
+    operationCallback = command.callbackId;
 }
 
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command
@@ -713,9 +687,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
-    
     [activePeripheral readValueForDescriptor:descriptor];
+    
+    operationCallback = command.callbackId;
 }
 
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command
@@ -775,31 +749,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    operationCallback = command.callbackId;
-    
     [activePeripheral writeValue:value forDescriptor:descriptor];
-}
-
-- (void)rssi:(CDVInvokedUrlCommand *)command
-{
-    if ([self isNotInitialized:command])
-    {
-        return;
-    }
-    
-    if ([self wasNeverConnected:command])
-    {
-        return;
-    }
-    
-    if ([self isNotConnected:command])
-    {
-        return;
-    }
     
     operationCallback = command.callbackId;
-    
-    [activePeripheral readRSSI];
 }
 
 - (void)isInitialized:(CDVInvokedUrlCommand *)command
@@ -913,10 +865,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSObject* name = [self formatName:peripheral.name];
-    NSData* data = [advertisementData valueForKey:CBAdvertisementDataManufacturerDataKey];
-    NSString* dataString = [data base64EncodedStringWithOptions:0];
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: statusScanResult, keyStatus, name, keyName, peripheral.identifier.UUIDString, keyAddress, RSSI, keyRssi, dataString, keyAdvertisement, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusScanResult, keyStatus, peripheral.name, keyName, peripheral.identifier.UUIDString, keyAddress, RSSI, keyRssi, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:true];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:scanCallback];
@@ -930,9 +879,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSObject* name = [self formatName:peripheral.name];
-    
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusConnected, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusConnected, keyStatus, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     //Keep in case device gets disconnected without user initiation
     [pluginResult setKeepCallbackAsBool:true];
@@ -941,6 +888,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
+    NSLog(@"connected fail");
     if (connectCallback == nil)
     {
         return;
@@ -956,14 +904,13 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
+    NSLog(@"Disconnected");
     if (connectCallback == nil)
     {
         return;
     }
     
-    NSObject* name = [self formatName:peripheral.name];
-    
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnected, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDisconnected, keyStatus, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:connectCallback];
@@ -974,16 +921,15 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 //Peripheral Delegates
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error
 {
+    NSLog(@"discovered service");
     if (operationCallback == nil)
     {
         return;
     }
     
-    NSObject* name = [self formatName:peripheral.name];
-    
     if (error != nil)
     {
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverServices, keyError, name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverServices, keyError, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -999,7 +945,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredServices, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, services, keyServiceUuids, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredServices, keyStatus, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, services, keyServiceAssignedNumbers, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1014,11 +960,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSObject* name = [self formatName:peripheral.name];
-    
     if (error != nil)
     {
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverCharacteristics, keyError, name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverCharacteristics, keyError, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1034,7 +978,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredCharacteristics, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, characteristics, keyCharacteristicUuids, [service.UUID representativeString], keyServiceUuid, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredCharacteristics, keyStatus, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, characteristics, keyCharacteristicAssignedNumbers, [service.UUID representativeString], keyServiceAssignedNumber, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1049,11 +993,9 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSObject* name = [self formatName:peripheral.name];
-    
     if (error != nil)
     {
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverDescriptors, keyError, name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscoverDescriptors, keyError, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, error.description, keyMessage, nil];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1069,7 +1011,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     }
     
     
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredDescriptors, keyStatus, name, keyName, [peripheral.identifier UUIDString], keyAddress, descriptors, keyDescriptorUuids, [characteristic.UUID representativeString], keyCharacteristicUuid, [characteristic.service.UUID representativeString], keyServiceUuid, nil];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusDiscoveredDescriptors, keyStatus, peripheral.name, keyName, [peripheral.identifier UUIDString], keyAddress, descriptors, keyDescriptorAssignedNumbers, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, [characteristic.service.UUID representativeString], keyServiceAssignedNumber, nil];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
@@ -1084,7 +1026,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, nil];
     
     if (error != nil)
     {
@@ -1114,7 +1056,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:true];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        
     }
     else
     {
@@ -1137,7 +1078,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     CBCharacteristic* characteristic = descriptor.characteristic;
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, [descriptor.UUID representativeString], keyDescriptorUuid, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, [descriptor.UUID representativeString], keyDescriptorAssignedNumber, nil];
     
     if (error != nil)
     {
@@ -1170,7 +1111,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, nil];
     
     if (error != nil)
     {
@@ -1187,13 +1128,12 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     [self addValue:characteristic.value toDictionary:returnObj];
     
     [returnObj setValue:statusWritten forKey:keyStatus];
-    if(!isSubscribed){
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-        [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-
-        operationCallback = nil;
-    }
+    
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
+    
+    operationCallback = nil;
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error
@@ -1205,7 +1145,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     CBCharacteristic* characteristic = descriptor.characteristic;
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, [descriptor.UUID representativeString], keyDescriptorUuid, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, [descriptor.UUID representativeString], keyDescriptorAssignedNumber, nil];
     
     if (error != nil)
     {
@@ -1236,7 +1176,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return;
     }
     
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceUuid, [characteristic.UUID representativeString], keyCharacteristicUuid, nil];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionaryWithObjectsAndKeys: [characteristic.service.UUID representativeString], keyServiceAssignedNumber, [characteristic.UUID representativeString], keyCharacteristicAssignedNumber, nil];
     
     if (error != nil)
     {
@@ -1265,31 +1205,6 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
         operationCallback = nil;
     }
-}
-
-- (void)peripheralDidUpdateRSSI:(CBPeripheral *)peripheral error:(NSError *)error
-{
-    if (operationCallback == nil)
-    {
-        return;
-    }
-    
-    if (error != nil)
-    {
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorRssi, keyError, error.description, keyMessage, nil];
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
-        [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-        operationCallback = nil;
-        return;
-    }
-    
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: peripheral.RSSI, keyRssi, statusRssi, keyStatus, nil];
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:operationCallback];
-    
-    operationCallback = nil;
 }
 
 //Helpers to check conditions and send callbacks
@@ -1442,16 +1357,11 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 
 -(NSData*) getValue:(NSDictionary *) obj
 {
-    NSString* string = [obj valueForKey:keyValue];
+    NSString* string = [obj objectForKey:keyValue];
     
     if (string == nil)
     {
       return nil;
-    }
-    
-    if (![string isKindOfClass:[NSString class]])
-    {
-        return nil;
     }
     
     NSData *data = [[NSData alloc] initWithBase64EncodedString:string options:0];
@@ -1480,17 +1390,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
 {
     NSMutableArray* uuids = [[NSMutableArray alloc] init];
     
-    NSArray* checkUuids = [dictionary valueForKey:type];
-    
-    if (checkUuids == nil)
-    {
-        return nil;
-    }
-    
-    if (![checkUuids isKindOfClass:[NSArray class]])
-    {
-        return nil;
-    }
+    NSArray* checkUuids = [dictionary objectForKey:type];
     
     for (NSString* checkUuid in checkUuids)
     {
@@ -1519,22 +1419,7 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
         return nil;
     }
     
-    if (![addressString isKindOfClass:[NSString class]])
-    {
-        return nil;
-    }
-    
     return [[NSUUID UUID] initWithUUIDString:addressString];
-}
-
--(NSObject*) formatName:(NSString*)name
-{
-    if (name != nil)
-    {
-        return name;
-    }
-    
-    return [NSNull null];
 }
 
 -(CBService*) getService:(NSDictionary *)obj
@@ -1544,16 +1429,11 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj valueForKey:keyServiceUuid];
+    NSString* uuidString = [obj objectForKey:keyServiceAssignedNumber];
     
     if (uuidString == nil)
     {
       return nil;
-    }
-    
-    if (![uuidString isKindOfClass:[NSString class]])
-    {
-        return nil;
     }
     
     CBUUID* uuid = [CBUUID UUIDWithString:uuidString];
@@ -1583,16 +1463,11 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj valueForKey:keyCharacteristicUuid];
+    NSString* uuidString = [obj objectForKey:keyCharacteristicAssignedNumber];
     
     if (uuidString == nil)
     {
       return nil;
-    }
-    
-    if (![uuidString isKindOfClass:[NSString class]])
-    {
-        return nil;
     }
     
     CBUUID* uuid = [CBUUID UUIDWithString:uuidString];
@@ -1622,16 +1497,11 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
       return nil;
     }
     
-    NSString* uuidString = [obj valueForKey:keyDescriptorUuid];
+    NSString* uuidString = [obj objectForKey:keyDescriptorAssignedNumber];
     
     if (uuidString == nil)
     {
       return nil;
-    }
-    
-    if (![uuidString isKindOfClass:[NSString class]])
-    {
-        return nil;
     }
     
     CBUUID* uuid = [CBUUID UUIDWithString:uuidString];
@@ -1653,5 +1523,4 @@ NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not f
     
     return descriptor;
 }
-
 @end
