@@ -96,7 +96,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyCharacteristics = "characteristics";
   private final String keyDescriptors = "descriptors";
   private final String keyValue = "value";
-  private final String keyIsInitialized = "isInitalized";
+  private final String keyIsInitialized = "isInitialized";
   private final String keyIsScanning = "isScanning";
   private final String keyIsConnected = "isConnected";
   private final String keyIsDiscovered = "isDiscovered";
