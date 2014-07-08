@@ -278,6 +278,7 @@ Descriptor Object:
 
 ```javascript
 {
+  "status" : "discovered",
   "address":"xx:xx:xx:xx:xx:xx",
   "name":"Polar H7",
   "services":[
