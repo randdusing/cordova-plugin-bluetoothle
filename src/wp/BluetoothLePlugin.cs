@@ -12,26 +12,35 @@ using WPCordovaClassLib.Cordova;
 using WPCordovaClassLib.Cordova.Commands;
 using WPCordovaClassLib.Cordova.JSON;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Windows.Threading;
 namespace Cordova.Extension.Commands
 {
     public class BluetoothLePlugin : BaseCommand
     {
+        private DispatcherTimer timer;
         DeviceInformationCollection bleDevices;
         string DeviceAddress = null;
         string DeviceName = null;
+        int NotifyCharaIndex = 0;
+        public string response = "";
+        GattCommunicationStatus xxxx;
+        bool ResponseScaning = true;
         struct  DeviceServices
         {
             public string StrUuid;
-            public int index;
         }
         struct CharacteristicWithValue
         {
             public GattCharacteristic GattCharacteristic { get; set; }
-            public byte[] Value { get; set; }
+            public string Value;
         }
-        CharacteristicWithValue currentDeviceCharacteristic = new CharacteristicWithValue();
+        CharacteristicWithValue [] currentDeviceCharacteristic;
+        CharacteristicWithValue currentDeviceCharacteristicConfig;
         BluetoothLEDevice currentDevice { get; set; }
         DeviceServices[] currentDeviceServices;
+        List<string> regex_charauuid = new List<string>();
+        List<string> currentDeviceCharacteristicUUid = new List<string>();
         public async void initialize(string options)
         {
             bleDevices = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(GattServiceUuids.GenericAccess));
@@ -51,25 +60,47 @@ namespace Cordova.Extension.Commands
             currentDevice = bleDevice;
             DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"connected\"}"));
         }
-        public void discover(string options)
+        public void services(string options)
         {
             DeviceAddress = currentDevice.BluetoothAddress.ToString();
             DeviceName = currentDevice.Name.ToString();
             currentDeviceServices = new DeviceServices[currentDevice.GattServices.Count];
             //List<string> serviceList = new List<string>();
+            string args = null;
+            bool uuidsaccess=false;
+            try
+            {
+                args = WPCordovaClassLib.Cordova.JSON.JsonHelper.Deserialize<string[]>(options)[0];
+            }
+            catch (FormatException)
+            {
+            }
             string JsonString = null;
+            char[] trimarray = { '\\', '[', ']', '"', ':' };
+            string regex_servuuid = Regex.Match(args, @":\[""([0-9a-zA-Z_\-]+)""").Value.Trim(trimarray);
+            //ushort servuuid = Convert.ToUInt16(regex_servuuid, 16);
             for (int i=0;i<currentDevice.GattServices.Count;i++)
             {
                 //serviceList.Add(service.Uuid.ToString());
-                currentDeviceServices[i].StrUuid = currentDevice.GattServices[i].Uuid.ToString().Substring(4,4);
-                currentDeviceServices[i].index = i;
+                //currentDeviceServices[i].StrUuid = currentDevice.GattServices[i].Uuid.ToString().Substring(4,4);
+                currentDeviceServices[i].StrUuid = currentDevice.GattServices[i].Uuid.ToString();
+                if(regex_servuuid==currentDeviceServices[i].StrUuid)
+                {
+                    uuidsaccess=true;
+                }
                 if (i == currentDevice.GattServices.Count-1)
                     JsonString = JsonString +"\""+currentDeviceServices[i].StrUuid+"\"";
                 else
                     JsonString = JsonString + "\"" + currentDeviceServices[i].StrUuid + "\",";
             }
-
-            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"discovered\",\"serviceUuids\":[" + JsonString + "]}"));
+            if (uuidsaccess)
+            {
+                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"discoveredServices\",\"serviceUuids\":[" + JsonString + "]}"));
+            }
+            else
+            {
+                DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"nodiscoveredServices\",\"serviceUuids\":[" + null + "]}"));
+            }
         }
         public void characteristics(string options)
         {
@@ -82,73 +113,82 @@ namespace Cordova.Extension.Commands
             {
             }
             string JsonString = null;
+            int index = 0;
             char[] trimarray = {'\\','[',']','"',':'};
-            string regex_servshortuuid = Regex.Match(args, @":""(\w+)""").Value.Trim(trimarray);
-            ushort servshortuuid = Convert.ToUInt16(regex_servshortuuid, 16);
-            string regex_charashortuuid = Regex.Match(args, @"\[""(\w+)""\]").Value.Trim(trimarray);
-            ushort charashortuuid = Convert.ToUInt16(regex_charashortuuid, 16);
-            for(int i=0;i<currentDevice.GattServices.Count;i++)
+            Regex r = new Regex(@"""([0-9a-zA-Z_\-]+)""");
+            Match m = r.Match(args);
+            bool scanning = true;
+            string value=m.Value.Trim(trimarray);
+            string regex_servuuid = "";
+            while (scanning)
             {
-                if (currentDeviceServices[i].StrUuid == regex_servshortuuid)
+                switch(value)
                 {
-                    currentDeviceCharacteristic.GattCharacteristic = currentDevice.GattServices[i].GetCharacteristics(GattCharacteristic.ConvertShortIdToUuid(charashortuuid))[0];
+                    case "serviceUuid":
+                        {
+                            m = m.NextMatch();
+                            value = m.Value.Trim(trimarray);
+                            regex_servuuid = value;
+                            m = m.NextMatch();
+                            value = m.Value.Trim(trimarray);
+                            break;
+                        }
+                    case "characteristicUuids":
+                        {
+                            m = m.NextMatch();
+                            value = m.Value.Trim(trimarray);
+                            break;
+                        }
+                    default:
+                        {
+                            value = m.Value.Trim(trimarray);
+                            if (value == "")
+                            {
+                                scanning = false;
+                                break;
+                            }
+                            else
+                            {
+                                regex_charauuid.Add(value);
+                                m = m.NextMatch();
+                                break;
+                            }
+                        }
                 }
             }
-            string currentDeviceCharacteristicUUid = currentDeviceCharacteristic.GattCharacteristic.Uuid.ToString().Substring(4, 4);
-            JsonString = JsonString + "\"" + currentDeviceCharacteristicUUid + "\"";
-            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"discoveredCharacteristics\",\"serviceUuids\":\"" + regex_servshortuuid + "\",\"characteristicUuids\":[" + JsonString + "]}"));
-        }
-        public async Task<byte[]> GetValue()
-        {
-            try
+            for (int i = 0; i < currentDeviceServices.Length; i++)
             {
-                    //If the characteristic supports Notify then tell it to notify us.
-                    try
+                if (currentDeviceServices[i].StrUuid == regex_servuuid)
+                {
+                    index = i;
+                }
+            }
+            currentDeviceCharacteristic = new CharacteristicWithValue[regex_charauuid.Count];
+            for (int i = 0; i < regex_charauuid.Count; i++)
+            {
+                currentDeviceCharacteristic[i].GattCharacteristic = currentDevice.GattServices[index].GetCharacteristics(new Guid(regex_charauuid[i]))[0];
+                currentDeviceCharacteristicUUid.Add(currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString());
+                try
+                {
+                    if (currentDeviceCharacteristic[i].GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                     {
-                        if (currentDeviceCharacteristic.GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
-                        {
-                            currentDeviceCharacteristic.GattCharacteristic.ValueChanged += characteristics_ValueChanged;
-                            await currentDeviceCharacteristic.GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                        }
+                        NotifyCharaIndex = i;
                     }
-                    catch { }
+                }
+                catch { }
 
-                    //Read
-                    if (currentDeviceCharacteristic.GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read))
-                    {
-                        var result = await currentDeviceCharacteristic.GattCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-
-                        if (result.Status == GattCommunicationStatus.Success)
-                        {
-                            byte[] forceData = new byte[result.Value.Length];
-                            DataReader.FromBuffer(result.Value).ReadBytes(forceData);
-                            return forceData;
-                        }
-                        else
-                        {
-                            //await new MessageDialog(result.Status.ToString()).ShowAsync();
-                        }
-                    }
-               
+                if (i == regex_charauuid.Count - 1)
+                {
+                    JsonString = JsonString + "\"" + currentDeviceCharacteristicUUid[i] + "\"";
+                }
+                else
+                {
+                    JsonString = JsonString + "\"" + currentDeviceCharacteristicUUid[i] + "\",";
+                }
             }
-            catch (Exception ex)
-            {
-                //Debug.WriteLine(ex.Message);
-            }
-            return null;
+            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"discoveredCharacteristics\",\"serviceUuids\":\"" + regex_servuuid + "\",\"characteristicUuids\":[" + JsonString + "]}"));
         }
-        void characteristics_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
-        {
-            byte[] data = new byte[args.CharacteristicValue.Length];
-            Windows.Storage.Streams.DataReader.FromBuffer(args.CharacteristicValue).ReadBytes(data);
-
-            //Update properties
-            if (sender.Uuid == GattCharacteristicUuids.HeartRateMeasurement)
-            {
-                currentDeviceCharacteristic.Value = data;
-            }
-        }
-        public void subscribe(string options)
+        public async void subscribe(string options)
         {
             string args = null;
             try
@@ -160,19 +200,63 @@ namespace Cordova.Extension.Commands
             }
             string JsonString = null;
             char[] trimarray = { '\\', '[', ']', '"', ':' };
-            string regex_servshortuuid = Regex.Match(args, @":""(\w+)""").Value.Trim(trimarray);
-            ushort servshortuuid = Convert.ToUInt16(regex_servshortuuid, 16);
-            Regex r = new Regex( @"""(\w+)""");
+            string regex_servuuid = Regex.Match(args, @":""([0-9a-zA-Z_\-]+)""").Value.Trim(trimarray);
+            Regex r = new Regex(@"""([0-9a-zA-Z_\-]+)""");
             Match m = r.Match(args);
             while (m.Value.Trim(trimarray) != "characteristicUuid")
             {
                 m = m.NextMatch();
             }
             m = m.NextMatch();
-            string regex_charashortuuid = m.Value.Trim(trimarray);
-            //string regex_charashortuuid = Regex.Match(args, @"""(\w+)""").Value.Trim(trimarray);
-            ushort charashortuuid = Convert.ToUInt16(regex_charashortuuid, 16);
+            string regex_charauuid = m.Value.Trim(trimarray);
+            try
+            {
+                if (currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                {
+                    currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.ValueChanged += characteristics_ValueChanged;
+                    xxxx = await currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                }
+            }
+            catch { }
+            byte[] data = new byte[] { (byte)'A', (byte)'T', (byte)'I' };
+            xxxx = await currentDeviceCharacteristic[1].GattCharacteristic.WriteValueAsync(data.AsBuffer(), GattWriteOption.WriteWithoutResponse);
+            currentDeviceCharacteristic[NotifyCharaIndex].Value = "";
+            //System.Threading.Thread.Sleep(10000);
+            JsonString = JsonString + "\"" + currentDeviceCharacteristic[NotifyCharaIndex].Value + "\"";
 
+            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"subscribedResult\",\"value\":[" + JsonString + "]}"));
+
+
+        }
+        void characteristics_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
+        {
+            //Update properties
+            if (sender.Uuid == currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.Uuid)
+            {
+                byte[] data = new byte[args.CharacteristicValue.Length];
+                Windows.Storage.Streams.DataReader.FromBuffer(args.CharacteristicValue).ReadBytes(data);
+                currentDeviceCharacteristic[NotifyCharaIndex].Value = currentDeviceCharacteristic[NotifyCharaIndex].Value + System.Text.Encoding.UTF8.GetString(data, 0, (int)args.CharacteristicValue.Length);
+            }
+        }
+        public async void read(string option)
+        {
+            try
+            {
+                    //Read
+                    if (currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read))
+                    {
+                        var result = await currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
+
+                        if (result.Status == GattCommunicationStatus.Success)
+                        {
+                            byte[] forceData = new byte[result.Value.Length];
+                            DataReader.FromBuffer(result.Value).ReadBytes(forceData);
+                        }
+                    }
+            }
+            catch (Exception ex)
+            {
+            }
         }
     }
 }
