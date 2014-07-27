@@ -77,7 +77,6 @@ $('body').on('click', '#Write', function () {
 });
 function initializeSuccess(obj)
 {
-    alert(obj.status);
     if (obj.status == "initialized")
   {
         console.log("Bluetooth initialized successfully");
@@ -210,6 +209,7 @@ function subscribeSuccess(obj) {
     }
     else if (obj.status == "subscribed") {
         console.log("Subscription started");
+        alert(obj.status);
     }
     else {
         console.log("Unexpected subscribe status: " + obj.status);
