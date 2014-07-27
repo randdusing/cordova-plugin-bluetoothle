@@ -27,6 +27,7 @@ namespace Cordova.Extension.Commands
         string DeviceName = null;
         int NotifyCharaIndex = 0;
         int waiting_time=50;
+        string callbackId_sub="";
         struct  DeviceServices
         {
             public string StrUuid;
@@ -192,29 +193,36 @@ namespace Cordova.Extension.Commands
         }
         public async void subscribe(string options)
         {
-            string args = null;
+            string[] args = null;
             try
             {
-                args = WPCordovaClassLib.Cordova.JSON.JsonHelper.Deserialize<string[]>(options)[0];
+                args = WPCordovaClassLib.Cordova.JSON.JsonHelper.Deserialize<string[]>(options);
             }
             catch (FormatException)
             {
             }
             string JsonString = null;
             char[] trimarray = { '\\', '[', ']', '"', ':' };
-            string regex_servuuid = Regex.Match(args, @":""([0-9a-zA-Z_\-\s]+)""").Value.Trim(trimarray);
+            string regex_servuuid = Regex.Match(args[0], @":""([0-9a-zA-Z_\-\s]+)""").Value.Trim(trimarray);
             Regex r = new Regex(@"""([0-9a-zA-Z_\-\s]+)""");
-            Match m = r.Match(args);
+            Match m = r.Match(args[0]);
             while (m.Value.Trim(trimarray) != "characteristicUuid")
             {
                 m = m.NextMatch();
             }
             m = m.NextMatch();
             string regex_charauuid = m.Value.Trim(trimarray);
-            await currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-            Thread.Sleep(waiting_time);
-            currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.ValueChanged += this.characteristics_ValueChanged;
-            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"subscribedResult\",\"value\":\"\"}"));
+             Deployment.Current.Dispatcher.BeginInvoke(async() =>
+            {
+                await currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                Thread.Sleep(waiting_time);
+                currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.ValueChanged += this.characteristics_ValueChanged;
+            });
+             callbackId_sub = args[1];
+            //DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"subscribedResult\",\"value\":\"\"}"));
+            PluginResult result = new PluginResult(PluginResult.Status.OK, "{\"status\":\"subscribed\",\"value\":\"\"}");
+            result.KeepCallback = true;
+            DispatchCommandResult(result, callbackId_sub);
         }
         public async void write(string options)
         {
@@ -246,10 +254,17 @@ namespace Cordova.Extension.Commands
         }
         public void characteristics_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs EventArgs)
         {
+            string JsonString=null;
             byte[] data = new byte[EventArgs.CharacteristicValue.Length];
             DataReader.FromBuffer(EventArgs.CharacteristicValue).ReadBytes(data);
             Thread.Sleep(waiting_time);
-            currentDeviceCharacteristic[NotifyCharaIndex].Value = currentDeviceCharacteristic[NotifyCharaIndex].Value + System.Text.Encoding.UTF8.GetString(data, 0, (int)EventArgs.CharacteristicValue.Length);
+            //currentDeviceCharacteristic[NotifyCharaIndex].Value = currentDeviceCharacteristic[NotifyCharaIndex].Value + System.Text.Encoding.UTF8.GetString(data, 0, (int)EventArgs.CharacteristicValue.Length);
+            JsonString = "\"" + System.Text.Encoding.UTF8.GetString(data, 0, (int)EventArgs.CharacteristicValue.Length)+ "\"";
+            JsonString = Regex.Replace(JsonString, "\n", "\\n");
+            JsonString = Regex.Replace(JsonString, "\r", "\\r");
+            PluginResult result = new PluginResult(PluginResult.Status.OK, "{\"status\":\"subscribedResult\",\"value\":" + JsonString + "}");
+            result.KeepCallback = true;
+            DispatchCommandResult(result, callbackId_sub);
         }
         public async void unsubscribe(string options)
         {
@@ -273,22 +288,11 @@ namespace Cordova.Extension.Commands
             }
             m = m.NextMatch();
             string regex_charauuid = m.Value.Trim(trimarray);
-            bool doExit = false;
             DateTime startTime = DateTime.Now;
-            while (currentDeviceCharacteristic[NotifyCharaIndex].Value.LastIndexOf('>') == -1 && doExit == false)
-            {
-                if (DateTime.Now.Subtract(startTime).TotalMilliseconds > 5000)
-                {
-                    doExit = true;
-                }
-            }
             await currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
             Thread.Sleep(waiting_time);
             currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.ValueChanged -= this.characteristics_ValueChanged;
-            JsonString = "\"" + currentDeviceCharacteristic[NotifyCharaIndex].Value + "\"";
-            JsonString = Regex.Replace(JsonString, "\n", "\\n");
-            JsonString = Regex.Replace(JsonString, "\r", "\\r");
-            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"unsubscribed\",\"value\":"+JsonString +"}"));
+            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"unsubscribed\",\"value\":\"\"}"));
         }
         public async void read(string option)
         {
