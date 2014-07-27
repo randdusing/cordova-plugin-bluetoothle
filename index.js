@@ -18,7 +18,6 @@
  */
 var addressKey = "address";
 var response = "";
-var command = "";
 
 //var heartRateServiceUuid = "180d";
 var UartServiceUuid = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
@@ -69,9 +68,12 @@ $('body').on('click', '#Start', function () {
     bluetoothle.initialize(initializeSuccess, initializeError);
 });
 $('body').on('click', '#Write', function () {
-    command = $('#fname').val();
-    var paramsObj = { "serviceUuid": UartServiceUuid, "characteristicUuid": TxCharacteristicUuid };
-    bluetoothle.subscribe(subscribeSuccess, subscribeError, paramsObj);
+    var command = $('#fname').val();
+    var paramsObj = { "value": command, "serviceUuid": UartServiceUuid, "characteristicUuid": RxCharacteristicUuid };
+    if (command != "") {
+        document.getElementById("result").innerHTML = "";
+        bluetoothle.write(writeSuccess, writeError, paramsObj);
+    }
 });
 function initializeSuccess(obj)
 {
@@ -184,7 +186,7 @@ function characteristicsHeartSuccess(obj) {
                 console.log("Subscribing to heart rate for 5 seconds");
                 var paramsObj = { "serviceUuid": UartServiceUuid, "characteristicUuid": TxCharacteristicUuid };
                 bluetoothle.subscribe(subscribeSuccess, subscribeError, paramsObj);
-                setTimeout(unsubscribeDevice, 5000);
+                //setTimeout(unsubscribeDevice, 5000);
                 return;
             }
         }
@@ -202,10 +204,10 @@ function characteristicsHeartError(obj) {
 }
 function subscribeSuccess(obj) {
     if (obj.status == "subscribedResult") {
-        var paramsObj = { "value": command, "serviceUuid": UartServiceUuid, "characteristicUuid": RxCharacteristicUuid };
-        if (command != "") {
-            bluetoothle.write(writeSuccess, writeError, paramsObj);
-        }
+        //alert(obj.value);
+        document.getElementById("result").innerHTML += obj.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+        //var str = response.replace(/(?:\r\n|\r|\n)/g, '<br />')
+        //$('#result').html(str);
         return;
     }
     else if (obj.status == "subscribed") {
@@ -225,7 +227,7 @@ function subscribeError(obj) {
 
 function writeSuccess(obj) {
     if (obj.status == "written") {
-        unsubscribeDevice();
+        //unsubscribeDevice();
     }
     else {
         console.log("Unexpected write status: " + obj.status);
@@ -249,9 +251,8 @@ function unsubscribeSuccess(obj)
     if (obj.status == "unsubscribed")
     {
         console.log("Unsubscribed device");
-        console.log("Reading client configuration descriptor");
-        alert(obj.value);
-        document.getElementById("result").innerHTML = obj.value;
+        //console.log("Reading client configuration descriptor");
+
         //var paramsObj = { "serviceUuid": UartServiceUuid, "characteristicUuid": TxCharacteristicUuid, "descriptorUuid": clientCharacteristicConfigDescriptorUuid };
         //bluetoothle.readDescriptor(readDescriptorSuccess, readDescriptorError, paramsObj);
         return;
