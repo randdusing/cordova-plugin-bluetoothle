@@ -9,6 +9,7 @@ Bluetooth LE PhoneGap Plugin
 * iOS 5 or higher
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
 * List of devices: http://www.bluetooth.com/Pages/Bluetooth-Smart-Devices-List.aspx
+* Windows Phone 8.1 (Tested on Nokia Lumia 630)
 
 
 ## Limitations / Issues ##
@@ -23,6 +24,7 @@ Bluetooth LE PhoneGap Plugin
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
 * Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android. iOS doesn't appear to use permissions.
+* To build for wp8.1 need some changes.
 
 ## Discovery Android vs iOS ##
 
