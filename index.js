@@ -71,7 +71,7 @@ $('body').on('click', '#Write', function () {
     var command = $('#fname').val();
     var paramsObj = { "value": command, "serviceUuid": UartServiceUuid, "characteristicUuid": RxCharacteristicUuid };
     if (command != "") {
-        document.getElementById("result").innerHTML = "";
+        response = "";
         bluetoothle.write(writeSuccess, writeError, paramsObj);
     }
 });
@@ -204,11 +204,9 @@ function characteristicsHeartError(obj) {
 }
 function subscribeSuccess(obj) {
     if (obj.status == "subscribedResult") {
-        //alert(obj.value);
-        document.getElementById("result").innerHTML += obj.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
-        //var str = response.replace(/(?:\r\n|\r|\n)/g, '<br />')
+        response += obj.value;
         //$('#result').html(str);
-        return;
+        print_resault(response);
     }
     else if (obj.status == "subscribed") {
         console.log("Subscription started");
@@ -352,4 +350,12 @@ function closeSuccess(obj)
 function closeError(obj)
 {
   console.log("Close error: " + obj.error + " - " + obj.message);
+}
+function print_resault(result)
+{
+    if (result.indexOf(">")!=-1)
+    {
+        document.getElementById("result").innerHTML = result.replace(/(?:\r\n|\r|\n)/g, '<br />');
+    }
+    return;
 }
