@@ -173,7 +173,7 @@ namespace Cordova.Extension.Commands
                 //{
                     if (currentDeviceCharacteristic[i].GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                     {
-                        NotifyCharaIndex = i;    
+                        NotifyCharaIndex = i;
                         //currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.ValueChanged += characteristics_ValueChanged;
                         //xxxx = await currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
                     }
@@ -250,7 +250,7 @@ namespace Cordova.Extension.Commands
             data = System.Text.Encoding.UTF8.GetBytes(command);
             await currentDeviceCharacteristic[1].GattCharacteristic.WriteValueAsync(data.AsBuffer(), GattWriteOption.WriteWithoutResponse);
             Thread.Sleep(waiting_time);
-            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"written\",\"value\":\"\"}"));   
+            DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"written\",\"value\":\"\"}"));
         }
         public void characteristics_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs EventArgs)
         {
