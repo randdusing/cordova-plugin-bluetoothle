@@ -1,7 +1,5 @@
 #import "BluetoothLePlugin.h"
 
-//TODO Allow for custom IDs, determine how UUIDs are returned
-
 //Object Keys
 NSString *const keyStatus = @"status";
 NSString *const keyError = @"error";
@@ -19,12 +17,13 @@ NSString *const keyCharacteristicUuid = @"characteristicUuid";
 NSString *const keyDescriptorUuid = @"descriptorUuid";
 NSString *const keyValue = @"value";
 NSString *const keyIsInitialized = @"isInitalized";
+NSString *const keyIsEnabled = @"isEnabled";
 NSString *const keyIsScanning = @"isScanning";
 NSString *const keyIsConnected = @"isConnected";
 NSString *const keyIsDiscovered = @"isDiscovered";
 
 //Status Types
-NSString *const statusInitialized = @"initialized";
+NSString *const statusEnabled = @"enabled";
 NSString *const statusScanStarted = @"scanStarted";
 NSString *const statusScanStopped = @"scanStopped";
 NSString *const statusScanResult = @"scanResult";
@@ -47,6 +46,7 @@ NSString *const statusRssi = @"rssi";
 
 //Error Types
 NSString *const errorInitialize = @"initialize";
+NSString *const errorEnable = @"enable";
 NSString *const errorArguments = @"arguments";
 NSString *const errorStartScan = @"startScan";
 NSString *const errorStopScan = @"stopScan";
@@ -77,6 +77,8 @@ NSString *const logUnknown = @"Bluetooth unknown state";
 NSString *const logResetting = @"Bluetooth resetting";
 NSString *const logUnsupported = @"Bluetooth unsupported";
 NSString *const logNotInit = @"Bluetooth not initialized";
+NSString *const logNotEnabled = @"Bluetooth not enabled";
+NSString *const logAlreadyInit = @"Bluetooth already initialized";
 //Scanning
 NSString *const logAlreadyScanning = @"Scanning already in progress";
 NSString *const logNotScanning = @"Not scanning";
@@ -104,22 +106,12 @@ NSString *const operationWrite = @"write";
 
 @implementation BluetoothLePlugin
 
-- (void)pluginInitialize
-{
-    [super pluginInitialize];
-    
-    activePeripheral = nil;
-}
-
 //Actions
 - (void)initialize:(CDVInvokedUrlCommand *)command
 {
-    if (centralManager != nil && centralManager.state == CBCentralManagerStatePoweredOn)
+    if (centralManager != nil)
     {
-        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusInitialized, keyStatus, nil];
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-        [pluginResult setKeepCallbackAsBool:false];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        //Already intialized
         return;
     }
     
@@ -132,8 +124,8 @@ NSString *const operationWrite = @"write";
         request = [self getRequest:obj];
     }
     
-    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin", CBCentralManagerOptionShowPowerAlertKey:request }];
     initCallback = command.callbackId;
+    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin", CBCentralManagerOptionShowPowerAlertKey:request }];
 }
 
 - (void)startScan:(CDVInvokedUrlCommand *)command
@@ -820,34 +812,50 @@ NSString *const operationWrite = @"write";
 
 - (void)isInitialized:(CDVInvokedUrlCommand *)command
 {
-    BOOL result = (centralManager != nil && centralManager.state == CBCentralManagerStatePoweredOn);
+    NSNumber* result = [NSNumber numberWithBool:(centralManager != nil)];
     
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:result];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, keyIsInitialized, nil];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)isEnabled:(CDVInvokedUrlCommand *)command
+{
+    NSNumber* result = [NSNumber numberWithBool:(centralManager != nil && centralManager.state == CBCentralManagerStatePoweredOn)];
+    
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, keyIsEnabled, nil];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)isScanning:(CDVInvokedUrlCommand *)command
 {
-    BOOL result = (scanCallback != nil);
+    NSNumber* result = [NSNumber numberWithBool:(scanCallback != nil)];
     
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:result];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, keyIsScanning, nil];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)isConnected:(CDVInvokedUrlCommand *)command
-{   
-    BOOL result = (activePeripheral != nil && activePeripheral.state == CBPeripheralStateConnected);
+{
+    NSNumber* result = [NSNumber numberWithBool:(activePeripheral != nil && activePeripheral.state == CBPeripheralStateConnected)];
     
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:result];
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, keyIsConnected, nil];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)isDiscovered:(CDVInvokedUrlCommand *)command
 {
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:false];
+    NSNumber* result = [NSNumber numberWithBool:(false)];
+    
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, keyIsDiscovered, nil];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -907,24 +915,27 @@ NSString *const operationWrite = @"write";
 
     if (error != nil)
     {
-        returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorInitialize, keyError, error, keyMessage, nil];
+        returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorEnable, keyError, error, keyMessage, nil];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        
+        //Clear out the callbacks cause user will need to connect again after Bluetooth is back on
+        scanCallback = nil;
+        connectCallback = nil;
+        [self clearOperationCallbacks];
+        activePeripheral = nil;
     }
     else
     {
-        returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusInitialized, keyStatus, nil];
+        returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusEnabled, keyStatus, nil];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     }
     
-    [pluginResult setKeepCallbackAsBool:false];
+    [pluginResult setKeepCallbackAsBool:true];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:initCallback];
-    
-    initCallback = nil;
 }
 
 - (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict
 {
-    
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
@@ -1422,7 +1433,7 @@ NSString *const operationWrite = @"write";
 //Helpers to check conditions and send callbacks
 - (BOOL) isNotInitialized:(CDVInvokedUrlCommand *)command
 {
-    if (centralManager == nil || centralManager.state != CBCentralManagerStatePoweredOn)
+    if (centralManager == nil)
     {
         NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorInitialize, keyError, logNotInit, keyMessage, nil];
         
@@ -1431,12 +1442,22 @@ NSString *const operationWrite = @"write";
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         
-        initCallback = nil;
-        scanCallback = nil;
-        connectCallback = nil;
-        [self clearOperationCallbacks];
+        return true;
+    }
+    
+    return [self isNotEnabled:command];
+}
+
+- (BOOL) isNotEnabled:(CDVInvokedUrlCommand *)command
+{
+    if (centralManager.state != CBCentralManagerStatePoweredOn)
+    {
+        NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorEnable, keyError, logNotEnabled, keyMessage, nil];
         
-        activePeripheral = nil;
+        CDVPluginResult *pluginResult = nil;
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        [pluginResult setKeepCallbackAsBool:false];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         
         return true;
     }
@@ -1567,7 +1588,11 @@ NSString *const operationWrite = @"write";
 //General Helpers
 -(NSDictionary*) getArgsObject:(NSArray *)args
 {
-    //TODO Not sure how cast typing works in objective c
+    if (args == nil)
+    {
+        return nil;
+    }
+    
     if (args.count == 1)
     {
         return (NSDictionary *)[args objectAtIndex:0];

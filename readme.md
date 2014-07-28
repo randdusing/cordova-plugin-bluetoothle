@@ -81,6 +81,7 @@ To fix:
 * bluetoothle.writeDescriptor
 * bluetoothle.rssi
 * bluetoothle.isInitialized
+* bluetoothle.isEnabled
 * bluetoothle.isScanning
 * bluetoothle.isConnected
 * bluetoothle.isDiscovered (Android only)
@@ -93,7 +94,8 @@ To fix:
 ## Errors ##
 
 Whenever the error callback is executed, the return object will contain the error type and a message.
-* initialize - Bluetooth is not initialized (Try initializing Bluetooth)
+* initialize - Bluetooth isn't initialized (Try initializing Bluetooth)
+* enable - Bluetooth isn't enabled (Request user to enable Bluetooth)
 * startScan - Scan couldn't be started (Is the scan already running?)
 * stopScan - Scan couldn't be stopped (Is the scan already stopped?)
 * connect - Connection attempt failed (Is the device address correct?)
@@ -132,7 +134,7 @@ For example:
 
 
 ## initialize ##
-Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it on Android devices. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true.
+Initialize Bluetooth on the device. Must be called before anything else and only once. Callback will continuously be used whenever Bluetooth is enabled or disabled. Use the request property to prompt the user to enable Bluetooth.
 
 ```javascript
 bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback);
@@ -147,7 +149,7 @@ bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback);
 
 ##### Success Return #####
 ```javascript
-{"status":"initialized"};
+{"status":"enabled"};
 ```
 
 
@@ -518,6 +520,18 @@ Determine whether the adapter is initialized. No error callback
 
 ```javascript
 bluetoothle.isInitialized(isInitializedCallback);
+```
+
+##### Success Return #####
+True or false
+
+
+
+### isEnabled ###
+Determine whether the adapter is enabled. No error callback
+
+```javascript
+bluetoothle.isEnabled(isEnabledCallback);
 ```
 
 ##### Success Return #####
