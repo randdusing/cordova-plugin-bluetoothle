@@ -24,7 +24,7 @@ Bluetooth LE PhoneGap Plugin
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
 * Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android. iOS doesn't appear to use permissions.
-* To build for wp8.1 need some changes.
+* To build wp8.1 app need some changes.
 
 ## Discovery Android vs iOS ##
 
