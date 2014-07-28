@@ -134,11 +134,7 @@ For example:
 
 
 ## initialize ##
-<<<<<<< HEAD
-Initialize Bluetooth on the device. Must be called before anything else and only once. Callback will continuously be used whenever Bluetooth is enabled or disabled. Use the request property to prompt the user to enable Bluetooth.
-=======
-Initialize Bluetooth on the device. Must be called before anything else. If Bluetooth is disabled, the user will be prompted to enable it on Android devices. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false.
->>>>>>> FETCH_HEAD
+Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false.
 
 ```javascript
 bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, params);
@@ -153,11 +149,7 @@ bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, param
 
 ##### Success Return #####
 ```javascript
-<<<<<<< HEAD
 {"status":"enabled"};
-=======
-{"status":"initialized"}
->>>>>>> FETCH_HEAD
 ```
 
 
