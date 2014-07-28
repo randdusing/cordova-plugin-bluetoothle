@@ -1,0 +1,100 @@
+ private void writeAction(JSONArray args, CallbackContext callbackContext)
+  {
+  	if (isNotInitialized(callbackContext))
+    {
+    	return;
+    }
+    
+    if (wasNeverConnected(callbackContext))
+    {
+      return;
+    }
+  	
+    if (isNotConnected(callbackContext))
+    {
+    	return;
+    }
+    
+    JSONObject obj = getArgsObject(args);
+		
+    if (isNotArgsObject(obj, callbackContext))
+    {
+      return;
+    }
+    
+    BluetoothGattService service = getService(obj);
+    
+    if (isNotService(service, callbackContext))
+    {
+    	return;
+    }
+    
+    BluetoothGattCharacteristic characteristic = getCharacteristic(obj, service);
+    
+    if (isNotCharacteristic(characteristic, callbackContext))
+    {
+    	return;
+    }
+    
+  	JSONObject returnObj = new JSONObject();
+  	addProperty(returnObj, keyServiceUuid, formatUuid(service.getUuid()));
+  	addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
+  	
+  	
+    String value = getPropertyBytes2(obj, keyValue);
+    String[] str=value.split(",");
+
+    int arrayint[] = new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+    for(int i=0;i<str.length;i++){
+    	
+    	arrayint[i]=Integer.parseInt(str[i]);
+
+    }
+
+    byte arraybyte[] = new byte[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+    for(int i=0;i<arrayint.length;i++){
+    	
+    	arraybyte[i]=(byte)arrayint[i];
+
+    }
+   
+
+	
+	String valuetoSend = new String(value);
+	
+
+    if (value == null)
+    {
+    	addProperty(returnObj, keyError, errorWrite);
+    	addProperty(returnObj, keyMessage, logWriteValueNotFound);
+    	callbackContext.error(returnObj);
+    	return;
+    }
+    
+    
+    
+    boolean result = characteristic.setValue(arraybyte);
+
+    if (!result)
+    {
+    	addProperty(returnObj, keyError, errorWrite);
+    	addProperty(returnObj, keyMessage, logWriteValueNotSet);
+    	callbackContext.error(returnObj);
+    	return;
+    }
+    
+    operationCallbackContext = callbackContext;
+    
+    result = bluetoothGatt.writeCharacteristic(characteristic);
+    if (!result)
+    {
+    	addProperty(returnObj, keyError, errorWrite);
+    	addProperty(returnObj, keyMessage, logWriteFail);
+    	callbackContext.error(returnObj);
+    	operationCallbackContext = null;
+    	return;
+    }
+  }
+  
