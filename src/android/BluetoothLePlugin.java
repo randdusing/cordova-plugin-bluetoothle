@@ -5,9 +5,10 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
 import android.util.Base64;
 
 import android.bluetooth.BluetoothAdapter;
@@ -75,6 +76,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String writeDescriptorActionName = "writeDescriptor";
   private final String rssiActionName = "rssi";
   private final String isInitializedActionName = "isInitialized";
+  private final String isEnabledActionName = "isEnabled";
   private final String isScanningActionName = "isScanning";
   private final String isDiscoveredActionName = "isDiscovered";
   private final String isConnectedActionName = "isConnected";
@@ -96,14 +98,15 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyCharacteristics = "characteristics";
   private final String keyDescriptors = "descriptors";
   private final String keyValue = "value";
-  private final String keyIsInitialized = "isInitialized";
-  private final String keyIsScanning = "isScanning";
+	private final String keyIsInitialized = "isInitalized";
+  private final String keyIsEnabled = "isEnabled";
+	private final String keyIsScanning = "isScanning";
   private final String keyIsConnected = "isConnected";
   private final String keyIsDiscovered = "isDiscovered";
   private final String keyIsNotification = "isNotification";
   
   //Status Types
-  private final String statusInitialized = "initialized";
+  private final String statusEnabled = "enabled";
   private final String statusScanStarted = "scanStarted";
   private final String statusScanStopped = "scanStopped";
   private final String statusScanResult = "scanResult";
@@ -124,6 +127,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   //Error Types
   private final String errorInitialize = "initialize";
+  private final String errorEnable = "enable";
   private final String errorArguments = "arguments";
   private final String errorStartScan = "startScan";
   private final String errorStopScan = "stopScan";
@@ -147,8 +151,6 @@ public class BluetoothLePlugin extends CordovaPlugin
   //Error Messages
   //Initialization
   private final String logNotEnabled = "Bluetooth not enabled";
-  private final String logNotEnabledUser = "Bluetooth not enabled by user";
-  private final String logNotSupported = "Hardware doesn't support Bluetooth LE";
   private final String logNotInit = "Bluetooth not initialized";
   //Scanning
   private final String logAlreadyScanning = "Scanning already in progress";
@@ -199,7 +201,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   //Client Configuration UUID for notifying/indicating
   private final UUID clientConfigurationDescriptorUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-
+  
   //Actions
   @Override
   public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException
@@ -304,6 +306,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     	isInitializedAction(callbackContext);
     	return true;
     }
+    else if (isEnabledActionName.equals(action))
+    {
+    	isEnabledAction(callbackContext);
+    	return true;
+    }
     else if (isScanningActionName.equals(action))
     {
     	isScanningAction(callbackContext);
@@ -321,67 +328,60 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     return false;
   }
-  
+
   private void initializeAction(JSONArray args, CallbackContext callbackContext)
   { 
+  	if (bluetoothAdapter != null)
+  	{
+  		return;
+  	}
+  	
     JSONObject returnObj = new JSONObject();
     
-    //If Bluetooth is already enabled, return success
-    if (bluetoothAdapter != null && bluetoothAdapter.isEnabled())
-    {
-    	addProperty(returnObj, keyStatus, statusInitialized);
-	    callbackContext.success(returnObj);
-	    return;
-    }
+    //Add a receiver to pick up when Bluetooth state changes
+    cordova.getActivity().registerReceiver(mReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
     
-    //Check whether the device supports Bluetooth LE
-    //Not necessary if app manifest contains: <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
-    if (!cordova.getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))
-    {
-    	addProperty(returnObj, keyError, errorInitialize);
-    	addProperty(returnObj, keyMessage, logNotSupported);
-      callbackContext.error(returnObj);
-      return;
-    }
+    //Save init callback
+    initCallbackContext = callbackContext;
     
     //Get Bluetooth adapter via Bluetooth Manager
     BluetoothManager bluetoothManager = (BluetoothManager) cordova.getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
     bluetoothAdapter = bluetoothManager.getAdapter();
-
-    //If adapter is null or disabled...
-    if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled())
+    
+    //If it's already enabled, 
+    if (bluetoothAdapter.isEnabled())
     {
-      JSONObject obj = getArgsObject(args);
-      
-      boolean request = false;
-      
-      if (obj != null)
-      {
-      	request = getRequest(obj);
-      }
-      
-    	if (request)
-    	{
-	      //Request Bluetooth to be enabled
-	      initCallbackContext = callbackContext;
-	      Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-	      cordova.startActivityForResult(this, enableBtIntent, REQUEST_BT_ENABLE);
-    	}
-    	else
-    	{
-    		addProperty(returnObj, keyError, errorInitialize);
-      	addProperty(returnObj, keyMessage, logNotEnabled);
-        
-  	    callbackContext.error(returnObj);
-    	}
+    	addProperty(returnObj, keyStatus, statusEnabled);
+    	PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(true);
+      initCallbackContext.sendPluginResult(pluginResult);
+    	return;
     }
-    //Else successful
-    else
+    
+    JSONObject obj = getArgsObject(args);
+    
+    boolean request = false;
+    if (obj != null)
     {
-    	addProperty(returnObj, keyStatus, statusInitialized);
-	    callbackContext.success(returnObj);
-	    return;
+    	request = getRequest(obj);
     }
+    
+    //Request user to enable Bluetooth
+  	if (request)
+  	{
+      //Request Bluetooth to be enabled
+      Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+      cordova.startActivityForResult(this, enableBtIntent, REQUEST_BT_ENABLE);
+  	}
+  	//No request, so send back not enabled
+  	else
+  	{
+  		addProperty(returnObj, keyError, errorEnable);
+    	addProperty(returnObj, keyMessage, logNotEnabled);
+    	PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+      pluginResult.setKeepCallback(true);
+      initCallbackContext.sendPluginResult(pluginResult);
+  	}
   }
   
   private void startScanAction(JSONArray args, CallbackContext callbackContext)
@@ -1229,10 +1229,20 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void isInitializedAction(CallbackContext callbackContext)
   {
-  	boolean result = (bluetoothAdapter != null && bluetoothAdapter.isEnabled());
+  	boolean result = (bluetoothAdapter != null);
   	
     JSONObject returnObj = new JSONObject();
   	addProperty(returnObj, keyIsInitialized, result);
+  	
+    callbackContext.success(returnObj);
+  }
+  
+  private void isEnabledAction(CallbackContext callbackContext)
+  {
+  	boolean result = (bluetoothAdapter != null && bluetoothAdapter.isEnabled());
+  	
+    JSONObject returnObj = new JSONObject();
+  	addProperty(returnObj, keyIsEnabled, result);
   	
     callbackContext.success(returnObj);
   }
@@ -1265,57 +1275,88 @@ public class BluetoothLePlugin extends CordovaPlugin
   	addProperty(returnObj, keyIsDiscovered, result);
   	
   	callbackContext.success(returnObj);
+
+  }
+
+  @Override
+  public void onDestroy()
+  {
+      super.onDestroy();
+      cordova.getActivity().unregisterReceiver(mReceiver);
   }
   
-  //Enable Bluetooth Callback
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent intent)
-  {
-    //If this was a Bluetooth enablement request...
-    if (requestCode == REQUEST_BT_ENABLE)
-    {
-    	//If callback doesnt exist, no reason to proceed
-    	if (initCallbackContext == null)
-    	{
-    		return;
-    	}
-    	
-    	JSONObject returnObj = new JSONObject();
-    	
-      //If Bluetooth was enabled...
-      if (resultCode == Activity.RESULT_OK)
-      {
-        //After requesting, check again whether it's enabled
-        BluetoothManager bluetoothManager = (BluetoothManager) cordova.getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-        
-        //Bluetooth wasn't enabled
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled())
-        {
-        	addProperty(returnObj, keyError, errorInitialize);
-        	addProperty(returnObj, keyMessage, logNotEnabled);
-          
-    	    initCallbackContext.error(returnObj);
-        }
-        //Bluetooth was enabled
-        else
-        {
-        	addProperty(returnObj, keyStatus, statusInitialized);
-    	    initCallbackContext.success(returnObj);
-        }
-      }
-      //Else user didn't enable Bluetooth
-      else
-      {
-      	addProperty(returnObj, keyError, errorInitialize);
-      	addProperty(returnObj, keyMessage, logNotEnabledUser);
-      	
-  	    initCallbackContext.error(returnObj);
-      }
-      
-      initCallbackContext = null;
-    }
-  }
+	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent)
+		{
+			if (initCallbackContext == null)
+			{
+				return;
+			}
+			
+			if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED))
+			{
+				JSONObject returnObj = new JSONObject();
+				PluginResult pluginResult;
+				
+				switch (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR))
+				{
+					case BluetoothAdapter.STATE_OFF:
+					//case BluetoothAdapter.STATE_TURNING_OFF:
+					//case BluetoothAdapter.STATE_TURNING_ON:
+						
+						addProperty(returnObj, keyError, errorEnable);
+						addProperty(returnObj, keyMessage, logNotEnabled);
+						
+						scanCallbackContext = null;
+						connectCallbackContext = null;
+						ClearOperationCallbacks();
+						bluetoothGatt = null;
+						
+						pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+			      pluginResult.setKeepCallback(true);
+			      initCallbackContext.sendPluginResult(pluginResult);
+			      
+			      break;
+					case BluetoothAdapter.STATE_ON:
+						
+						addProperty(returnObj, keyStatus, statusEnabled);
+						
+						pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+			      pluginResult.setKeepCallback(true);
+			      initCallbackContext.sendPluginResult(pluginResult);
+			      
+						break;
+				}
+			}
+		}
+	};
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent intent)
+	{
+		//If this was a Bluetooth enablement request...
+		if (requestCode == REQUEST_BT_ENABLE)
+		{
+			//If callback doesnt exist, no reason to proceed
+			if (initCallbackContext == null)
+			{
+				return;
+			}
+			
+			//Whether the result code was successful or not, just check whether Bluetooth is enabled
+			if (!bluetoothAdapter.isEnabled())
+			{
+				JSONObject returnObj = new JSONObject();
+				addProperty(returnObj, keyError, errorEnable);
+		  	addProperty(returnObj, keyMessage, logNotEnabled);
+		  	
+		  	PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+	      pluginResult.setKeepCallback(true);
+	      initCallbackContext.sendPluginResult(pluginResult);
+			}
+		}
+	}
   
   //Scan Callback
   private LeScanCallback scanCallback = new LeScanCallback()
@@ -1849,12 +1890,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //Helpers to Check Conditions
   private boolean isNotInitialized(CallbackContext callbackContext)
   {
-    if (bluetoothAdapter != null && bluetoothAdapter.isEnabled())
-    {
-      return false;
-    }
-    
-    if (callbackContext != null)
+    if (bluetoothAdapter == null)
     {
 	    JSONObject returnObj = new JSONObject();
 	    
@@ -1862,25 +1898,28 @@ public class BluetoothLePlugin extends CordovaPlugin
 	    addProperty(returnObj, keyMessage, logNotInit);
 	    
 	    callbackContext.error(returnObj);
+
+      return true;
     }
     
-    //Assumption that disabled Bluetooth adapter "kills" current scans, current connected devices, etc
-    
-    //Clean up callbacks
-    initCallbackContext = null;
-    scanCallbackContext = null;
-    connectCallbackContext = null;
-    ClearOperationCallbacks();
+    return isNotEnabled(callbackContext);
+  }
+  
+  private boolean isNotEnabled(CallbackContext callbackContext)
+  {
+  	if (!bluetoothAdapter.isEnabled())
+  	{
+  		JSONObject returnObj = new JSONObject();
+	    
+	    addProperty(returnObj, keyError, errorEnable);
+	    addProperty(returnObj, keyMessage, logNotEnabled);
+	    
+	    callbackContext.error(returnObj);
 
-    //Clean up states
-    connectionState = BluetoothProfile.STATE_DISCONNECTED;
-    discoveredState = STATE_UNDISCOVERED;
-    
-    //Clean up other variables
-    bluetoothGatt = null;
-    bluetoothAdapter = null;
-    
-    return true;
+      return true;
+  	}
+  	
+  	return false;
   }
 
   private boolean isNotArgsObject(JSONObject obj, CallbackContext callbackContext)
