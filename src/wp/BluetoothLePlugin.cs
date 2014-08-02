@@ -50,8 +50,6 @@ namespace Cordova.Extension.Commands
         CharacteristicWithValue [] currentDeviceCharacteristic;
         BluetoothLEDevice currentDevice { get; set; }
         DeviceServices[] currentDeviceServices;
-        List<string> regex_charauuid = new List<string>();
-        List<string> currentDeviceCharacteristicUUid = new List<string>();
         public async void initialize(string options)
         {
             bleDevices = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(GattServiceUuids.GenericAccess));
@@ -260,7 +258,6 @@ namespace Cordova.Extension.Commands
                 }
             }
             currentDeviceCharacteristic = new CharacteristicWithValue[CurrentJSGattProfileArgs[0].characteristics.Length];
-            currentDeviceCharacteristicUUid.Clear();
             for (int i = 0; i < CurrentJSGattProfileArgs[0].characteristics.Length; i++)
             {
                 if (ShortUuidFlag)
@@ -272,27 +269,26 @@ namespace Cordova.Extension.Commands
                 {
                     currentDeviceCharacteristic[i].GattCharacteristic = currentDevice.GattServices[index].GetCharacteristics(new Guid(CurrentJSGattProfileArgs[0].characteristics[i]))[0];
                 }
-                currentDeviceCharacteristicUUid.Add(currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString());/*????*/
                 if (i == CurrentJSGattProfileArgs[0].characteristics.Length - 1)
                 {
                     if (ShortUuidFlag)
                     {
-                        JsonString = JsonString + "\"" + currentDeviceCharacteristicUUid[i].Substring(4, 4) + "\"";
+                        JsonString = JsonString + "\"" + currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString().Substring(4, 4) + "\"";
                     }
                     else
                     {
-                        JsonString = JsonString + "\"" + currentDeviceCharacteristicUUid[i] + "\"";
+                        JsonString = JsonString + "\"" + currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString() + "\"";
                     }
                 }
                 else
                 {
                     if (ShortUuidFlag)
                     {
-                        JsonString = JsonString + "\"" + currentDeviceCharacteristicUUid[i].Substring(4, 4) + "\",";
+                        JsonString = JsonString + "\"" + currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString().Substring(4, 4) + "\",";
                     }
                     else
                     {
-                        JsonString = JsonString + "\"" + currentDeviceCharacteristicUUid[i] + "\",";
+                        JsonString = JsonString + "\"" + currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString() + "\",";
                     }
                 }
             }
@@ -329,7 +325,6 @@ namespace Cordova.Extension.Commands
                 }
             }
             currentDeviceCharacteristic = new CharacteristicWithValue[CurrentJSGattProfileArgs[0].characteristics.Length];
-            currentDeviceCharacteristicUUid.Clear();
             for (int i = 0; i < CurrentJSGattProfileArgs[0].characteristics.Length; i++)
             {
                 if (ShortUuidFlag)
@@ -341,7 +336,6 @@ namespace Cordova.Extension.Commands
                 {
                     currentDeviceCharacteristic[i].GattCharacteristic = currentDevice.GattServices[index].GetCharacteristics(new Guid(CurrentJSGattProfileArgs[0].characteristics[i]))[0];
                 }
-                currentDeviceCharacteristicUUid.Add(currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString());/*????*/
                 if (currentDeviceCharacteristic[i].GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                 {
                     Deployment.Current.Dispatcher.BeginInvoke(async () =>
@@ -351,7 +345,6 @@ namespace Cordova.Extension.Commands
                         currentDeviceCharacteristic[NotifyCharaIndex].GattCharacteristic.ValueChanged += this.characteristics_ValueChanged;
                     });
                     callbackId_sub = args[args.Length - 1];
-                    //DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"subscribedResult\",\"value\":\"\"}"));
                     PluginResult result = new PluginResult(PluginResult.Status.OK, "{\"status\":\"subscribed\",\"value\":\"\"}");
                     result.KeepCallback = true;
                     DispatchCommandResult(result, callbackId_sub);
@@ -431,7 +424,6 @@ namespace Cordova.Extension.Commands
                 }
             }
             currentDeviceCharacteristic = new CharacteristicWithValue[CurrentJSGattProfileArgs[0].characteristics.Length];
-            currentDeviceCharacteristicUUid.Clear();
             for (int i = 0; i < CurrentJSGattProfileArgs[0].characteristics.Length; i++)
             {
                 if (ShortUuidFlag)
@@ -443,7 +435,6 @@ namespace Cordova.Extension.Commands
                 {
                     currentDeviceCharacteristic[i].GattCharacteristic = currentDevice.GattServices[index].GetCharacteristics(new Guid(CurrentJSGattProfileArgs[0].characteristics[i]))[0];
                 }
-                currentDeviceCharacteristicUUid.Add(currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString());/*????*/
                 if (currentDeviceCharacteristic[i].GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                 {
                     Deployment.Current.Dispatcher.BeginInvoke(async () =>
@@ -484,7 +475,6 @@ namespace Cordova.Extension.Commands
                 }
             }
             currentDeviceCharacteristic = new CharacteristicWithValue[CurrentJSGattProfileArgs[0].characteristics.Length];
-            currentDeviceCharacteristicUUid.Clear();
             for (int i = 0; i < CurrentJSGattProfileArgs[0].characteristics.Length; i++)
             {
                 if (ShortUuidFlag)
@@ -496,7 +486,6 @@ namespace Cordova.Extension.Commands
                 {
                     currentDeviceCharacteristic[i].GattCharacteristic = currentDevice.GattServices[index].GetCharacteristics(new Guid(CurrentJSGattProfileArgs[0].characteristics[i]))[0];
                 }
-                currentDeviceCharacteristicUUid.Add(currentDeviceCharacteristic[i].GattCharacteristic.Uuid.ToString());/*????*/
                 try
                 {
                     //Read
