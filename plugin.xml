@@ -45,7 +45,8 @@
             </feature>
         </config-file>
 		<config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
-			<Capability Name="internetClient" />
+			<Capability Name="ID_CAP_NETWORKING" />
+			<Capability Name="ID_CAP_IDENTITY_DEVICE" />
 			<m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
 				<m2:Device Id="any">
 					<m2:Function Type="serviceId:1803"/>
