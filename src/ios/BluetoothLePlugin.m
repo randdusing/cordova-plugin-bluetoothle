@@ -124,6 +124,10 @@ NSString *const operationWrite = @"write";
         request = [self getRequest:obj];
     }
     
+<<<<<<< HEAD
+    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin", CBCentralManagerOptionShowPowerAlertKey:request }];
+=======
+>>>>>>> 0565cee0cd4a379d7cc5bd74005435bc130ef0d4
     initCallback = command.callbackId;
     centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"bluetoothleplugin", CBCentralManagerOptionShowPowerAlertKey:request }];
 }
@@ -915,7 +919,11 @@ NSString *const operationWrite = @"write";
 
     if (error != nil)
     {
+<<<<<<< HEAD
+        returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorInitialize, keyError, error, keyMessage, nil];
+=======
         returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorEnable, keyError, error, keyMessage, nil];
+>>>>>>> 0565cee0cd4a379d7cc5bd74005435bc130ef0d4
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
         
         //Clear out the callbacks cause user will need to connect again after Bluetooth is back on
@@ -936,6 +944,11 @@ NSString *const operationWrite = @"write";
 
 - (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict
 {
+}
+
+- (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict
+{
+    
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
@@ -1413,12 +1426,21 @@ NSString *const operationWrite = @"write";
 - (void) removeCallback: (CBUUID *) characteristicUuid forOperationType:(NSString*) operationType
 {
     NSMutableDictionary* characteristicCallbacks = [operationCallbacks objectForKey:characteristicUuid];
+<<<<<<< HEAD
     
   	if (characteristicCallbacks == nil)
   	{
   		return;
   	}
     
+=======
+    
+  	if (characteristicCallbacks == nil)
+  	{
+  		return;
+  	}
+    
+>>>>>>> 0565cee0cd4a379d7cc5bd74005435bc130ef0d4
     [characteristicCallbacks removeObjectForKey:operationType];
 }
 
@@ -1439,6 +1461,18 @@ NSString *const operationWrite = @"write";
         
         CDVPluginResult *pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+<<<<<<< HEAD
+        [pluginResult setKeepCallbackAsBool:false];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        
+        initCallback = nil;
+        scanCallback = nil;
+        connectCallback = nil;
+        [self clearOperationCallbacks];
+        
+        activePeripheral = nil;
+        
+=======
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         
@@ -1459,6 +1493,7 @@ NSString *const operationWrite = @"write";
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         
+>>>>>>> 0565cee0cd4a379d7cc5bd74005435bc130ef0d4
         return true;
     }
     

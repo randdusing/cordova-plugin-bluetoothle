@@ -9,6 +9,7 @@ Bluetooth LE PhoneGap Plugin
 * iOS 7 or higher
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
 * List of devices: http://www.bluetooth.com/Pages/Bluetooth-Smart-Devices-List.aspx
+* Windows Phone 8.1 (Tested on Nokia Lumia 630)
 
 
 ## Limitations / Issues ##
@@ -18,11 +19,15 @@ Bluetooth LE PhoneGap Plugin
 * Tested with a heart rate monitor, so some scenarios especially those involving writing characteristics may not work as I was unable to test it. If you run into an issue, log it and I'll try to fix it. If you let me borrow a device, I can probably fix it even quicker. :)
 * Limited to connecting to a single device at a time (Pretty sure it's feasible and not too difficult to implement, but a low priorty for my original project) ** Hope to begin working on this starting in July
 * <del>All discovery, read and write operations must be done sequentially. i.e read characteristic x1234, wait for read result, read characteristic x5678, wait for read result, etc. More info on http://stackoverflow.com/questions/18011816/has-native-android-ble-gatt-implementation-synchronous-nature (Eventually queuing could be added, but a low priority for my original project)</del> There's now support for multiple operations. For example, you can write characteristic A or read characteristic B while subscribed to characteristic C.
-* No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released. Originally planned to buy a Windows 8.1 Phone before moving to Korea, but the one I wanted did come out in time. Still deciding what to do.
+* <del>No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released. Originally planned to buy a Windows 8.1 Phone before moving to Korea, but the one I wanted did come out in time. Still deciding what to do.
 * Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin or Android's Bluetooth LE implementation.
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
 * Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android. iOS doesn't appear to use permissions.
+
+##How to start with Windows Phone 8.1##
+
+
 
 ## Discovery Android vs iOS ##
 
@@ -179,6 +184,7 @@ bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
 {"status":"scanStarted"};
 {"status":"scanResult","address":"01:23:45:67:89:AB","name":"Polar H7","rssi":-5}; /* Android */
 {"status":"scanResult","address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX","name":"Polar H7","rssi":-5}; /* iOS */
+{"status":"scanResult","address":"0123456789AB","name":"Polar H7"}; /* WP8.1 */
 ```
 
 
