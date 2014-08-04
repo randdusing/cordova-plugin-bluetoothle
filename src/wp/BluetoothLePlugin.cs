@@ -58,7 +58,7 @@ namespace Cordova.Extension.Commands
                 this.value = new byte[value.Length];
                 this.value = value;
             }
-        }  
+        }
         JavaScriptServiceArgs[] CurrentJSGattProfileArgs;
         struct CharacteristicWithValue
         {
@@ -216,7 +216,7 @@ namespace Cordova.Extension.Commands
                     servuuid = GattCharacteristic.ConvertShortIdToUuid(Convert.ToUInt16(CurrentJSGattProfileArgs[servJSindex].service, 16)).ToString();
                     ShortUuidFlag = true;
                 }
-                else 
+                else
                 {
                     servuuid = CurrentJSGattProfileArgs[servJSindex].service;
                 }
@@ -231,7 +231,7 @@ namespace Cordova.Extension.Commands
                             {
                                 JsonString = JsonString + "\"" + currentDeviceServices[i].StrUuid.Substring(4, 4) +"\"";
                             }
-                            else 
+                            else
                             {
                                 JsonString = JsonString + "\"" + currentDeviceServices[i].StrUuid + "\"";
                             }
@@ -291,7 +291,7 @@ namespace Cordova.Extension.Commands
                     currentDeviceCharacteristic[i].GattCharacteristic = currentDevice.GattServices[index].
                         GetCharacteristics(GattCharacteristic.ConvertShortIdToUuid(Convert.ToUInt16(CurrentJSGattProfileArgs[0].characteristics[i], 16)))[0];
                 }
-                else 
+                else
                 {
                     currentDeviceCharacteristic[i].GattCharacteristic = currentDevice.GattServices[index].GetCharacteristics(new Guid(CurrentJSGattProfileArgs[0].characteristics[i]))[0];
                 }
@@ -428,9 +428,9 @@ namespace Cordova.Extension.Commands
                 {
                     await currentDeviceCharacteristic[i].GattCharacteristic.WriteValueAsync(CurrentJSGattProfileArgs[0].value.AsBuffer(), GattWriteOption.WriteWithoutResponse);
                     Thread.Sleep(waiting_time);
-                    DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"written\",\"value\":\"\"}")); 
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.OK, "{\"status\":\"written\",\"value\":\"\"}"));
                 }
-            }  
+            }
         }
         public void characteristics_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs EventArgs)
         {
@@ -592,7 +592,7 @@ namespace Cordova.Extension.Commands
                 servuuid = GattCharacteristic.ConvertShortIdToUuid(Convert.ToUInt16(CurrentJSGattProfileArgs[0].service, 16)).ToString();
                 ShortUuidFlag = true;
             }
-            else 
+            else
             {
                 servuuid = CurrentJSGattProfileArgs[0].service;
             }
