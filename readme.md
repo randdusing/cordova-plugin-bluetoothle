@@ -139,7 +139,7 @@ For example:
 
 
 ## initialize ##
-Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must reinitialize Bluetooth, connect to the device, start a read/write operation, etc. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false.
+Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must connect to the device, start a read/write operation, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false.
 
 ```javascript
 bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, params);
@@ -653,7 +653,7 @@ bluetoothle.initialize(initializeSuccess, initializeError);
 
 function initializeSuccess(obj)
 {
-  if (obj.status == "initialized")
+  if (obj.status == "enabled")
   {
   	var address = window.localStorage.getItem(addressKey);
   	if (address == null)
