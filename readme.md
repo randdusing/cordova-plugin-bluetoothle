@@ -160,7 +160,7 @@ bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, param
 
 
 ### startScan ###
-Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Phonegap app should use a timer to limit the scan interval.
+Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Phonegap app should use a timer to limit the scan interval. Also Android uses an AND operator for filtering, while iOS uses an OR operator for filtering.
 
 ```javascript
 bluetoothle.startScan(startScanSuccessCallback, startScanErrorCallback, params);
