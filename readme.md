@@ -25,10 +25,6 @@ Bluetooth LE PhoneGap Plugin
 * Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android. iOS doesn't appear to use permissions.
 
-##How to start with Windows Phone 8.1##
-
-
-
 ## Discovery Android vs iOS ##
 
 Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The Device plugin (http://docs.phonegap.com/en/edge/cordova_device_device.md.html#Device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS.
@@ -39,6 +35,16 @@ Since iOS returns the 16 bit version of the "out of the box" UUIDs even if a 128
 Android on the other hand only uses the 128 bit version, but the plugin will automatically convert 16 bit UUIDs to the 128 bit version on input and output.
 
 https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
+
+## Advertisement Data / MAC Address ##
+On iOS, the MAC address is hidden from the advertisement packet, and the address returned from the scanResult is a generated, device-specific address. This is a problem when using devices like iBeacons where you need the MAC Address. Fortunately the CLBeacon class can be used for this, but unfortunately it's not supported in this plugin.
+One option is to set Manufacturer Specific Data in the advertisement packet if that's possible in your project.
+Another option is to connect to the device and use the "Device Information" (0x180A) service, but connecting to each device is much more energy intensive than scanning for advertisement data.
+
+Some related links:
+https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-energy-peripheral
+https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios
+
 
 ## Installation ##
 
