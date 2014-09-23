@@ -7,9 +7,9 @@ Bluetooth LE PhoneGap Plugin
 * PhoneGap 3.0.0 or higher
 * Android 4.3 or higher
 * iOS 7 or higher
+* Windows Phone 8.1 (Tested on Nokia Lumia 630)
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
 * List of devices: http://www.bluetooth.com/Pages/Bluetooth-Smart-Devices-List.aspx
-* Windows Phone 8.1 (Tested on Nokia Lumia 630)
 
 
 ## Limitations / Issues ##
@@ -22,7 +22,7 @@ Bluetooth LE PhoneGap Plugin
 * <del>No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released. Originally planned to buy a Windows 8.1 Phone before moving to Korea, but the one I wanted did come out in time. Still deciding what to do.
 * Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin or Android's Bluetooth LE implementation.
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
-* Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.
+* <del>Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.</del>Charactertistic properties are now returned. See discovery/characteristics method documentation for more info.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android. iOS doesn't appear to use permissions.
 
 ## Discovery Android vs iOS ##
@@ -131,6 +131,16 @@ For example:
 ```javascript
 {"error":"startScan", "message":"Scanning already started"}
 ```
+
+
+
+## Properties ##
+Characteristics can have the following different properties: broadcast, read, writeWithoutResponse, write, notify, indicate, authenticatedSignedWrites, extendedProperties, notifyEncryptionRequired, indicateEncryptionRequired
+If the characteristic has a property, it will exist as a key in the characteristic's properties object. See discovery() or characteristics()
+
+https://developer.android.com/reference/android/bluetooth/BluetoothGattCharacteristic.html
+https://developer.apple.com/library/mac/documentation/CoreBluetooth/Reference/CBCharacteristic_Class/translated_content/CBCharacteristic.html#//apple_ref/c/tdef/CBCharacteristicProperties
+
 
 
 ## Life Cycle ##
@@ -292,6 +302,7 @@ Service Object:
 
 Characteristic Object:
 * characteristicUuid = Characteristic's uuid
+* properties = If the property is defined as a key, the characteristic has that property
 * descriptors = Array of descriptor objects below
 
 Descriptor Object:
@@ -312,7 +323,11 @@ Descriptor Object:
             {
               "descriptorUuid":"2902"
             }
-          ]
+          ],
+          "properties":
+          {
+          	"read":null,
+          } 
         },
         {
           "characteristicUuid":"2a38",
@@ -342,7 +357,7 @@ bluetoothle.services(servicesSuccessCallback, servicesErrorCallback, params);
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverServices","serviceUuids":["180D","180F"]}
+{"status":"discoveredServices","serviceUuids":["180d"],"name":"Polar H7 259536","address":"6A267C59-3364-544C-F2AE-1616AE34F2C3"}
 ```
 
 
@@ -361,7 +376,7 @@ bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsError
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverCharacteristics","serviceUuid":"180D","characteristicUuids":["2A37","2A38"]}
+{"status":"discoveredCharacteristics","characteristics":[{"properties":{"notify":null},"characteristicUuid":"2a37"}],"name":"Polar H7 259536","address":"6A267C59-3364-544C-F2AE-1616AE34F2C3"}
 ```
 
 
@@ -380,7 +395,7 @@ bluetoothle.characteristics(descriptorsSuccessCallback, descriptorsErrorCallback
 
 ##### Success Return #####
 ```javascript
-{"status":"discoverDescriptors","serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuids":["2902"]}
+{"status":"discoveredDescriptors","descriptorUuids":["2902"],"characteristicUuid":"2a37","name":"Polar H7 259536","serviceUuid":"180d","address":"6A267C59-3364-544C-F2AE-1616AE34F2C3"}
 ```
 
 
@@ -456,9 +471,10 @@ bluetoothle.write(writeSuccessCallback, writeErrorCallback, params);
 
 ##### Params #####
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
+To write without response, set type to "noResponse". Any other value will default to write with response. Note, no callback will occur on write without response.
 ```javascript
 //Note, this example doesn't actually work since it's read only characteristic
-{"value":"","serviceUuid":"180F","characteristicUuid":"2A19"}
+{"value":"","serviceUuid":"180F","characteristicUuid":"2A19","type":"noResponse"}
 ```
 
 ##### Success Return #####
@@ -914,11 +930,11 @@ function characteristicsHeartSuccess(obj)
 {
   if (obj.status == "discoveredCharacteristics")
   {
-    var characteristicUuids = obj.characteristicUuids;
-    for (var i = 0; i < characteristicUuids.length; i++)
+    var characteristics = obj.characteristics;
+    for (var i = 0; i < characteristics.length; i++)
     {
       console.log("Heart characteristics found, now discovering descriptor");
-      var characteristicUuid = characteristicUuids[i];
+      var characteristicUuid = characteristics[i].characteristicUuid;
       
       if (characteristicUuid == heartRateMeasurementCharacteristicUuid)
       {
@@ -999,10 +1015,10 @@ function characteristicsBatterySuccess(obj)
 {
   if (obj.status == "discoveredCharacteristics")
   {
-    var characteristicUuids = obj.characteristicUuids;
-    for (var i = 0; i < characteristicUuids.length; i++)
+    var characteristics = obj.characteristics;
+    for (var i = 0; i < characteristics.length; i++)
     {
-      var characteristicUuid = characteristicUuids[i];
+      var characteristicUuid = characteristics[i].characteristicUuid;
       
       if (characteristicUuid == batteryLevelCharacteristicUuid)
       {

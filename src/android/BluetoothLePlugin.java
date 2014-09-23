@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Base64;
+import android.util.Log;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -96,14 +97,19 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyDescriptorUuid = "descriptorUuid";
   private final String keyServices = "services";
   private final String keyCharacteristics = "characteristics";
+  private final String keyProperties = "properties";
   private final String keyDescriptors = "descriptors";
   private final String keyValue = "value";
+  private final String keyType = "type";
 	private final String keyIsInitialized = "isInitialized";
   private final String keyIsEnabled = "isEnabled";
 	private final String keyIsScanning = "isScanning";
   private final String keyIsConnected = "isConnected";
   private final String keyIsDiscovered = "isDiscovered";
   private final String keyIsNotification = "isNotification";
+  
+  //Write Types
+  private final String writeTypeNoResponse = "noResponse";
   
   //Status Types
   private final String statusEnabled = "enabled";
@@ -124,6 +130,18 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String statusReadDescriptor = "readDescriptor";
   private final String statusWrittenDescriptor = "writtenDescriptor";
   private final String statusRssi = "rssi";
+  
+  //Properties
+  private final String propertyBroadcast = "broadcast";
+  private final String propertyRead = "read";
+  private final String propertyWriteWithoutResponse = "writeWithoutResponse";
+  private final String propertyWrite = "write";
+  private final String propertyNotify = "notify";
+  private final String propertyIndicate = "indicate";
+  private final String propertyAuthenticatedSignedWrites = "authenticatedSignedWrites";
+  private final String propertyExtendedProperties = "extendedProperties";
+  private final String propertyNotifyEncryptionRequired = "notifyEncryptionRequired";
+  private final String propertyIndicateEncryptionRequired = "indicateEncryptionRequired";
   
   //Error Types
   private final String errorInitialize = "initialize";
@@ -1014,6 +1032,9 @@ public class BluetoothLePlugin extends CordovaPlugin
       callbackContext.error(returnObj);
       return;
     }
+    
+    int writeType = this.getWriteType(obj);
+    characteristic.setWriteType(writeType);
     
     boolean result = characteristic.setValue(value);
     
@@ -2200,6 +2221,17 @@ public class BluetoothLePlugin extends CordovaPlugin
   	return obj.optBoolean(keyRequest, false);
   }
   
+  private int getWriteType(JSONObject obj)
+  {
+  	String writeType = obj.optString(keyType, null);
+    
+    if (writeType == null || !writeType.equals(writeTypeNoResponse))
+    {
+      return BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+    }
+    return BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+  }
+  
   private JSONObject getDiscovery()
   {
     JSONObject deviceObject = new JSONObject();
@@ -2229,6 +2261,7 @@ public class BluetoothLePlugin extends CordovaPlugin
         JSONObject characteristicObject = new JSONObject();
         
         addProperty(characteristicObject, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
+        addProperty(characteristicObject, keyProperties, getProperties(characteristic));
         
         JSONArray descriptorsArray = new JSONArray();
         
@@ -2256,5 +2289,55 @@ public class BluetoothLePlugin extends CordovaPlugin
     addProperty(deviceObject, keyServices, servicesArray);
     
     return deviceObject;
+  }
+
+  private JSONObject getProperties(BluetoothGattCharacteristic characteristic)
+  {
+  	int properties = characteristic.getProperties();
+
+  	JSONObject propertiesObject = new JSONObject();
+  	
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_BROADCAST) == BluetoothGattCharacteristic.PROPERTY_BROADCAST)
+  	{
+  		addProperty(propertiesObject, propertyBroadcast, JSONObject.NULL);
+  	}
+  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_READ) == BluetoothGattCharacteristic.PROPERTY_READ)
+  	{
+  		addProperty(propertiesObject, propertyRead, JSONObject.NULL);
+  	}
+  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)
+  	{
+  		addProperty(propertiesObject, propertyWriteWithoutResponse, JSONObject.NULL);
+  	}
+  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE) == BluetoothGattCharacteristic.PROPERTY_WRITE)
+  	{
+  		addProperty(propertiesObject, propertyWrite, JSONObject.NULL);
+  	}
+  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == BluetoothGattCharacteristic.PROPERTY_NOTIFY)
+  	{
+  		addProperty(propertiesObject, propertyNotify, JSONObject.NULL);
+  	}
+  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_INDICATE) == BluetoothGattCharacteristic.PROPERTY_INDICATE)
+  	{
+  		addProperty(propertiesObject, propertyIndicate, JSONObject.NULL);
+  	}
+  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) == BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE)
+  	{
+  		addProperty(propertiesObject, propertyAuthenticatedSignedWrites, JSONObject.NULL);
+  	}
+  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS) == BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS)
+  	{
+  		addProperty(propertiesObject, propertyExtendedProperties, JSONObject.NULL);
+  	}
+  	else if ((properties & 0x100) == 0x100)
+  	{
+  		addProperty(propertiesObject, propertyNotifyEncryptionRequired, JSONObject.NULL);
+  	}
+  	else if ((properties & 0x200) == 0x200)
+  	{
+  		addProperty(propertiesObject, propertyIndicateEncryptionRequired, JSONObject.NULL);
+  	}
+
+  	return propertiesObject;
   }
 }
