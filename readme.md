@@ -326,7 +326,7 @@ Descriptor Object:
           ],
           "properties":
           {
-          	"read":null,
+          	"read":true,
           } 
         },
         {
@@ -376,7 +376,7 @@ bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsError
 
 ##### Success Return #####
 ```javascript
-{"status":"discoveredCharacteristics","characteristics":[{"properties":{"notify":null},"characteristicUuid":"2a37"}],"name":"Polar H7 259536","address":"6A267C59-3364-544C-F2AE-1616AE34F2C3"}
+{"status":"discoveredCharacteristics","characteristics":[{"properties":{"notify":true},"characteristicUuid":"2a37"}],"name":"Polar H7 259536","address":"6A267C59-3364-544C-F2AE-1616AE34F2C3"}
 ```
 
 

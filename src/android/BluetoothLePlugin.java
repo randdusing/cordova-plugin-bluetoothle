@@ -2299,43 +2299,52 @@ public class BluetoothLePlugin extends CordovaPlugin
   	
   	if ((properties & BluetoothGattCharacteristic.PROPERTY_BROADCAST) == BluetoothGattCharacteristic.PROPERTY_BROADCAST)
   	{
-  		addProperty(propertiesObject, propertyBroadcast, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyBroadcast, true);
   	}
-  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_READ) == BluetoothGattCharacteristic.PROPERTY_READ)
+  	
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_READ) == BluetoothGattCharacteristic.PROPERTY_READ)
   	{
-  		addProperty(propertiesObject, propertyRead, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyRead, true);
   	}
-  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)
+  	
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)
   	{
-  		addProperty(propertiesObject, propertyWriteWithoutResponse, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyWriteWithoutResponse, true);
   	}
-  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE) == BluetoothGattCharacteristic.PROPERTY_WRITE)
+  	
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE) == BluetoothGattCharacteristic.PROPERTY_WRITE)
   	{
-  		addProperty(propertiesObject, propertyWrite, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyWrite, true);
   	}
-  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == BluetoothGattCharacteristic.PROPERTY_NOTIFY)
+
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == BluetoothGattCharacteristic.PROPERTY_NOTIFY)
   	{
-  		addProperty(propertiesObject, propertyNotify, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyNotify, true);
   	}
-  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_INDICATE) == BluetoothGattCharacteristic.PROPERTY_INDICATE)
+
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_INDICATE) == BluetoothGattCharacteristic.PROPERTY_INDICATE)
   	{
-  		addProperty(propertiesObject, propertyIndicate, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyIndicate, true);
   	}
-  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) == BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE)
+  	
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) == BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE)
   	{
-  		addProperty(propertiesObject, propertyAuthenticatedSignedWrites, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyAuthenticatedSignedWrites, true);
   	}
-  	else if ((properties & BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS) == BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS)
+  	
+  	if ((properties & BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS) == BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS)
   	{
-  		addProperty(propertiesObject, propertyExtendedProperties, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyExtendedProperties, true);
   	}
-  	else if ((properties & 0x100) == 0x100)
+  	
+  	if ((properties & 0x100) == 0x100)
   	{
-  		addProperty(propertiesObject, propertyNotifyEncryptionRequired, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyNotifyEncryptionRequired, true);
   	}
-  	else if ((properties & 0x200) == 0x200)
+
+  	if ((properties & 0x200) == 0x200)
   	{
-  		addProperty(propertiesObject, propertyIndicateEncryptionRequired, JSONObject.NULL);
+  		addProperty(propertiesObject, propertyIndicateEncryptionRequired, true);
   	}
 
   	return propertiesObject;

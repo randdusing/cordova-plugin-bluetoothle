@@ -2031,43 +2031,52 @@ NSString *const operationWrite = @"write";
     
     if ((properties & CBCharacteristicPropertyBroadcast) == CBCharacteristicPropertyBroadcast)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyBroadcast];
+        [propertiesObject setValue:@YES forKey:propertyBroadcast];
     }
-    else if ((properties & CBCharacteristicPropertyRead) == CBCharacteristicPropertyRead)
+    
+    if ((properties & CBCharacteristicPropertyRead) == CBCharacteristicPropertyRead)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyRead];
+        [propertiesObject setValue:@YES forKey:propertyRead];
     }
-    else if ((properties & CBCharacteristicPropertyWriteWithoutResponse) == CBCharacteristicPropertyWriteWithoutResponse)
+    
+    if ((properties & CBCharacteristicPropertyWriteWithoutResponse) == CBCharacteristicPropertyWriteWithoutResponse)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyWriteWithoutResponse];
+        [propertiesObject setValue:@YES forKey:propertyWriteWithoutResponse];
     }
-    else if ((properties & CBCharacteristicPropertyWrite) == CBCharacteristicPropertyWrite)
+    
+    if ((properties & CBCharacteristicPropertyWrite) == CBCharacteristicPropertyWrite)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyWrite];
+        [propertiesObject setValue:@YES forKey:propertyWrite];
     }
-    else if ((properties & CBCharacteristicPropertyNotify) == CBCharacteristicPropertyNotify)
+    
+    if ((properties & CBCharacteristicPropertyNotify) == CBCharacteristicPropertyNotify)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyNotify];
+        [propertiesObject setValue:@YES forKey:propertyNotify];
     }
-    else if ((properties & CBCharacteristicPropertyIndicate) == CBCharacteristicPropertyIndicate)
+    
+    if ((properties & CBCharacteristicPropertyIndicate) == CBCharacteristicPropertyIndicate)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyIndicate];
+        [propertiesObject setValue:@YES forKey:propertyIndicate];
     }
-    else if ((properties & CBCharacteristicPropertyAuthenticatedSignedWrites) == CBCharacteristicPropertyAuthenticatedSignedWrites)
+    
+    if ((properties & CBCharacteristicPropertyAuthenticatedSignedWrites) == CBCharacteristicPropertyAuthenticatedSignedWrites)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyAuthenticatedSignedWrites];
+        [propertiesObject setValue:@YES forKey:propertyAuthenticatedSignedWrites];
     }
-    else if ((properties & CBCharacteristicPropertyExtendedProperties) == CBCharacteristicPropertyExtendedProperties)
+    
+    if ((properties & CBCharacteristicPropertyExtendedProperties) == CBCharacteristicPropertyExtendedProperties)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyExtendedProperties];
+        [propertiesObject setValue:@YES forKey:propertyExtendedProperties];
     }
-    else if ((properties & CBCharacteristicPropertyNotifyEncryptionRequired) == CBCharacteristicPropertyNotifyEncryptionRequired)
+    
+    if ((properties & CBCharacteristicPropertyNotifyEncryptionRequired) == CBCharacteristicPropertyNotifyEncryptionRequired)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyNotifyEncryptionRequired];
+        [propertiesObject setValue:@YES forKey:propertyNotifyEncryptionRequired];
     }
-    else if ((properties & CBCharacteristicPropertyIndicateEncryptionRequired) == CBCharacteristicPropertyIndicateEncryptionRequired)
+    
+    if ((properties & CBCharacteristicPropertyIndicateEncryptionRequired) == CBCharacteristicPropertyIndicateEncryptionRequired)
     {
-        [propertiesObject setValue:[NSNull null] forKey:propertyIndicateEncryptionRequired];
+        [propertiesObject setValue:@YES forKey:propertyIndicateEncryptionRequired];
     }
     
     return propertiesObject;
