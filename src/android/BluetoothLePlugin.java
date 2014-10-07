@@ -46,6 +46,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //Initialization related variables
   private final int REQUEST_BT_ENABLE = 59627; /*Random integer*/
   private BluetoothAdapter bluetoothAdapter;
+  private boolean isReceiverRegistered = false;
 
   //Connection related variables
   private BluetoothGatt bluetoothGatt;
@@ -349,8 +350,32 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void initializeAction(JSONArray args, CallbackContext callbackContext)
   { 
+    //Save init callback
+    initCallbackContext = callbackContext;
+    
   	if (bluetoothAdapter != null)
   	{
+  		JSONObject returnObj = new JSONObject();
+			PluginResult pluginResult;
+			
+			if (bluetoothAdapter.isEnabled())
+			{
+				addProperty(returnObj, keyStatus, statusEnabled);
+				
+				pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+	      pluginResult.setKeepCallback(true);
+	      initCallbackContext.sendPluginResult(pluginResult);
+			}
+			else
+			{
+				addProperty(returnObj, keyError, errorEnable);
+				addProperty(returnObj, keyMessage, logNotEnabled);
+				
+				pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+	      pluginResult.setKeepCallback(true);
+	      initCallbackContext.sendPluginResult(pluginResult);
+			}
+				
   		return;
   	}
   	
@@ -358,9 +383,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     
     //Add a receiver to pick up when Bluetooth state changes
     cordova.getActivity().registerReceiver(mReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-    
-    //Save init callback
-    initCallbackContext = callbackContext;
+    isReceiverRegistered = true;
     
     //Get Bluetooth adapter via Bluetooth Manager
     BluetoothManager bluetoothManager = (BluetoothManager) cordova.getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
@@ -1303,7 +1326,11 @@ public class BluetoothLePlugin extends CordovaPlugin
   public void onDestroy()
   {
       super.onDestroy();
-      cordova.getActivity().unregisterReceiver(mReceiver);
+      
+      if (isReceiverRegistered)
+      {
+      	cordova.getActivity().unregisterReceiver(mReceiver);
+      }
   }
   
 	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {

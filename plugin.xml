@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="com.randdusing.bluetoothle" version="1.0.4">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="com.randdusing.bluetoothle" version="1.0.5">
     <engines>
         <engine name="cordova" version=">=3.0.0" />
     </engines>
@@ -38,22 +38,22 @@
         <source-file src="src/ios/BluetoothLePlugin.m" />
         <framework src="CoreBluetooth.framework" />
     </platform>
-	<platform name="wp8">
-        <config-file target="config.xml" parent="/*">
-            <feature name="BluetoothLePlugin">
-                <param name="wp-package" value="BluetoothLePlugin" />
-            </feature>
-        </config-file>
-		<config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
-			<Capability Name="ID_CAP_NETWORKING" />
-			<Capability Name="ID_CAP_IDENTITY_DEVICE" />
-			<m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
-				<m2:Device Id="any">
-					<m2:Function Type="serviceId:1803"/>
-				</m2:Device>
-			</m2:DeviceCapability>
-		</config-file>
-        <source-file src="src/wp/BluetoothLePlugin.cs" />
-    </platform>
+		<!--<platform name="wp8">
+			<config-file target="config.xml" parent="/*">
+				<feature name="BluetoothLePlugin">
+					<param name="wp-package" value="BluetoothLePlugin" />
+				</feature>
+			</config-file>
+			<config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
+				<Capability Name="ID_CAP_NETWORKING" />
+				<Capability Name="ID_CAP_IDENTITY_DEVICE" />
+				<m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
+					<m2:Device Id="any">
+						<m2:Function Type="serviceId:1803"/>
+					</m2:Device>
+				</m2:DeviceCapability>
+			</config-file>
+			<source-file src="src/wp/BluetoothLePlugin.cs" />
+    </platform>-->
     <info>For more info: http://randdusing.com/</info>
 </plugin>

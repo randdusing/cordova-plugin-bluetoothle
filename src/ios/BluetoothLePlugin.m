@@ -99,7 +99,6 @@ NSString *const logResetting = @"Bluetooth resetting";
 NSString *const logUnsupported = @"Bluetooth unsupported";
 NSString *const logNotInit = @"Bluetooth not initialized";
 NSString *const logNotEnabled = @"Bluetooth not enabled";
-NSString *const logAlreadyInit = @"Bluetooth already initialized";
 //Scanning
 NSString *const logAlreadyScanning = @"Scanning already in progress";
 NSString *const logNotScanning = @"Not scanning";
@@ -130,9 +129,29 @@ NSString *const operationWrite = @"write";
 //Actions
 - (void)initialize:(CDVInvokedUrlCommand *)command
 {
-    //Check to see if central manager has alrady been initialized
+    //Save the callback
+    initCallback = command.callbackId;
+    
+    //If central manager has been initialized already, return status=>enabled success or enable error
     if (centralManager != nil)
     {
+        NSDictionary* returnObj = nil;
+        CDVPluginResult* pluginResult = nil;
+        if ([centralManager state] == CBCentralManagerStatePoweredOn)
+        {
+            
+            returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusEnabled, keyStatus, nil];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+        }
+        else
+        {
+            returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorEnable, keyError, nil];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        }
+        
+        [pluginResult setKeepCallbackAsBool:true];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:initCallback];
+    
         return;
     }
     
@@ -146,8 +165,7 @@ NSString *const operationWrite = @"write";
         request = [self getRequest:obj];
     }
     
-    //Set the initialization callback and initialize central manager
-    initCallback = command.callbackId;
+    //Initialize central manager
     centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:pluginName, CBCentralManagerOptionShowPowerAlertKey:request }];
 }
 
