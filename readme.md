@@ -46,6 +46,19 @@ https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-en
 https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios
 
 
+## Background Mode (iOS) ##
+By default, background mode is enabled. If you wish to remove this, follow the steps below:
+
+1. Click your Project
+2. Click your Target
+3. Click Capabilities
+4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories
+5. Open up BLuetoothLePlugin.m
+6. Remove "CBCentralManagerOptionRestoreIdentifierKey:pluginName," from the initWithDelegate call in the initialize function
+7. Remove the willRestoreState function
+8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used
+
+
 ## Installation ##
 
 If you are using phonegap add the plugin to your app by running the command below:
