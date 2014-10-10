@@ -3,11 +3,20 @@ var bluetoothle = {
   initialize: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "initialize", [params]); 
   },
+  enable: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "enable", []);
+  },
+  disable: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "disable", []);
+  },
   startScan: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]); 
   },
   stopScan: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "stopScan", []);
+  },
+  retrieveConnected: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "retrieveConnected", [params]);
   },
   connect: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "connect", [params]);

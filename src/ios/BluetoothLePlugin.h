@@ -14,11 +14,16 @@
     CBCentralManager *centralManager;
     
     CBPeripheral* activePeripheral;
+    
+    NSNumber* statusReceiver;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;
+- (void)enable:(CDVInvokedUrlCommand *)command;
+- (void)disable:(CDVInvokedUrlCommand *)command;
 - (void)startScan:(CDVInvokedUrlCommand *)command;
 - (void)stopScan:(CDVInvokedUrlCommand *)command;
+- (void)retrieveConnected:(CDVInvokedUrlCommand *)command;
 - (void)connect:(CDVInvokedUrlCommand *)command;
 - (void)reconnect:(CDVInvokedUrlCommand *)command;
 - (void)disconnect:(CDVInvokedUrlCommand *)command;

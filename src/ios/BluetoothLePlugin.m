@@ -7,6 +7,7 @@ NSString *const pluginName = @"bluetoothleplugin";
 NSString *const keyStatus = @"status";
 NSString *const keyError = @"error";
 NSString *const keyRequest = @"request";
+NSString *const keyStatusReceiver = @"statusReceiver";
 NSString *const keyMessage = @"message";
 NSString *const keyName = @"name";
 NSString *const keyAddress = @"address";
@@ -165,8 +166,27 @@ NSString *const operationWrite = @"write";
         request = [self getRequest:obj];
     }
     
+    //Check if status should be returned
+    statusReceiver = [self getStatusReceiver:obj];
+    
     //Initialize central manager
     centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:pluginName, CBCentralManagerOptionShowPowerAlertKey:request }];
+}
+
+- (void)enable:(CDVInvokedUrlCommand *)command
+{
+    //Do nothing if discover is called on iOS
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)disable:(CDVInvokedUrlCommand *)command
+{
+    //Do nothing if discover is called on iOS
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)startScan:(CDVInvokedUrlCommand *)command
@@ -235,6 +255,42 @@ NSString *const operationWrite = @"write";
     //Return a callback
     NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusScanStopped, keyStatus, nil];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)retrieveConnected:(CDVInvokedUrlCommand *)command
+{
+    //Ensure Bluetooth is enabled
+    if ([self isNotInitialized:command])
+    {
+        return;
+    }
+    
+    //Get an array of service assigned numbers to filter by
+    NSDictionary *obj = [self getArgsObject:command.arguments];
+    NSMutableArray* serviceUuids = nil;
+    if (obj != nil)
+    {
+        serviceUuids = [self getUuids:obj forType:keyServiceUuids];
+    }
+    
+    //Get connected devices with specified services
+    NSArray* peripherals = [centralManager retrieveConnectedPeripheralsWithServices:serviceUuids];
+    
+    //Array to store returned peripherals
+    NSMutableArray* peripheralsOut = [[NSMutableArray alloc] init];
+    
+    //Create an object from each peripheral containing device ID and name, and add to array
+    for (CBPeripheral* peripheral in peripherals)
+    {
+        NSObject* name = [self formatName:peripheral.name];
+        NSMutableDictionary* peripheralOut = [NSMutableDictionary dictionaryWithObjectsAndKeys: name, keyName, peripheral.identifier.UUIDString, keyAddress, nil];
+        [peripheralsOut addObject:peripheralOut];
+    }
+    
+    //Return the array
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:peripheralsOut];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -984,6 +1040,12 @@ NSString *const operationWrite = @"write";
 //Central Manager Delegates
 - (void) centralManagerDidUpdateState:(CBCentralManager *)central
 {
+    //If status notifications shouldn't be sent and first status after initialization has been sent, ignore
+    if ([statusReceiver boolValue] == FALSE)
+    {
+        return;
+    }
+    
     //If no callback, don't return anything
     if (initCallback == nil)
     {
@@ -1901,6 +1963,23 @@ NSString *const operationWrite = @"write";
     }
     
     return request;
+}
+
+-(NSNumber*) getStatusReceiver:(NSDictionary *)obj
+{
+    NSNumber* checkStatusReceiver = [obj valueForKey:keyStatusReceiver];
+    
+    if (checkStatusReceiver == nil)
+    {
+        return [NSNumber numberWithBool:YES];
+    }
+    
+    if (![checkStatusReceiver isKindOfClass:[NSNumber class]])
+    {
+        return [NSNumber numberWithBool:YES];
+    }
+    
+    return checkStatusReceiver;
 }
 
 -(int) getWriteType:(NSDictionary *)obj

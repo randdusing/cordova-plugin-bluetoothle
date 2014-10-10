@@ -4,13 +4,11 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Base64;
-import android.util.Log;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -60,6 +58,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   //Action Name Strings
   private final String initializeActionName = "initialize";
+  private final String enableActionName = "enable";
+  private final String disableActionName = "disable";
   private final String startScanActionName = "startScan";
   private final String stopScanActionName = "stopScan";
   private final String connectActionName = "connect";
@@ -88,6 +88,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyError = "error";
   private final String keyMessage = "message";
   private final String keyRequest = "request";
+  private final String keyStatusReceiver = "statusReceiver";
   private final String keyName = "name";
   private final String keyAddress = "address";
   private final String keyRssi = "rssi";
@@ -147,6 +148,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //Error Types
   private final String errorInitialize = "initialize";
   private final String errorEnable = "enable";
+  private final String errorDisable = "disable";
   private final String errorArguments = "arguments";
   private final String errorStartScan = "startScan";
   private final String errorStopScan = "stopScan";
@@ -170,6 +172,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //Error Messages
   //Initialization
   private final String logNotEnabled = "Bluetooth not enabled";
+  private final String logNotDisabled = "Bluetooth not disabled";
   private final String logNotInit = "Bluetooth not initialized";
   //Scanning
   private final String logAlreadyScanning = "Scanning already in progress";
@@ -233,6 +236,16 @@ public class BluetoothLePlugin extends CordovaPlugin
           initializeAction(args, callbackContext);
         }
       });
+      return true;
+    }
+    else if (enableActionName.equals(action))
+    {
+      enableAction(callbackContext);
+      return true;
+    }
+    else if (disableActionName.equals(action))
+    {
+      disableAction(callbackContext);
       return true;
     }
     else if (startScanActionName.equals(action))
@@ -379,15 +392,20 @@ public class BluetoothLePlugin extends CordovaPlugin
   		return;
   	}
   	
-    JSONObject returnObj = new JSONObject();
-    
-    //Add a receiver to pick up when Bluetooth state changes
-    cordova.getActivity().registerReceiver(mReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-    isReceiverRegistered = true;
+  	JSONObject obj = getArgsObject(args);
+  	
+  	if (getStatusReceiver(obj))
+  	{
+	    //Add a receiver to pick up when Bluetooth state changes
+	    cordova.getActivity().registerReceiver(mReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+	    isReceiverRegistered = true;
+  	}
     
     //Get Bluetooth adapter via Bluetooth Manager
     BluetoothManager bluetoothManager = (BluetoothManager) cordova.getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
     bluetoothAdapter = bluetoothManager.getAdapter();
+    
+    JSONObject returnObj = new JSONObject();
     
     //If it's already enabled, 
     if (bluetoothAdapter.isEnabled())
@@ -398,8 +416,6 @@ public class BluetoothLePlugin extends CordovaPlugin
       initCallbackContext.sendPluginResult(pluginResult);
     	return;
     }
-    
-    JSONObject obj = getArgsObject(args);
     
     boolean request = false;
     if (obj != null)
@@ -425,9 +441,60 @@ public class BluetoothLePlugin extends CordovaPlugin
   	}
   }
   
+  private void enableAction(CallbackContext callbackContext)
+  {
+  	if (isNotInitialized(callbackContext, false))
+  	{
+  		return;
+  	}
+  	
+  	if (isNotDisabled(callbackContext))
+  	{
+  		return;
+  	}
+  	
+  	boolean result = bluetoothAdapter.enable();
+  	
+  	if (!result)
+  	{
+  		//Throw an enabling error
+  		JSONObject returnObj = new JSONObject();
+	    
+	    addProperty(returnObj, keyError, errorEnable);
+	    addProperty(returnObj, keyMessage, logNotEnabled);
+	    
+	    callbackContext.error(returnObj);
+  	}
+  	
+  	//Else listen to initialize callback for enabling
+  }
+  
+  private void disableAction(CallbackContext callbackContext)
+  {
+  	if (isNotInitialized(callbackContext, true))
+  	{
+  		return;
+  	}
+  	
+  	boolean result = bluetoothAdapter.disable();
+  	
+  	if (!result)
+  	{
+  		//Throw a disabling error
+  		JSONObject returnObj = new JSONObject();
+	    
+	    addProperty(returnObj, keyError, errorDisable);
+	    addProperty(returnObj, keyMessage, logNotDisabled);
+	    
+	    callbackContext.error(returnObj);
+  	}
+  	
+  	//Else listen to initialize callback for disabling
+  }
+  
   private void startScanAction(JSONArray args, CallbackContext callbackContext)
   {
-  	if (isNotInitialized(callbackContext))
+  	if (isNotInitialized(callbackContext, true))
   	{
   		return;
   	}
@@ -487,7 +554,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void stopScanAction(CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -516,7 +583,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void connectAction(JSONArray args, CallbackContext callbackContext)
   { 
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -580,7 +647,7 @@ public class BluetoothLePlugin extends CordovaPlugin
    
   private void reconnectAction(CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -626,7 +693,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void disconnectAction(CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -678,7 +745,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void closeAction(CallbackContext callbackContext)
   {  
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -715,7 +782,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void discoverAction(CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -756,7 +823,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void readAction(JSONArray args, CallbackContext callbackContext)
   {
-  	if (isNotInitialized(callbackContext))
+  	if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -812,7 +879,7 @@ public class BluetoothLePlugin extends CordovaPlugin
    
   private void subscribeAction(JSONArray args, CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -916,7 +983,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void unsubscribeAction(JSONArray args, CallbackContext callbackContext)
   {
-  	if (isNotInitialized(callbackContext))
+  	if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -1004,7 +1071,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void writeAction(JSONArray args, CallbackContext callbackContext)
   {
-  	if (isNotInitialized(callbackContext))
+  	if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -1084,7 +1151,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void readDescriptorAction(JSONArray args, CallbackContext callbackContext)
   {
-  	if (isNotInitialized(callbackContext))
+  	if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -1147,7 +1214,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void writeDescriptorAction(JSONArray args, CallbackContext callbackContext)
   {
-  	if (isNotInitialized(callbackContext))
+  	if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -1241,7 +1308,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   
   private void rssiAction(CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext))
+    if (isNotInitialized(callbackContext, true))
     {
     	return;
     }
@@ -1936,7 +2003,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   }
   
   //Helpers to Check Conditions
-  private boolean isNotInitialized(CallbackContext callbackContext)
+  private boolean isNotInitialized(CallbackContext callbackContext, boolean checkIsNotEnabled)
   {
     if (bluetoothAdapter == null)
     {
@@ -1950,7 +2017,14 @@ public class BluetoothLePlugin extends CordovaPlugin
       return true;
     }
     
-    return isNotEnabled(callbackContext);
+    if (checkIsNotEnabled)
+    {
+    	return isNotEnabled(callbackContext);
+    }
+    else
+    {
+    	return false;
+    } 
   }
   
   private boolean isNotEnabled(CallbackContext callbackContext)
@@ -1961,6 +2035,23 @@ public class BluetoothLePlugin extends CordovaPlugin
 	    
 	    addProperty(returnObj, keyError, errorEnable);
 	    addProperty(returnObj, keyMessage, logNotEnabled);
+	    
+	    callbackContext.error(returnObj);
+
+      return true;
+  	}
+  	
+  	return false;
+  }
+  
+  private boolean isNotDisabled(CallbackContext callbackContext)
+  {
+  	if (bluetoothAdapter.isEnabled())
+  	{
+  		JSONObject returnObj = new JSONObject();
+	    
+	    addProperty(returnObj, keyError, errorDisable);
+	    addProperty(returnObj, keyMessage, logNotDisabled);
 	    
 	    callbackContext.error(returnObj);
 
@@ -2246,6 +2337,11 @@ public class BluetoothLePlugin extends CordovaPlugin
   private boolean getRequest(JSONObject obj)
   {
   	return obj.optBoolean(keyRequest, false);
+  }
+  
+  private boolean getStatusReceiver(JSONObject obj)
+  {
+  	return obj.optBoolean(keyStatusReceiver, true);
   }
   
   private int getWriteType(JSONObject obj)

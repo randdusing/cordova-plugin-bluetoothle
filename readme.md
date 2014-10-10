@@ -107,6 +107,7 @@ To fix:
 Whenever the error callback is executed, the return object will contain the error type and a message.
 * initialize - Bluetooth isn't initialized (Try initializing Bluetooth)
 * enable - Bluetooth isn't enabled (Request user to enable Bluetooth)
+* disable - Bluetooth isn't disabled (Can't enabled if already disabled) * Android
 * startScan - Scan couldn't be started (Is the scan already running?)
 * stopScan - Scan couldn't be stopped (Is the scan already stopped?)
 * connect - Connection attempt failed (Is the device address correct?)
@@ -162,16 +163,47 @@ bluetoothle.initialize(initializeSuccessCallback, initializeErrorCallback, param
 ```
 
 ##### Params #####
-* request = true/false
+* request = true / false (default) - Should user be prompted to enable Bluetooth
+* statusReceiver = true (default) / false - Should change in Bluetooth status notifications be sent.
 
 ```javascript
-{"request":true};
+{"request":true, "statusReceiver":false};
 ```
 
 ##### Success Return #####
 ```javascript
 {"status":"enabled"};
 ```
+
+
+
+## enable ##
+Enable Bluetooth on the device. Android support only. iOS will return null.
+```javascript
+bluetoothle.enable(enableSuccessCallback, enableErrorCallback);
+```
+
+##### Error Return #####
+* errorDisable = Bluetooth isn't disabled, so unable to enable.
+* errorEnable = Immediate failure of the internal enable() function due to Bluetooth already on or airplane mode, so unable to enable.
+
+##### Success Return #####
+The successCallback isn't actually used. Listen to initialize callbacks for change in Bluetooth state. A successful enable will return a status => enabled via initialize success callback.
+
+
+
+## disable ##
+Disable Bluetooth on the device. Android support only. iOS will return null.
+```javascript
+bluetoothle.disable(disableSuccessCallback, disableErrorCallback);
+```
+
+##### Error Return #####
+* errorEnable = Bluetooth isn't enabled, so unable to disable.
+* errorDisable = Immediate failure of the internal disable() function due to Bluetooth already off, so unable to enable. This shouldn't occur since the plugin is already checking this condition anyways.
+
+##### Success Return #####
+The successCallback isn't actually used. Listen to initialize callbacks for change in Bluetooth state. A successful disable will return an error => enable via initialize error callback.
 
 
 
@@ -216,6 +248,31 @@ bluetoothle.stopScan(stopScanSuccessCallback, stopScanErrorCallback);
 * scanStop = Scan has stopped
 ```javascript
 {"status":"scanStopped"}
+```
+
+
+
+###retrieveConnected ###
+Retrieved Bluetooth LE devices currently connected. In iOS, devices that are "paired" to will not return during a normal scan. Callback is "instant" compared to a scan. iOS support only. Android will return null.
+
+```javascript
+bluetoothle.retrieveConnected(retrieveConnectedSuccessCallback, retrieveConnectedErrorCallback, params);
+```
+
+##### Params #####
+* serviceUuids = An array of service IDs to filter the retrieval or empty array / null
+
+```javascript
+{"serviceUuids":["180D", "180F"]}
+```
+
+##### Success Return #####
+* name = the device's display name
+* address = the device's address / identifier for connecting to the object
+```javascript
+[{"address":"01:23:45:67:89:AB","name":"Polar H7"}]; /* Android */
+[{"address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX","name":"Polar H7"}]; /* iOS */
+[{"address":"0123456789AB","name":"Polar H7"}]; /* WP8.1 */
 ```
 
 
@@ -284,7 +341,7 @@ bluetoothle.close(closeSuccessCallback, closeErrorCallback);
 
 
 ### discover ###
-Discover all the devices services, characteristics and descriptors. Doesn't need to be called again after disconnecting and then reconnecting. Android support only. Calling on iOS will return void.
+Discover all the devices services, characteristics and descriptors. Doesn't need to be called again after disconnecting and then reconnecting. Android support only. iOS will return null.
 
 ```javascript
 bluetoothle.discover(discoverSuccessCallback, discoverErrorCallback);
@@ -342,7 +399,7 @@ Descriptor Object:
 
 
 ### services ###
-Discover the device's services. Not providing an array of services will return all services and take longer to discover. iOS support only. Calling on Android will return void.
+Discover the device's services. Not providing an array of services will return all services and take longer to discover. iOS support only. Android will return null.
 
 ```javascript
 bluetoothle.services(servicesSuccessCallback, servicesErrorCallback, params);
@@ -363,7 +420,7 @@ bluetoothle.services(servicesSuccessCallback, servicesErrorCallback, params);
 
 
 ### characteristics ###
-Discover the service's characteristics. Not providing an array of characteristics will return all characteristics and take longer to discover. iOS support only. Calling on Android will return void.
+Discover the service's characteristics. Not providing an array of characteristics will return all characteristics and take longer to discover. iOS support only. Android will return null.
 
 ```javascript
 bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsErrorCallback, params);
@@ -382,7 +439,7 @@ bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsError
 
 
 ### descriptors ###
-Discover the characteristic's descriptors. iOS support only. Calling on Android will return void.
+Discover the characteristic's descriptors. iOS support only. Android will return null.
 
 ```javascript
 bluetoothle.characteristics(descriptorsSuccessCallback, descriptorsErrorCallback, params);
@@ -596,7 +653,7 @@ bluetoothle.isConnected(isConnectedCallback);
 
 
 ### isDiscovered ###
-Determine whether the device's characteristics and descriptors have been discovered. No error callback. Android support only. Calling on iOS will return false.
+Determine whether the device's characteristics and descriptors have been discovered. No error callback. Android support only. iOS will return false.
 
 ```javascript
 bluetoothle.isDiscovered(isDiscoveredCallback);
