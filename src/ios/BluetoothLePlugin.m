@@ -1121,7 +1121,7 @@ NSString *const operationWrite = @"write";
 
 - (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict
 {
-    //Trying to remember why this was here...
+    //Needed to support background mode
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
