@@ -3,19 +3,13 @@
 
 @interface BluetoothLePlugin : CDVPlugin <CBCentralManagerDelegate, CBPeripheralDelegate>
 {
+    CBCentralManager *centralManager;
+    NSNumber* statusReceiver;
+    
     NSString* initCallback;
     NSString* scanCallback;
-    NSString* connectCallback;
-    NSString* discoverCallback;
-    NSString* descriptorCallback;
-    NSString* rssiCallback;
-    NSMutableDictionary* operationCallbacks;
-    
-    CBCentralManager *centralManager;
-    
-    CBPeripheral* activePeripheral;
-    
-    NSNumber* statusReceiver;
+
+    NSMutableDictionary* connections;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;

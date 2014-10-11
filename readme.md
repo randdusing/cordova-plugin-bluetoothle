@@ -14,20 +14,40 @@ Bluetooth LE PhoneGap Plugin
 
 ## Limitations / Issues ##
 
-* Warning: Phonegap, Android, iOS and Objective C are all very new to me.
-* <del>iOS doesn't prompt user to enable Bluetooth if disabled like Android does. It's probably possible, but I just forgot until right before comitting the latest changes.</del> This is now configurable using the "request" property in initialize.
-* Tested with a heart rate monitor, so some scenarios especially those involving writing characteristics may not work as I was unable to test it. If you run into an issue, log it and I'll try to fix it. If you let me borrow a device, I can probably fix it even quicker. :)
-* Limited to connecting to a single device at a time (Pretty sure it's feasible and not too difficult to implement, but a low priorty for my original project) ** Hope to begin working on this starting in July
-* <del>All discovery, read and write operations must be done sequentially. i.e read characteristic x1234, wait for read result, read characteristic x5678, wait for read result, etc. More info on http://stackoverflow.com/questions/18011816/has-native-android-ble-gatt-implementation-synchronous-nature (Eventually queuing could be added, but a low priority for my original project)</del> There's now support for multiple operations. For example, you can write characteristic A or read characteristic B while subscribed to characteristic C.
-* <del>No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released. Originally planned to buy a Windows 8.1 Phone before moving to Korea, but the one I wanted did come out in time. Still deciding what to do.
+* Tested mostly with a heart rate monitor, so some scenarios especially those involving writing characteristics may not work as I was unable to test it.
+* Example could use an update
+* Windows Phone 8 support is limited in some areas for the time being
+* No queueing support for read/write operations
 * Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin or Android's Bluetooth LE implementation.
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
-* <del>Characteristic properties are not returned during discovery. If anyone requests this, I should be able to add it fairly easily.</del>Charactertistic properties are now returned. See discovery/characteristics method documentation for more info.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android. iOS doesn't appear to use permissions.
+
+
+## Installation ##
+
+If you are using phonegap add the plugin to your app by running the command below:
+
+```phonegap local plugin add https://github.com/randdusing/BluetoothLE```
+
+If you are using apache cordova use this instead:
+
+```cordova plugin add https://github.com/randdusing/BluetoothLE```
+
+
+## Updating ##
+
+Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries. To fix:
+1. Click your project to open the "properties" window
+2. Click your target
+3. Click Build Phases
+4. Ensure BluetoothLePlugin.m is added to the Compile Sources
+5. Ensure CoreBluetooth.framework is added to the Link Binary with Libraries
+
 
 ## Discovery Android vs iOS ##
 
 Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The Device plugin (http://docs.phonegap.com/en/edge/cordova_device_device.md.html#Device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS.
+
 
 ## UUIDs ##
 UUIDs can be 16 bits or 128 bits. The "out of the box" UUIDs from the link below are 16 bits.
@@ -35,6 +55,7 @@ Since iOS returns the 16 bit version of the "out of the box" UUIDs even if a 128
 Android on the other hand only uses the 128 bit version, but the plugin will automatically convert 16 bit UUIDs to the 128 bit version on input and output.
 
 https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
+
 
 ## Advertisement Data / MAC Address ##
 On iOS, the MAC address is hidden from the advertisement packet, and the address returned from the scanResult is a generated, device-specific address. This is a problem when using devices like iBeacons where you need the MAC Address. Fortunately the CLBeacon class can be used for this, but unfortunately it's not supported in this plugin.
@@ -53,35 +74,10 @@ By default, background mode is enabled. If you wish to remove this, follow the s
 2. Click your Target
 3. Click Capabilities
 4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories
-5. Open up BLuetoothLePlugin.m
+5. Open up BluetoothLePlugin.m
 6. Remove "CBCentralManagerOptionRestoreIdentifierKey:pluginName," from the initWithDelegate call in the initialize function
 7. Remove the willRestoreState function
 8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used
-
-
-## Installation ##
-
-If you are using phonegap add the plugin to your app by running the command below:
-
-```phonegap local plugin add https://github.com/randdusing/BluetoothLE```
-
-If you are using apache cordova use this instead:
-
-```cordova plugin add https://github.com/randdusing/BluetoothLE```
-
-
-Read the documentation below.
-
-
-## Updating ##
-
-Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries.
-To fix:
-- Click your project to open the "properties" window
-- Click your target
-- Click Build Phases
-- Ensure BluetoothLePlugin.m is added to the Compile Sources
-- Ensure CoreBluetooth.framework is added to the Link Binary with Libraries
 
 
 ## Methods ##
@@ -89,6 +85,7 @@ To fix:
 * bluetoothle.initialize
 * bluetoothle.startScan
 * bluetoothle.stopScan
+* bluetoothle.retrieveConnected (iOS only)
 * bluetoothle.connect
 * bluetoothle.reconnect
 * bluetoothle.disconnect
@@ -120,7 +117,7 @@ To fix:
 Whenever the error callback is executed, the return object will contain the error type and a message.
 * initialize - Bluetooth isn't initialized (Try initializing Bluetooth)
 * enable - Bluetooth isn't enabled (Request user to enable Bluetooth)
-* disable - Bluetooth isn't disabled (Can't enabled if already disabled) * Android
+* disable - Bluetooth isn't disabled (Can't enabled if already disabled) *Android only
 * startScan - Scan couldn't be started (Is the scan already running?)
 * stopScan - Scan couldn't be stopped (Is the scan already stopped?)
 * connect - Connection attempt failed (Is the device address correct?)
@@ -163,7 +160,7 @@ https://developer.apple.com/library/mac/documentation/CoreBluetooth/Reference/CB
 2. scan (if device address is unknown)
 3. connect
 4. discover (Android) OR services/characteristics/descriptors (iOS)
-5. read/subscribe/write characteristics/descriptors
+5. read/subscribe/write characteristics AND read/write descriptors
 6. disconnect
 7. close
 
@@ -265,7 +262,7 @@ bluetoothle.stopScan(stopScanSuccessCallback, stopScanErrorCallback);
 
 
 
-###retrieveConnected ###
+### retrieveConnected ###
 Retrieved Bluetooth LE devices currently connected. In iOS, devices that are "paired" to will not return during a normal scan. Callback is "instant" compared to a scan. iOS support only. Android will return null.
 
 ```javascript
@@ -322,6 +319,14 @@ Reconnect to a previously connected Bluetooth device. The Phonegap app should us
 bluetoothle.reconnect(reconnectSuccessCallback, reconnectErrorCallback);
 ```
 
+##### Params #####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{"address":"01:23:45:67:89:AB"} /* Android */
+{"address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"} /* iOS */
+```
+
 ##### Success Return #####
 See return object for connect
 
@@ -332,6 +337,14 @@ Disconnect from a Bluetooth LE device.
 
 ```javascript
 bluetoothle.disconnect(disconnectSuccessCallback, disconnectErrorCallback);
+```
+
+##### Params #####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{"address":"01:23:45:67:89:AB"} /* Android */
+{"address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"} /* iOS */
 ```
 
 ##### Return #####
@@ -346,6 +359,14 @@ Close/dispose a Bluetooth LE device. Must disconnect before closing.
 bluetoothle.close(closeSuccessCallback, closeErrorCallback);
 ```
 
+##### Params #####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{"address":"01:23:45:67:89:AB"} /* Android */
+{"address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"} /* iOS */
+```
+
 ##### Success Return #####
 ```javascript
 {"status":"closed","address":"01:23:45:67:89:AB","name":"Polar H7"}
@@ -358,6 +379,14 @@ Discover all the devices services, characteristics and descriptors. Doesn't need
 
 ```javascript
 bluetoothle.discover(discoverSuccessCallback, discoverErrorCallback);
+```
+
+##### Params #####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{"address":"01:23:45:67:89:AB"} /* Android */
+{"address":"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"} /* iOS */
 ```
 
 ##### Return #####
@@ -419,10 +448,11 @@ bluetoothle.services(servicesSuccessCallback, servicesErrorCallback, params);
 ```
 
 ##### Params #####
+* address = The address/identifier provided by the scan's return object
 * serviceUuids = An array of service IDs to filter the scan or empty array / null
 
 ```javascript
-{"serviceUuids":["180D","180F"]};
+{"address":"abc123", "serviceUuids":["180D","180F"]};
 ```
 
 ##### Success Return #####
@@ -440,8 +470,12 @@ bluetoothle.characteristics(characteristicsSuccessCallback, characteristicsError
 ```
 
 ##### Params #####
+* address = The address/identifier provided by the scan's return object
+* serviceUuid = The service ID
+* characteristicUuids = An array of characteristic IDs to discover or empty array / null
+
 ```javascript
-{"serviceUuid":"180D","characteristicUuids":["2A37","2A38"]}
+{"address":"abc123", "serviceUuid":"180D","characteristicUuids":["2A37","2A38"]}
 ```
 
 ##### Success Return #####
@@ -459,8 +493,12 @@ bluetoothle.characteristics(descriptorsSuccessCallback, descriptorsErrorCallback
 ```
 
 ##### Params #####
+* address = The address/identifier provided by the scan's return object
+* serviceUuid = The service's ID
+* characteristicUuids = The characteristic's ID
+
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37"};
+{"address":"abc123", "serviceUuid":"180D","characteristicUuid":"2A37"};
 ```
 
 ##### Success Return #####
@@ -478,8 +516,12 @@ bluetoothle.read(readSuccessCallback, readErrorCallback, params);
 ```
 
 ##### Params #####
+* address = The address/identifier provided by the scan's return object
+* serviceUuid = The service's ID
+* characteristicUuids = The characteristic's ID
+
 ```javascript
-{"serviceUuid":"180F","characteristicUuid":"2A19"}
+{"address":"abc123", "serviceUuid":"180F","characteristicUuid":"2A19"}
 ```
 
 ##### Success Return #####
@@ -533,7 +575,7 @@ bluetoothle.unsubscribe(unsubscribeSuccessCallback, unsubscribeErrorCallback, pa
 
 
 ### write ###
-Write a particular service's characteristic. ***Note, this hasn't been well tested***
+Write a particular service's characteristic.
 
 ```javascript
 bluetoothle.write(writeSuccessCallback, writeErrorCallback, params);

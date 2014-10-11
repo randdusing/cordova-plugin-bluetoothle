@@ -21,17 +21,17 @@ var bluetoothle = {
   connect: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "connect", [params]);
   },
-  reconnect: function(successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "reconnect", []);
+  reconnect: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "reconnect", [params]);
   },
-  disconnect: function(successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "disconnect", []);
+  disconnect: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "disconnect", [params]);
   },
-  close: function(successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "close", []);
+  close: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "close", [params]);
   },
-  discover: function(successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "discover", []);
+  discover: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "discover", [params]);
   },
   services: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "services", [params]);
@@ -60,8 +60,8 @@ var bluetoothle = {
   writeDescriptor: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "writeDescriptor", [params]);
   },
-  rssi: function(successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "rssi", []);
+  rssi: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "rssi", [params]);
   },
   isInitialized: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isInitialized", []);
@@ -72,11 +72,11 @@ var bluetoothle = {
   isScanning: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isScanning", []);
   },
-  isConnected: function(successCallback) {
-    cordova.exec(successCallback, successCallback, bluetoothleName, "isConnected", []);
+  isConnected: function(successCallback, params) {
+    cordova.exec(successCallback, successCallback, bluetoothleName, "isConnected", [params]);
   },
-  isDiscovered: function(successCallback) {
-    cordova.exec(successCallback, successCallback, bluetoothleName, "isDiscovered", []);
+  isDiscovered: function(successCallback, params) {
+    cordova.exec(successCallback, successCallback, bluetoothleName, "isDiscovered", [params]);
   },
   encodedStringToBytes: function(string) {
     var data = atob(string);
