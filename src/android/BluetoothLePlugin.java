@@ -177,6 +177,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logNotScanning = "Not scanning";
   //Connection
   private final String logPreviouslyConnected = "Device previously connected, reconnect or close for new device";
+  private final String logConnectFail = "Connect failed";
   private final String logNeverConnected = "Never connected to device";
   private final String logIsNotConnected = "Device isn't connected";
   private final String logIsNotDisconnected = "Device isn't disconnected";
@@ -1442,9 +1443,20 @@ public class BluetoothLePlugin extends CordovaPlugin
       BluetoothDevice device = gatt.getDevice();
       
       connectionState = newState;
-      
+
+      //Connection failed
+      if (status != BluetoothGatt.GATT_SUCCESS) {
+        JSONObject returnObj = new JSONObject();
+        addProperty(returnObj, keyError, errorConnect);
+        addProperty(returnObj, keyMessage, logConnectFail);
+
+        //Keep connection call back for disconnect
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+        pluginResult.setKeepCallback(true);
+        connectCallbackContext.sendPluginResult(pluginResult);
+      }
       //Device was connected
-      if (newState == BluetoothProfile.STATE_CONNECTED)
+      else if (newState == BluetoothProfile.STATE_CONNECTED)
       {
       	operationCallbackContexts = new HashMap<UUID, HashMap<String, CallbackContext>>();
       	
