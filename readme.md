@@ -14,6 +14,7 @@ Bluetooth LE PhoneGap Plugin
 
 ## Limitations / Issues ##
 
+* Samsung Devices - I've been experiencing a lot of issues with Samsung devices. I'd appreciate anyone who could test their Samsung devices pretty heavily!
 * Warning: Phonegap, Android, iOS and Objective C are all very new to me.
 * <del>iOS doesn't prompt user to enable Bluetooth if disabled like Android does. It's probably possible, but I just forgot until right before comitting the latest changes.</del> This is now configurable using the "request" property in initialize.
 * Tested with a heart rate monitor, so some scenarios especially those involving writing characteristics may not work as I was unable to test it. If you run into an issue, log it and I'll try to fix it. If you let me borrow a device, I can probably fix it even quicker. :)
