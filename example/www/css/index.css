@@ -1,0 +1,17 @@
+/*Reset*/
+html{color:#000;background:#fff}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}table{border-collapse:collapse;border-spacing:0}fieldset,img{border:0}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}ol,ul{list-style:none}caption,th{text-align:left}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}q:before,q:after{content:''}abbr,acronym{border:0;font-variant:normal}sup{vertical-align:text-top}sub{vertical-align:text-bottom}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit;font-size:100%}legend{color:#000}
+
+/*General*/
+h2 { margin-bottom: .25em; }
+a { margin-bottom: .5em; }
+.ui-content { padding: .5em; }
+
+/*Lists*/
+li { border: 1px solid #666; padding: .25em; }
+
+/*Toggle*/
+.toggle { font-weight: bold; padding: .25em; }
+.toggle:after { content: " +"; }
+.toggle + ul { display: none; }
+.toggle.active:after { content: " -"; }
+.toggle.active + ul { display: block; }

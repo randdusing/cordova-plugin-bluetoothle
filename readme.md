@@ -1265,7 +1265,10 @@ bluetoothle.bytesToString(bytes);
 
 
 ## Example ##
-Please see the sample application! The write and writeDescriptor functions will need to be edited with actual values before using.
+1. Create an out of the box Cordova application
+2. Copy and paste the /www folder in /example to your Cordova application
+3. Install the plugin using the steps below.
+4. Modify write and writeDescriptor functions with actual values.
 
 
 
