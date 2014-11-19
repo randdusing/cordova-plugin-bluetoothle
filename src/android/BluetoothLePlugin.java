@@ -186,11 +186,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logNotScanning = "Not scanning";
   //Connection
   private final String logPreviouslyConnected = "Device previously connected, reconnect or close for new device";
-<<<<<<< HEAD
-  private final String logConnectFail = "Connect failed";
-=======
   private final String logConnectFail = "Connection failed";
->>>>>>> test
   private final String logNeverConnected = "Never connected to device";
   private final String logIsNotConnected = "Device isn't connected";
   private final String logIsNotDisconnected = "Device isn't disconnected";
@@ -1784,72 +1780,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
   };
   
-  
-  
   private String formatUuid(UUID uuid)
   {
-<<<<<<< HEAD
-    @Override
-    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
-    {
-      //Get the connected device
-      BluetoothDevice device = gatt.getDevice();
-      
-      connectionState = newState;
-
-      //Connection failed
-      if (status != BluetoothGatt.GATT_SUCCESS) {
-        JSONObject returnObj = new JSONObject();
-        addProperty(returnObj, keyError, errorConnect);
-        addProperty(returnObj, keyMessage, logConnectFail);
-
-        //Keep connection call back for disconnect
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
-        pluginResult.setKeepCallback(true);
-        connectCallbackContext.sendPluginResult(pluginResult);
-      }
-      //Device was connected
-      else if (newState == BluetoothProfile.STATE_CONNECTED)
-      {
-      	operationCallbackContexts = new HashMap<UUID, HashMap<String, CallbackContext>>();
-      	
-        //This shouldn't happen
-        if (connectCallbackContext == null)
-        {
-          return;
-        }
-
-	      //Create json object with address, name and connection status
-	      JSONObject returnObj = new JSONObject();
-	      addProperty(returnObj, keyStatus, statusConnected);
-	      addProperty(returnObj, keyAddress, device.getAddress());
-	      addProperty(returnObj, keyName, device.getName());
-
-	      //Keep connection call back for disconnect
-	      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-	      pluginResult.setKeepCallback(true);
-	      connectCallbackContext.sendPluginResult(pluginResult);
-      }
-      //Device was disconnected
-      else if (newState == BluetoothProfile.STATE_DISCONNECTED)
-      {      
-      	ClearOperationCallbacks();
-
-        if (connectCallbackContext == null)
-        {
-          return;
-        }
-        
-        JSONObject returnObj = new JSONObject();
-        addProperty(returnObj, keyStatus, statusDisconnected);
-        addProperty(returnObj, keyAddress, device.getAddress());
-        addProperty(returnObj, keyName, device.getName());
-        
-        connectCallbackContext.success(returnObj);
-        connectCallbackContext = null;
-      }
-    }
-=======
   	String uuidString = uuid.toString();
   	
   	if (uuidString.startsWith(baseUuidStart) && uuidString.endsWith(baseUuidEnd))
@@ -1859,7 +1791,6 @@ public class BluetoothLePlugin extends CordovaPlugin
   	
   	return uuidString;
   }
->>>>>>> test
   
   //Helpers for BluetoothGatt classes
   private BluetoothGattService getService(BluetoothGatt bluetoothGatt, JSONObject obj)

@@ -14,19 +14,9 @@ Bluetooth LE Cordova Plugin
 
 ## Limitations / Issues ##
 
-<<<<<<< HEAD
-* Samsung Devices - I've been experiencing a lot of issues with Samsung devices. I'd appreciate anyone who could test their Samsung devices pretty heavily!
-* Warning: Phonegap, Android, iOS and Objective C are all very new to me.
-* <del>iOS doesn't prompt user to enable Bluetooth if disabled like Android does. It's probably possible, but I just forgot until right before comitting the latest changes.</del> This is now configurable using the "request" property in initialize.
-* Tested with a heart rate monitor, so some scenarios especially those involving writing characteristics may not work as I was unable to test it. If you run into an issue, log it and I'll try to fix it. If you let me borrow a device, I can probably fix it even quicker. :)
-* Limited to connecting to a single device at a time (Pretty sure it's feasible and not too difficult to implement, but a low priorty for my original project) ** Hope to begin working on this starting in July
-* <del>All discovery, read and write operations must be done sequentially. i.e read characteristic x1234, wait for read result, read characteristic x5678, wait for read result, etc. More info on http://stackoverflow.com/questions/18011816/has-native-android-ble-gatt-implementation-synchronous-nature (Eventually queuing could be added, but a low priority for my original project)</del> There's now support for multiple operations. For example, you can write characteristic A or read characteristic B while subscribed to characteristic C.
-* <del>No support for Windows Phone currently. **Update: Windows Phone 8.1 supports Bluetooth LE and devices are pretty cheap, so this will be a priority as soon as it's released. Originally planned to buy a Windows 8.1 Phone before moving to Korea, but the one I wanted did come out in time. Still deciding what to do.
-=======
 * Tested mostly with a heart rate monitor, so some scenarios especially those involving writing characteristics / descriptors may not work or are poorly documented
 * Windows Phone 8 support is limited for the time being. I hope to begin working on this in December
 * No queueing support for read/write operations
->>>>>>> test
 * Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin or Android's Bluetooth LE implementation.
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android.
