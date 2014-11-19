@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="com.randdusing.bluetoothle" version="2.0.0">
+	<engines>
+		<engine name="cordova" version=">=3.0.0" />
+	</engines>
+	<name>Bluetooth LE</name>
+	<description>Use the Bluetooth Low Energy plugin to connect your Cordova app to new Bluetooth devices like heart rate monitors, thermometers, etc...</description>
+	<author>Rand Dusing</author>
+	<keywords>bluetooth,low energy,smart</keywords>
+	<license>Apache 2.0</license>
+	<js-module src="www/bluetoothle.js" name="BluetoothLe">
+		<clobbers target="window.bluetoothle" />
+	</js-module>
+	<platform name="android">
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="BluetoothLePlugin">
+				<param name="android-package" value="com.randdusing.bluetoothle.BluetoothLePlugin" />
+			</feature>
+		</config-file>
+		<source-file src="src/android/BluetoothLePlugin.java" target-dir="src/com/randdusing/bluetoothle" />
+		<config-file target="AndroidManifest.xml" parent="/manifest">
+			<uses-permission android:name="android.permission.BLUETOOTH"/>
+			<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+		</config-file>
+	</platform>
+	<platform name="ios">
+		<config-file target="config.xml" parent="/*">
+			<feature name="BluetoothLePlugin">
+				<param name="ios-package" value="BluetoothLePlugin" />
+			</feature>
+		</config-file>
+		<config-file target="*-Info.plist" parent="UIBackgroundModes">
+			<array>
+				<string>bluetooth-central</string>
+			</array>
+		</config-file>
+		<header-file src="src/ios/BluetoothLePlugin.h" />
+		<source-file src="src/ios/BluetoothLePlugin.m" />
+		<framework src="CoreBluetooth.framework" />
+	</platform>
+	<!--<platform name="wp8">
+		<config-file target="config.xml" parent="/*">
+			<feature name="BluetoothLePlugin">
+				<param name="wp-package" value="BluetoothLePlugin" />
+			</feature>
+		</config-file>
+		<config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
+			<Capability Name="ID_CAP_NETWORKING" />
+			<Capability Name="ID_CAP_IDENTITY_DEVICE" />
+			<m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
+				<m2:Device Id="any">
+					<m2:Function Type="serviceId:1803"/>
+				</m2:Device>
+			</m2:DeviceCapability>
+		</config-file>
+		<source-file src="src/wp/BluetoothLePlugin.cs" />
+	</platform>-->
+	<info>For more info: http://randdusing.com/</info>
+</plugin>
