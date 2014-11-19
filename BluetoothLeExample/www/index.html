@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bluetooth LE Example</title>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/pure-min.css" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+  </head>
+  <body>
+    <div id="home" data-role="page">
+      <div data-role="content">
+ 				<a href="#" class="pure-button initialize">Initialize</a>
+				<a href="#" class="pure-button enable">Enable</a>
+				<a href="#" class="pure-button disable">Disable</a>
+				<a href="#" class="pure-button startScan">Start Scan</a>
+				<a href="#" class="pure-button stopScan">Stop Scan</a>
+				<a href="#" class="pure-button retrieveConnected">Retrieve Connected</a>
+				<br />
+				<a href="#" class="pure-button isInitialized">Is Initialized</a>
+				<a href="#" class="pure-button isEnabled">Is Enabled</a>
+				<a href="#" class="pure-button isScanning">Is Scanning</a>
+				<h2>Devices</h2>
+				<ul class="devices">
+				</ul>
+      </div>
+    </div>
+    <script type="text/template" id="device">
+    	<li data-address="{0}">
+    		<h2>{1}</h2>
+				<a href="#" class="pure-button connect">Connect</a>
+				<a href="#" class="pure-button reconnect">Reconnect</a>
+				<a href="#" class="pure-button disconnect">Disconnect</a>
+				<a href="#" class="pure-button close">Close</a>
+				<a href="#" class="pure-button discover">Discover</a>
+				<a href="#" class="pure-button services">Services</a>
+				<a href="#" class="pure-button rssi">RSSI</a>
+    		<br />
+				<a href="#" class="pure-button isConnected">Is Connected</a>
+				<a href="#" class="pure-button isDiscovered">Is Discovered</a>
+    		<h2 class="toggle">Services</h2>
+    		<ul class="services">
+    		</ul>
+    	</li>
+  	</script>
+  	<script type="text/template" id="service">
+  		<li data-serviceUuid="{0}">
+				<h2>{0}</h2>
+				<a href="#" class="pure-button characteristics">Characteristics</a>
+				<h2 class="toggle">Characteristics</h2>
+				<ul class="characteristics">
+				</ul>
+			</li>
+  	</script>
+  	<script type="text/template" id="characteristic">
+  		<li data-characteristicUuid="{0}">
+				<h2>{0}</h2>
+				<a href="#" class="pure-button read">Read</a>
+				<a href="#" class="pure-button subscribe">Subscribe</a>
+				<a href="#" class="pure-button unsubscribe">Unsubscribe</a>
+				<a href="#" class="pure-button write">Write</a>
+				<a href="#" class="pure-button descriptors">Descriptors</a>
+				<h2 class="toggle">Descriptors</h2>
+				<ul class="descriptors">
+				</ul>
+			</li>
+  	</script>
+  	<script type="text/template" id="descriptor">
+			<li data-descriptorUuid="{0}">
+				<h2>{0}</h2>
+				<a href="#" class="pure-button readDescriptor">Read Descriptor</a>
+				<a href="#" class="pure-button writeDescriptor">Write Descriptor</a>
+			</li>
+  	</script>
+  </body>
+</html>
