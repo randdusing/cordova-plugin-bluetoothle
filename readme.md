@@ -1268,6 +1268,7 @@ bluetoothle.bytesToString(bytes);
 1. Create an out of the box Cordova application
 2. Copy and paste the /www folder in /example to your Cordova application
 3. Install the plugin using the steps above
+4. Install the console plugin using: cordova plugin add org.apache.cordova.console
 4. Modify write and writeDescriptor functions with actual values.
 
 
