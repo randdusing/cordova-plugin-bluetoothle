@@ -1091,7 +1091,7 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.encodedString
 Read RSSI of a connected device. RSSI is also returned with scanning.
 
 ```javascript
-bluetoothle.rssi(rssiSuccess, rssiError);
+bluetoothle.rssi(rssiSuccess, rssiError, params);
 ```
 
 #### Params ####
