@@ -464,7 +464,7 @@ bluetoothle.disconnect(disconnectSuccess, disconnectError);
 Close/dispose a Bluetooth LE device. Must disconnect before closing.
 
 ```javascript
-bluetoothle.close(closeSuccess, closeError);
+bluetoothle.close(closeSuccess, closeError, params);
 ```
 
 ##### Params #####
