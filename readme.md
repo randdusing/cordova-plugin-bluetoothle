@@ -464,7 +464,7 @@ bluetoothle.disconnect(disconnectSuccess, disconnectError);
 Close/dispose a Bluetooth LE device. Must disconnect before closing.
 
 ```javascript
-bluetoothle.close(closeSuccess, closeError);
+bluetoothle.close(closeSuccess, closeError, params);
 ```
 
 ##### Params #####
@@ -1091,7 +1091,7 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.encodedString
 Read RSSI of a connected device. RSSI is also returned with scanning.
 
 ```javascript
-bluetoothle.rssi(rssiSuccess, rssiError);
+bluetoothle.rssi(rssiSuccess, rssiError, params);
 ```
 
 #### Params ####
