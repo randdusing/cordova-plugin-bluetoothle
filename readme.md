@@ -94,36 +94,36 @@ By default, background mode is enabled. If you wish to remove this, follow the s
 
 ## Methods ##
 
-* bluetoothle.initialize
-* bluetoothle.enable (Android)
-* bluetoothle.disable (Android)
-* bluetoothle.startScan
-* bluetoothle.stopScan
-* bluetoothle.retrieveConnected (iOS)
-* bluetoothle.connect
-* bluetoothle.reconnect
-* bluetoothle.disconnect
-* bluetoothle.close
-* bluetoothle.discover (Android)
-* bluetoothle.services (iOS)
-* bluetoothle.characteristics (iOS)
-* bluetoothle.descriptors (iOS)
-* bluetoothle.read
-* bluetoothle.subscribe
-* bluetoothle.unsubscribe
-* bluetoothle.write
-* bluetoothle.readDescriptor
-* bluetoothle.writeDescriptor
-* bluetoothle.rssi
-* bluetoothle.isInitialized
-* bluetoothle.isEnabled
-* bluetoothle.isScanning
-* bluetoothle.isConnected
-* bluetoothle.isDiscovered (Android)
-* bluetoothle.encodedStringToBytes
-* bluetoothle.bytesToEncodedString
-* bluetoothle.stringToBytes
-* bluetoothle.bytesToString
+* [bluetoothle.initialize] (#initialize)
+* [bluetoothle.enable] (#enable) (Android)
+* [bluetoothle.disable] (#disable) (Android)
+* [bluetoothle.startScan] (#startScan)
+* [bluetoothle.stopScan] (#stopScan)
+* [bluetoothle.retrieveConnected] (#retrieveConnected) (iOS)
+* [bluetoothle.connect] (#connect)
+* [bluetoothle.reconnect] (#reconnect)
+* [bluetoothle.disconnect] (#disconnect)
+* [bluetoothle.close] (#close)
+* [bluetoothle.discover] (#discover) (Android)
+* [bluetoothle.services] (#services) (iOS)
+* [bluetoothle.characteristics] (#characteristics) (iOS)
+* [bluetoothle.descriptors] (#descriptors)  (iOS)
+* [bluetoothle.read] (#read)
+* [bluetoothle.subscribe] (#subscribe)
+* [bluetoothle.unsubscribe] (#unsubscribe)
+* [bluetoothle.write] (#write)
+* [bluetoothle.readDescriptor] (#readDescriptor)
+* [bluetoothle.writeDescriptor] (#writeDescriptor)
+* [bluetoothle.rssi] (#rssi)
+* [bluetoothle.isInitialized] (#isInitialized)
+* [bluetoothle.isEnabled] (#isEnabled)
+* [bluetoothle.isScanning] (#isScanning)
+* [bluetoothle.isConnected] (#isConnected)
+* [bluetoothle.isDiscovered] (#isdiscovered)  (Android)
+* [bluetoothle.encodedStringToBytes] (#encodedStringToBytes)
+* [bluetoothle.bytesToEncodedString] (#bytesToEncodedString)
+* [bluetoothle.stringToBytes] (#stringToBytes)
+* [bluetoothle.bytesToString] (#bytesToString)
 
 
 ## Errors ##
