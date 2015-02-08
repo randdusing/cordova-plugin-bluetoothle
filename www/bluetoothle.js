@@ -78,6 +78,9 @@ var bluetoothle = {
   isDiscovered: function(successCallback, params) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isDiscovered", [params]);
   },
+  requestConnectionPriority: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]); 
+  },
   encodedStringToBytes: function(string) {
     var data = atob(string);
     var bytes = new Uint8Array(data.length);

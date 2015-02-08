@@ -80,6 +80,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String isScanningActionName = "isScanning";
   private final String isDiscoveredActionName = "isDiscovered";
   private final String isConnectedActionName = "isConnected";
+  private final String requestConnectionPriorityActionName = "requestConnectionPriority";
   
   //Object keys
   private final String keyStatus = "status";
@@ -110,6 +111,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyPeripheral = "peripheral";
   private final String keyState = "state";
   private final String keyDiscoveredState = "discoveredState";
+  private final String keyConnectionPriority = "priority";
+  private final String keyConnectionPriorityRequested = "priorityRequested";
   
   //Write Types
   private final String writeTypeNoResponse = "noResponse";
@@ -145,6 +148,9 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String propertyExtendedProperties = "extendedProperties";
   private final String propertyNotifyEncryptionRequired = "notifyEncryptionRequired";
   private final String propertyIndicateEncryptionRequired = "indicateEncryptionRequired";
+  private final String propertyConnectionPriorityHigh = "high";
+  private final String propertyConnectionPriorityLow = "low";
+  private final String propertyConnectionPriorityBalanced = "balanaced";
   
   //Error Types
   private final String errorInitialize = "initialize";
@@ -384,6 +390,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     else if (isDiscoveredActionName.equals(action))
     {
       isDiscoveredAction(args, callbackContext);
+      return true;
+    }
+    else if (requestConnectionPriorityActionName.equals(action))
+    {
+      requestConnectionPriorityAction(args, callbackContext);
       return true;
     }
     return false;
@@ -1673,6 +1684,77 @@ public class BluetoothLePlugin extends CordovaPlugin
   	callbackContext.success(returnObj);
   }
 
+  private void requestConnectionPriorityAction(JSONArray args, CallbackContext callbackContext)
+  {
+    if(isNotInitialized(callbackContext, true))
+    {
+      return;
+    }
+    
+    JSONObject obj = getArgsObject(args);
+    
+    if (isNotArgsObject(obj, callbackContext))
+    {
+      return;
+    }
+    
+    String address = getAddress(obj);
+    
+    if (isNotAddress(address, callbackContext))
+    {
+      return;
+    }
+    
+    HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext); 
+    if (connection == null)
+    {
+      return;
+    }
+    
+    BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
+    
+    String priority = obj.optString(keyConnectionPriority, null);
+    
+    int androidPriority = BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
+    
+    if (priority == null)
+    {
+      return;
+    }
+    
+    else if (priority.equals(propertyConnectionPriorityLow))
+    {
+      androidPriority = BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
+    }
+    
+    else if (priority.equals(propertyConnectionPriorityBalanced))
+    {
+      androidPriority = BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
+    }
+    
+    else if (priority.equals(propertyConnectionPriorityHigh))
+    {
+      androidPriority = BluetoothGatt.CONNECTION_PRIORITY_HIGH;
+    }
+    
+    else
+    {
+      return;
+    }
+    
+    boolean result = bluetoothGatt.requestConnectionPriority(androidPriority);
+    
+    JSONObject returnObj = new JSONObject();
+    
+    BluetoothDevice device = bluetoothGatt.getDevice();
+    
+    addProperty(returnObj, keyConnectionPriorityRequested, result);
+    
+    addDevice(returnObj, device);
+    
+    callbackContext.success(returnObj);
+  }
+  
   @Override
   public void onDestroy()
   {
