@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.ParcelUuid;
+import android.os.Build;
 import android.util.Base64;
 
 import android.app.Activity;
