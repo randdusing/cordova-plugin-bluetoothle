@@ -1686,73 +1686,76 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void requestConnectionPriorityAction(JSONArray args, CallbackContext callbackContext)
   {
-    if(isNotInitialized(callbackContext, true))
+    if (Build.VERSION.SDK_INT >= 21) 
     {
-      return;
+	if(isNotInitialized(callbackContext, true))
+	{
+		return;
+	}
+	
+	JSONObject obj = getArgsObject(args);
+	
+	if (isNotArgsObject(obj, callbackContext))
+	{
+		return;
+	}
+	
+	String address = getAddress(obj);
+	
+	if (isNotAddress(address, callbackContext))
+	{
+		return;
+	}
+	
+	HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext); 
+	if (connection == null)
+	{
+		return;
+	}
+	
+	BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
+	
+	String priority = obj.optString(keyConnectionPriority, null);
+	
+	int androidPriority = BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
+	
+	if (priority == null)
+	{
+		return;
+	}
+	
+	else if (priority.equals(propertyConnectionPriorityLow))
+	{
+		androidPriority = BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
+	}
+	
+	else if (priority.equals(propertyConnectionPriorityBalanced))
+	{
+		androidPriority = BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
+	}
+	
+	else if (priority.equals(propertyConnectionPriorityHigh))
+	{
+		androidPriority = BluetoothGatt.CONNECTION_PRIORITY_HIGH;
+	}
+	
+	else
+	{
+		return;
+	}
+	
+	boolean result = bluetoothGatt.requestConnectionPriority(androidPriority);
+	
+	JSONObject returnObj = new JSONObject();
+	
+	BluetoothDevice device = bluetoothGatt.getDevice();
+	
+	addProperty(returnObj, keyConnectionPriorityRequested, result);
+	
+	addDevice(returnObj, device);
+	
+	callbackContext.success(returnObj);
     }
-    
-    JSONObject obj = getArgsObject(args);
-    
-    if (isNotArgsObject(obj, callbackContext))
-    {
-      return;
-    }
-    
-    String address = getAddress(obj);
-    
-    if (isNotAddress(address, callbackContext))
-    {
-      return;
-    }
-    
-    HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext); 
-    if (connection == null)
-    {
-      return;
-    }
-    
-    BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
-    
-    String priority = obj.optString(keyConnectionPriority, null);
-    
-    int androidPriority = BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
-    
-    if (priority == null)
-    {
-      return;
-    }
-    
-    else if (priority.equals(propertyConnectionPriorityLow))
-    {
-      androidPriority = BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
-    }
-    
-    else if (priority.equals(propertyConnectionPriorityBalanced))
-    {
-      androidPriority = BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
-    }
-    
-    else if (priority.equals(propertyConnectionPriorityHigh))
-    {
-      androidPriority = BluetoothGatt.CONNECTION_PRIORITY_HIGH;
-    }
-    
-    else
-    {
-      return;
-    }
-    
-    boolean result = bluetoothGatt.requestConnectionPriority(androidPriority);
-    
-    JSONObject returnObj = new JSONObject();
-    
-    BluetoothDevice device = bluetoothGatt.getDevice();
-    
-    addProperty(returnObj, keyConnectionPriorityRequested, result);
-    
-    addDevice(returnObj, device);
-    
-    callbackContext.success(returnObj);
   }
   
   @Override
