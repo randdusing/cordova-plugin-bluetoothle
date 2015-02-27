@@ -15,12 +15,11 @@ Bluetooth LE Cordova Plugin
 ## Limitations / Issues ##
 
 * Tested mostly with a heart rate monitor, so some scenarios especially those involving writing characteristics / descriptors may not work or are poorly documented
-* Windows Phone 8 support is limited for the time being. I hope to begin working on this in December
+* Windows Phone 8 support is limited for the time being. I'm not sure when I'll begin working on this...
 * No queueing support for read/write operations
 * Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin or Android's Bluetooth LE implementation.
 * For subscribing, indication hasn't been tested since my heart rate monitor doesn't support it.
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android.
-* Samsung devices seem to have a lot of Bluetooth LE issues
 
 
 ## Want to Help? ##
