@@ -5,7 +5,7 @@
 {
     CBCentralManager *centralManager;
     NSNumber* statusReceiver;
-    
+
     NSString* initCallback;
     NSString* scanCallback;
 
@@ -38,6 +38,7 @@
 - (void)isScanning:(CDVInvokedUrlCommand *)command;
 - (void)isConnected:(CDVInvokedUrlCommand *)command;
 - (void)isDiscovered:(CDVInvokedUrlCommand *)command;
+- (void)requestConnectionPriority:(CDVInvokedUrlCommand *)command;
 
 @end
 
@@ -54,11 +55,11 @@
 - (NSString *)representativeString;
 {
     NSData *data = [self data];
-    
+
     NSUInteger bytesToConvert = [data length];
     const unsigned char *uuidBytes = [data bytes];
     NSMutableString *outputString = [NSMutableString stringWithCapacity:16];
-    
+
     for (NSUInteger currentByteIndex = 0; currentByteIndex < bytesToConvert; currentByteIndex++)
     {
         switch (currentByteIndex)
@@ -69,9 +70,9 @@
             case 9:[outputString appendFormat:@"%02x-", uuidBytes[currentByteIndex]]; break;
             default:[outputString appendFormat:@"%02x", uuidBytes[currentByteIndex]];
         }
-        
+
     }
-    
+
     return outputString;
 }
 

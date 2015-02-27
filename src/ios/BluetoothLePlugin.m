@@ -138,7 +138,7 @@ NSString *const operationWrite = @"write";
 {
     //Save the callback
     initCallback = command.callbackId;
-    
+
     //If central manager has been initialized already, return status=>enabled success or enable error
     if (centralManager != nil)
     {
