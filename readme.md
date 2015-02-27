@@ -30,7 +30,8 @@ Bluetooth LE Cordova Plugin
 
 ## To Do ##
 
-* Full support for Windows Phone
+* Full support for Windows Phone 8.1 C#-based projects. Assuming I can follow @MiBLE's process successfully.
+* Support for Windows Phone 8.1 Javascript projects. Currently waiting for better debugging support with Visual Studio.
 * Connect and Reconnect should detect existing connection with better error messages
 * Better documentation and example for write and writeDescriptor
 
@@ -59,6 +60,10 @@ Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Co
 ## Discovery Android vs iOS ##
 
 Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The Device plugin (http://docs.phonegap.com/en/edge/cordova_device_device.md.html#Device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS.
+
+
+## Android Target SDK ##
+Version 2.1.0 requires you to set the target version SDK to 21 to support the request connection priority functionality. If you have unrecognized symbol issues when compiling, ensure that project.properties in /platform/android has 'target=android-21'. Alternatively the requestConnectionPriority code could be commented out if you don't want to use it. Please let me know if there's a better way to handle this!
 
 
 ## UUIDs ##
@@ -155,6 +160,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * isNotDisconnected - Device is not disconnected (Don't call connect, reconnect or close while connected)
 * isNotConnected - Device isn't connected (Don't call discover or any read/write operations)
 * isDisconnected - Device is disconnected (Don't call disconnect)
+* requestConnectionPriority - Failed to request connection priority (Is the device iOS?)
 
 For example:
 ```javascript
@@ -306,14 +312,14 @@ bluetoothle.stopScan(stopScanSuccess, stopScanError);
 
 
 ### retrieveConnected ###
-Retrieved Bluetooth LE devices currently connected. In iOS, devices that are "paired" to will not return during a normal scan. Callback is "instant" compared to a scan. iOS support only.
+Retrieved Bluetooth LE devices currently connected. In iOS, devices that are "paired" to will not return during a normal scan. Callback is "instant" compared to a scan. I haven't been able to get UUID filtering working on Android, so it returns all paired devices including non Bluetooth LE ones.
 
 ```javascript
 bluetoothle.retrieveConnected(retrieveConnectedSuccess, retrieveConnectedError, params);
 ```
 
 ##### Params #####
-* serviceUuids = An array of service IDs to filter the retrieval or empty array / null
+* serviceUuids = An array of service IDs to filter the retrieval by. If no service IDs are specified, no devices will be returned! Ignored on Android
 
 ```javascript
 {
@@ -493,7 +499,7 @@ bluetoothle.close(closeSuccess, closeError, params);
 Discover all the devices services, characteristics and descriptors. Doesn't need to be called again after disconnecting and then reconnecting. Android support only.
 
 ```javascript
-bluetoothle.discover(discoverSuccess, discoverError);
+bluetoothle.discover(discoverSuccess, discoverError, params);
 ```
 
 ##### Params #####
@@ -1226,6 +1232,36 @@ bluetoothle.isDiscovered(isDiscovered);
 }
 ```
 
+
+
+### requestConnectionPriority ###
+Request a change in the connection priority to improve throughput when transfer large amounts of data via BLE. Android support only. iOS will return error.
+
+```javascript
+bluetoothle.requestConnectionPriority(success, error, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+* connectionPriority = low / balanced / high
+
+```javascript
+{
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "connectionPriority" : "balanced"
+}
+```
+
+##### Success #####
+* status => connectionPriorityRequested = true
+
+```javascript
+{
+  "name": "Polar H7 3B321015",
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "status" : "connectionPriorityRequested"
+}
+```
 
 
 ### encodedStringToBytes ###
