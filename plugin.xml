@@ -55,5 +55,77 @@
     </config-file>
     <source-file src="src/wp/BluetoothLePlugin.cs" />
   </platform>-->
+  <platform name="windows">
+    <config-file target="config.xml" parent="/*">
+      <feature name="BluetoothLePlugin">
+        <param name="windows-package" value="BluetoothLePlugin" />
+      </feature>
+    </config-file>
+    <config-file target="package.appxmanifest" parent="/Package/Capabilities">
+      <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
+        <m2:Device Id="any">
+          <!-- Generic Access -->
+          <m2:Function Type="serviceId:1800"/>
+          <!-- Generic Attribute -->
+          <m2:Function Type="serviceId:1801"/>
+          <!-- Immediate Alert -->
+          <m2:Function Type="serviceId:1802"/>
+          <!-- Link Loss -->
+          <m2:Function Type="serviceId:1803"/>
+          <!-- Tx Power -->
+          <m2:Function Type="serviceId:1804"/>
+          <!-- Reference Time Update Service -->
+          <m2:Function Type="serviceId:1806"/>
+          <!-- Next DST Change Service -->
+          <m2:Function Type="serviceId:1807"/>
+          <!-- Glucose -->
+          <m2:Function Type="serviceId:1808"/>
+          <!-- Health Thermometer-->
+          <m2:Function Type="serviceId:1809"/>
+          <!-- Device Information -->
+          <m2:Function Type="serviceId:180A"/>
+          <!-- Heart Rate -->
+          <m2:Function Type="serviceId:180D"/>
+          <!-- Phone Alert Status Service -->
+          <m2:Function Type="serviceId:180E"/>
+          <!-- Battery Service -->
+          <m2:Function Type="serviceId:180F"/>
+          <!-- Blood Pressure -->
+          <m2:Function Type="serviceId:1810"/>
+          <!-- Alert Notification Service -->
+          <m2:Function Type="serviceId:1811"/>
+          <!-- Human Interface Device -->
+          <m2:Function Type="serviceId:1812"/>
+          <!-- Scan Parameters -->
+          <m2:Function Type="serviceId:1813"/>
+          <!-- Running Speed and Cadence -->
+          <m2:Function Type="serviceId:1814"/>
+          <!-- Cycling Speed and Cadence -->
+          <m2:Function Type="serviceId:1816"/>
+          <!-- Cycling Power -->
+          <m2:Function Type="serviceId:1818"/>
+          <!-- Location and Navigation -->
+          <m2:Function Type="serviceId:1819"/>
+          <!-- Environmental Sensing -->
+          <m2:Function Type="serviceId:181A"/>
+          <!-- Body Composition -->
+          <m2:Function Type="serviceId:181B"/>
+          <!-- User Data -->
+          <m2:Function Type="serviceId:181C"/>
+          <!-- Weight Scale -->
+          <m2:Function Type="serviceId:181D"/>
+          <!-- Bond Management-->
+          <m2:Function Type="serviceId:181E"/>
+          <!-- Continuous Glucose Monitoring -->
+          <m2:Function Type="serviceId:181F"/>
+          <!-- Internet Protocol Support-->
+          <m2:Function Type="serviceId:1820"/>
+        </m2:Device>
+      </m2:DeviceCapability>
+    </config-file>
+    <js-module src="src/windows/BluetoothLEPlugin.js" name="BluetoothLEPlugin">
+      <merges target="" />
+    </js-module>
+  </platform>
   <info>For more info: http://randdusing.com/</info>
 </plugin>
