@@ -78,7 +78,7 @@ module.exports = {
 
     if (params && params.length > 0 && params[0].address) {
       var deviceId = params[0].address;
-      
+
       for (var i = 0; i < cachedServices.length;) {
         var service = cachedServices[i];
         if (service.deviceId == deviceId) {
@@ -105,7 +105,7 @@ module.exports = {
           var deviceName;
           var serviceIds = [];
           for (var i = 0; i < services.length; i++) {
-            var re = /\{0000([0-9a-f]{4})\-0000\-1000\-8000\-00805f9b34fb\}_Dev_VID/;
+            var re = /\{0000([0-9a-f]{4})\-0000\-1000\-8000\-00805f9b34fb\}_/;
             var serviceId = re.exec(services[i].id)[1];
             serviceIds.push(serviceId);
             deviceName = services[i].name;
@@ -138,38 +138,40 @@ module.exports = {
         for (var i = 0; i < serviceInfo.characteristics.length; i++) {
           var characteristicInfo = serviceInfo.characteristics[i];
           var characteristic = service.getCharacteristics(gatt.GattCharacteristic.convertShortIdToUuid(characteristicInfo.uuid))[0];
-          var char = { characteristicUuid: characteristic.uuid.substring(4, 8), properties: new Object() };
-          if (characteristic.characteristicProperties & 1) {
-            char.properties.broadcast = "true";
+          if (characteristic) {
+            var char = { characteristicUuid: characteristic.uuid.substring(4, 8), properties: new Object() };
+            if (characteristic.characteristicProperties & 1) {
+              char.properties.broadcast = "true";
+            }
+            if (characteristic.characteristicProperties & 2) {
+              char.properties.read = "true";
+            }
+            if (characteristic.characteristicProperties & 4) {
+              char.properties.writeWithoutResponse = "true";
+            }
+            if (characteristic.characteristicProperties & 8) {
+              char.properties.write = "true";
+            }
+            if (characteristic.characteristicProperties & 16) {
+              char.properties.notify = "true";
+            }
+            if (characteristic.characteristicProperties & 32) {
+              char.properties.indicate = "true";
+            }
+            if (characteristic.characteristicProperties & 64) {
+              char.properties.authenticatedSignedWrites = "true";
+            }
+            if (characteristic.characteristicProperties & 128) {
+              char.properties.extendedProperties = "true";
+            }
+            if (characteristic.characteristicProperties & 256) {
+              char.properties.reliableWrites = "true";
+            }
+            if (characteristic.characteristicProperties & 512) {
+              char.properties.writableAuxilaries = "true";
+            }
+            characteristicsResult.push(char);
           }
-          if (characteristic.characteristicProperties & 2) {
-            char.properties.read = "true";
-          }
-          if (characteristic.characteristicProperties & 4) {
-            char.properties.writeWithoutResponse = "true";
-          }
-          if (characteristic.characteristicProperties & 8) {
-            char.properties.write = "true";
-          }
-          if (characteristic.characteristicProperties & 16) {
-            char.properties.notify = "true";
-          }
-          if (characteristic.characteristicProperties & 32) {
-            char.properties.indicate = "true";
-          }
-          if (characteristic.characteristicProperties & 64) {
-            char.properties.authenticatedSignedWrites = "true";
-          }
-          if (characteristic.characteristicProperties & 128) {
-            char.properties.extendedProperties = "true";
-          }
-          if (characteristic.characteristicProperties & 256) {
-            char.properties.reliableWrites = "true";
-          }
-          if (characteristic.characteristicProperties & 512) {
-            char.properties.writableAuxilaries = "true";
-          }
-          characteristicsResult.push(char);
         }
         successCallback({ status: "characteristics", characteristics: characteristicsResult, name: service.name, serviceUuid: serviceId, address: deviceId });
       }, function (error) {
@@ -209,7 +211,7 @@ module.exports = {
     }
   },
 
-  read : function (successCallback, errorCallback, params) {
+  read: function (successCallback, errorCallback, params) {
     if (!initialized) {
       errorCallback({ error: "read", message: "Not initialized." });
       return;
@@ -370,7 +372,7 @@ module.exports = {
       errorCallback({ error: "readDescriptor", message: "Invalid parameters." });
     }
   },
-  
+
   writeDescriptor: function (successCallback, errorCallback, params) {
     if (!initialized) {
       errorCallback({ error: "writeDescriptor", message: "Not initialized." });
@@ -406,12 +408,12 @@ module.exports = {
   isInitialized: function (successCallback, errorCallback, strInput) {
     successCallback({ isInitialized: initialized });
   },
-  
+
 };
 
 function getService(deviceId, serviceId) {
   return new WinJS.Promise(function (successCallback, errorCallback, progressDispatch) {
-    for (var i = 0; i < cachedServices.length;) {
+    for (var i = 0; i < cachedServices.length; i++) {
       var service = cachedServices[i];
       if (service.deviceId == deviceId && service.serviceId == serviceId) {
         successCallback(service.deviceService);
