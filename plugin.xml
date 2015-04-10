@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="com.randdusing.bluetoothle" version="2.1.0">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" id="com.randdusing.bluetoothle" version="2.1.0">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -120,6 +120,8 @@
           <m2:Function Type="serviceId:181F"/>
           <!-- Internet Protocol Support-->
           <m2:Function Type="serviceId:1820"/>
+          <!-- Medisana BS 430 Connect (Body Analysis Scale) -->
+          <m2:Function Type="serviceId:78b2"/>
         </m2:Device>
       </m2:DeviceCapability>
     </config-file>
