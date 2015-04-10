@@ -134,43 +134,23 @@ module.exports = {
 
       getService(deviceId, serviceId).then(function (service) {
         var characteristicsResult = [];
-        var serviceInfo = getServiceInfo(serviceId);
-        for (var i = 0; i < serviceInfo.characteristics.length; i++) {
-          var characteristicInfo = serviceInfo.characteristics[i];
-          var characteristic = service.getCharacteristics(gatt.GattCharacteristic.convertShortIdToUuid(characteristicInfo.uuid))[0];
-          if (characteristic) {
-            var char = { characteristicUuid: characteristic.uuid.substring(4, 8), properties: new Object() };
-            if (characteristic.characteristicProperties & 1) {
-              char.properties.broadcast = "true";
+        if (service.getAllCharacteristics) { // Phone
+          var characteristics = service.getAllCharacteristics();
+          for (var i = 0; i < characteristics.length; i++) {
+            characteristicsResult.push(convertCharacteristic(characteristics[i]));
+          }
+        } else { // Client
+          var serviceInfo = getServiceInfo(serviceId);
+          if (serviceInfo) {
+            for (var i = 0; i < serviceInfo.characteristics.length; i++) {
+              var characteristicInfo = serviceInfo.characteristics[i];
+              var characteristic = service.getCharacteristics(gatt.GattCharacteristic.convertShortIdToUuid(characteristicInfo.uuid))[0];
+              if (characteristic) {
+                characteristicsResult.push(convertCharacteristic(characteristic));
+              }
             }
-            if (characteristic.characteristicProperties & 2) {
-              char.properties.read = "true";
-            }
-            if (characteristic.characteristicProperties & 4) {
-              char.properties.writeWithoutResponse = "true";
-            }
-            if (characteristic.characteristicProperties & 8) {
-              char.properties.write = "true";
-            }
-            if (characteristic.characteristicProperties & 16) {
-              char.properties.notify = "true";
-            }
-            if (characteristic.characteristicProperties & 32) {
-              char.properties.indicate = "true";
-            }
-            if (characteristic.characteristicProperties & 64) {
-              char.properties.authenticatedSignedWrites = "true";
-            }
-            if (characteristic.characteristicProperties & 128) {
-              char.properties.extendedProperties = "true";
-            }
-            if (characteristic.characteristicProperties & 256) {
-              char.properties.reliableWrites = "true";
-            }
-            if (characteristic.characteristicProperties & 512) {
-              char.properties.writableAuxilaries = "true";
-            }
-            characteristicsResult.push(char);
+          } else {
+            errorCallback({ error: "characteristics", message: "Unknown service, add the service to getServiceInfos() and try again." });
           }
         }
         successCallback({ status: "characteristics", characteristics: characteristicsResult, name: service.name, serviceUuid: serviceId, address: deviceId });
@@ -195,11 +175,18 @@ module.exports = {
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
         var descriptorIds = [];
-        var characteristicInfo = getCharacteristicsInfo(serviceId, characteristicId);
-        for (var i = 0; i < characteristicInfo.descriptors.length; i++) {
-          var descriptors = characteristic.getDescriptors(gatt.GattDescriptor.convertShortIdToUuid(characteristicInfo.descriptors[i]));
-          for (var j = 0; j < descriptors.length; j++) {
-            descriptorIds.push(descriptors[j].uuid.substring(4, 8));
+        if (characteristic.getAllDescriptors) { // Phone
+          var descriptors = characteristic.getAllDescriptors();
+          for (var i = 0; i < descriptors.length; i++) {
+            descriptorIds.push(descriptors[i].uuid.substring(4, 8));
+          }
+        } else { // Client
+          var characteristicInfo = getCharacteristicsInfo(serviceId, characteristicId);
+          for (var i = 0; i < characteristicInfo.descriptors.length; i++) {
+            var descriptors = characteristic.getDescriptors(gatt.GattDescriptor.convertShortIdToUuid(characteristicInfo.descriptors[i]));
+            for (var j = 0; j < descriptors.length; j++) {
+              descriptorIds.push(descriptors[j].uuid.substring(4, 8));
+            }
           }
         }
         successCallback({ status: "descriptors", descriptorUuids: descriptorIds, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
@@ -429,7 +416,7 @@ function getService(deviceId, serviceId) {
              cachedServices.push({ deviceId: deviceId, serviceId: serviceId, deviceService: deviceService });
              successCallback(deviceService);
            } else {
-             errorCallback("Error retrieving deviceService.");
+             errorCallback("Error retrieving deviceService, check the app's permissions for this service (plugin.xml).");
            }
          }, function (error) {
            errorCallback(error);
@@ -472,6 +459,41 @@ function getDescriptor(deviceId, serviceId, characteristicId, descriptorId) {
       errorCallback(error);
     });
   });
+}
+
+function convertCharacteristic(characteristic) {
+  var char = { characteristicUuid: characteristic.uuid.substring(4, 8), properties: new Object() };
+  if (characteristic.characteristicProperties & 1) {
+    char.properties.broadcast = "true";
+  }
+  if (characteristic.characteristicProperties & 2) {
+    char.properties.read = "true";
+  }
+  if (characteristic.characteristicProperties & 4) {
+    char.properties.writeWithoutResponse = "true";
+  }
+  if (characteristic.characteristicProperties & 8) {
+    char.properties.write = "true";
+  }
+  if (characteristic.characteristicProperties & 16) {
+    char.properties.notify = "true";
+  }
+  if (characteristic.characteristicProperties & 32) {
+    char.properties.indicate = "true";
+  }
+  if (characteristic.characteristicProperties & 64) {
+    char.properties.authenticatedSignedWrites = "true";
+  }
+  if (characteristic.characteristicProperties & 128) {
+    char.properties.extendedProperties = "true";
+  }
+  if (characteristic.characteristicProperties & 256) {
+    char.properties.reliableWrites = "true";
+  }
+  if (characteristic.characteristicProperties & 512) {
+    char.properties.writableAuxilaries = "true";
+  }
+  return char;
 }
 
 function getServiceInfo(serviceId) {
@@ -781,7 +803,19 @@ function getServiceInfos() {
       { uuid: 0x2A9E, descriptors: [] },
       { uuid: 0x2A9D, descriptors: [0x2902, ] },
     ]
+  },
+  // Medisana BS 430 Connect (Body Analysis Scale)
+  {
+    uuid: 0x78b2,
+    characteristics: [
+      { uuid: 0x8a20, descriptors: [] },
+      { uuid: 0x8a21, descriptors: [0x2902, ] },
+      { uuid: 0x8a22, descriptors: [0x2902, ] },
+      { uuid: 0x8a81, descriptors: [] },
+      { uuid: 0x8a82, descriptors: [0x2902, ] },
+    ]
   }
+  // ---------------------------------------------
   ];
 }
 
