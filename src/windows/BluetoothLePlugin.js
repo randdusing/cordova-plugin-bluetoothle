@@ -309,10 +309,16 @@ module.exports = {
       var serviceId = params[0].serviceUuid;
       var characteristicId = params[0].characteristicUuid;
       var value = params[0].value;
+      var writeOption;
+      if (params[0].type !== undefined && params[0].type == "noResponse") {
+          writeOption = gatt.GattWriteOption.writeWithoutResponse;
+      } else {
+          writeOption = gatt.GattWriteOption.writeWithResponse;
+      }
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
         var buffer = wsc.CryptographicBuffer.decodeFromBase64String(value);
-        characteristic.writeValueAsync(buffer).done(function (result) {
+        characteristic.writeValueAsync(buffer, writeOption).done(function (result) {
           if (result == gatt.GattCommunicationStatus.success) {
             successCallback({ status: "written", characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
           } else {
