@@ -3126,6 +3126,7 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
     {
       addProperty(returnObj, keyStatus, statusRssi);
       addProperty(returnObj, keyRssi, rssi);
+      addProperty(returnObj, keyAddress, address);
       callbackContext.success(returnObj);
     }
     //Else it failed
