@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothProfile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -84,6 +85,9 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String requestConnectionPriorityActionName = "requestConnectionPriority";
 
   //Object keys
+  private final String keyPendingRequest = "pendingRequest";
+  private final String keyRequestQueue = "requestQueue";
+  private final String keyAction = "action";
   private final String keyStatus = "status";
   private final String keyError = "error";
   private final String keyMessage = "message";
@@ -633,39 +637,39 @@ public class BluetoothLePlugin extends CordovaPlugin
   	{
   		return;
   	}
-  	
+
     /*JSONObject obj = getArgsObject(args);
-    
+
     UUID[] serviceUuids = null;
-    
+
     if (obj != null)
     {
       serviceUuids = getServiceUuids(obj);
     }*/
-    
+
     JSONArray returnArray = new JSONArray();
-    
+
     Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
     for (BluetoothDevice device : devices)
     {
     	/*if (serviceUuids != null)
-    	{	
+    	{
 	    	ParcelUuid[] uuids = device.getUuids();
-	    	
+
 	    	if (uuids == null)
 	    	{
 	    		continue;
 	    	}
-	    	
+
 	    	Set<UUID> set = new HashSet<UUID>();
-	    	
+
 	    	for (ParcelUuid uuid : uuids)
 	    	{
 	    		set.add(uuid.getUuid());
 	    	}
-    	
+
 	    	boolean flag = false;
-	    	
+
 	    	for (UUID uuid : serviceUuids)
 	    	{
 	    		if (!set.contains(uuid))
@@ -674,20 +678,20 @@ public class BluetoothLePlugin extends CordovaPlugin
 	    			break;
 	    		}
 	    	}
-	    	
+
 	    	if (flag)
 	    	{
 	    		continue;
 	    	}
     	}*/
-    	
+
     	JSONObject returnObj = new JSONObject();
-    	
+
     	addDevice(returnObj, device);
-    	
+
     	returnArray.put(returnObj);
     }
-    
+
     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnArray);
     pluginResult.setKeepCallback(true);
     callbackContext.sendPluginResult(pluginResult);
@@ -987,6 +991,54 @@ public class BluetoothLePlugin extends CordovaPlugin
     bluetoothGatt.discoverServices();
   }
 
+  private void nextRequestQueue(String address)
+  {
+    HashMap<Object, Object> connection = connections.get(address);;
+    if (connection == null)
+    {
+      return;
+    }
+
+    if (isPending(connection))
+    {
+      return;
+    }
+
+    LinkedList<Object[]> requests = (LinkedList<Object[]>)(connection.get(keyRequestQueue));
+    if (requests == null || requests.size() == 0)
+    {
+      return;
+    }
+
+    Object[] next = requests.remove();
+
+    JSONObject obj = (JSONObject)(next[0]);
+    final JSONArray args = new JSONArray();
+    args.put(obj);
+    final CallbackContext callbackContext = (CallbackContext)(next[1]);
+
+    String action = getAction(obj);
+
+    if (readActionName.equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          readAction(args, callbackContext);
+        }
+      });
+      return;
+    }
+    else if (subscribeActionName.equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          subscribeAction(args, callbackContext);
+        }
+      });
+      return;
+    }
+  }
+
   private void readAction(JSONArray args, CallbackContext callbackContext)
   {
     if (isNotInitialized(callbackContext, true))
@@ -1034,6 +1086,22 @@ public class BluetoothLePlugin extends CordovaPlugin
       return;
     }
 
+    if (isPending(connection))
+    {
+      connection.put(keyPendingRequest, true);
+      //Queue
+      LinkedList<Object[]> requests = (LinkedList<Object[]>)(connection.get(keyRequestQueue));
+      if (requests == null)
+      {
+        requests = new LinkedList<Object[]>();
+      }
+      addProperty(obj, keyAction, readActionName);
+      requests.add(new Object[] { obj, callbackContext });
+      connection.put(keyRequestQueue, requests);
+      return;
+    }
+    connection.put(keyPendingRequest, true);
+
     UUID characteristicUuid = characteristic.getUuid();
 
     AddCallback(characteristicUuid, connection, operationRead, callbackContext);
@@ -1054,6 +1122,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       callbackContext.error(returnObj);
 
       RemoveCallback(characteristicUuid, connection, operationRead);
+      nextRequestQueue(address);
     }
   }
 
@@ -1111,6 +1180,23 @@ public class BluetoothLePlugin extends CordovaPlugin
       return;
     }
 
+
+    if (isPending(connection))
+    {
+      connection.put(keyPendingRequest, true);
+      //Queue
+      LinkedList<Object[]> requests = (LinkedList<Object[]>)(connection.get(keyRequestQueue));
+      if (requests == null)
+      {
+        requests = new LinkedList<Object[]>();
+      }
+      addProperty(obj, keyAction, subscribeActionName);
+      requests.add(new Object[] { obj, callbackContext });
+      connection.put(keyRequestQueue, requests);
+      return;
+    }
+    connection.put(keyPendingRequest, true);
+
     UUID characteristicUuid = characteristic.getUuid();
 
     JSONObject returnObj = new JSONObject();
@@ -1151,6 +1237,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       addProperty(returnObj, keyMessage, logWriteDescriptorFail);
       callbackContext.error(returnObj);
       RemoveCallback(characteristicUuid, connection, operationSubscribe);
+      nextRequestQueue(address);
     }
   }
 
@@ -1717,7 +1804,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
 
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
-    
+
     if (Build.VERSION.SDK_INT < 21)
     {
       JSONObject returnObj = new JSONObject();
@@ -2352,6 +2439,19 @@ public class BluetoothLePlugin extends CordovaPlugin
     return true;
   }
 
+  private boolean isPending(HashMap<Object,Object> connection)
+  {
+    Boolean pending = (Boolean)(connection.get(keyPendingRequest));
+
+    //Determine whether the device is currently disconnected including connecting and disconnecting
+    //Certain actions like read/write operations can only be done while completely connected
+    if (pending == null)
+    {
+      pending = false;
+    }
+    return pending;
+  }
+
   private boolean wasConnected(String address, CallbackContext callbackContext)
   {
     HashMap<Object, Object> connection = connections.get(address);
@@ -2538,6 +2638,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     return address;
   }
 
+  private String getAction(JSONObject obj)
+  {
+    return obj.optString(keyAction, null);
+  }
+
   private boolean getRequest(JSONObject obj)
   {
     return obj.optBoolean(keyRequest, false);
@@ -2708,7 +2813,7 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
       connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
 
       connections.put(device.getAddress(), connection);
-      
+
       if (callbackContext == null)
       {
         return;
@@ -2716,9 +2821,9 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
 
       addProperty(returnObj, keyError, errorConnect);
       addProperty(returnObj, keyMessage, logConnectFail);
-      
+
       callbackContext.error(returnObj);
-      
+
       return;
     }
 
@@ -2816,6 +2921,8 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
     {
       return;
     }
+    connection.put(keyPendingRequest, false);
+    nextRequestQueue(address);
 
     UUID characteristicUuid = characteristic.getUuid();
 
@@ -2982,7 +3089,7 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
   }
 
   @Override
-  public void onDescriptorWrite (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+  public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
   {
     //Get the connected device
     BluetoothDevice device = gatt.getDevice();
@@ -2993,6 +3100,9 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
     {
       return;
     }
+
+    connection.put(keyPendingRequest, false);
+    nextRequestQueue(address);
 
     BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
     UUID characteristicUuid = characteristic.getUuid();
