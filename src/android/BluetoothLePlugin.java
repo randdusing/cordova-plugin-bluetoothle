@@ -633,39 +633,39 @@ public class BluetoothLePlugin extends CordovaPlugin
   	{
   		return;
   	}
-  	
+
     /*JSONObject obj = getArgsObject(args);
-    
+
     UUID[] serviceUuids = null;
-    
+
     if (obj != null)
     {
       serviceUuids = getServiceUuids(obj);
     }*/
-    
+
     JSONArray returnArray = new JSONArray();
-    
+
     Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
     for (BluetoothDevice device : devices)
     {
     	/*if (serviceUuids != null)
-    	{	
+    	{
 	    	ParcelUuid[] uuids = device.getUuids();
-	    	
+
 	    	if (uuids == null)
 	    	{
 	    		continue;
 	    	}
-	    	
+
 	    	Set<UUID> set = new HashSet<UUID>();
-	    	
+
 	    	for (ParcelUuid uuid : uuids)
 	    	{
 	    		set.add(uuid.getUuid());
 	    	}
-    	
+
 	    	boolean flag = false;
-	    	
+
 	    	for (UUID uuid : serviceUuids)
 	    	{
 	    		if (!set.contains(uuid))
@@ -674,20 +674,20 @@ public class BluetoothLePlugin extends CordovaPlugin
 	    			break;
 	    		}
 	    	}
-	    	
+
 	    	if (flag)
 	    	{
 	    		continue;
 	    	}
     	}*/
-    	
+
     	JSONObject returnObj = new JSONObject();
-    	
+
     	addDevice(returnObj, device);
-    	
+
     	returnArray.put(returnObj);
     }
-    
+
     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnArray);
     pluginResult.setKeepCallback(true);
     callbackContext.sendPluginResult(pluginResult);
@@ -1717,7 +1717,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
 
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
-    
+
     if (Build.VERSION.SDK_INT < 21)
     {
       JSONObject returnObj = new JSONObject();
@@ -2708,7 +2708,7 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
       connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
 
       connections.put(device.getAddress(), connection);
-      
+
       if (callbackContext == null)
       {
         return;
@@ -2716,9 +2716,9 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
 
       addProperty(returnObj, keyError, errorConnect);
       addProperty(returnObj, keyMessage, logConnectFail);
-      
+
       callbackContext.error(returnObj);
-      
+
       return;
     }
 
@@ -2727,17 +2727,25 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
     //Device was connected
     if (newState == BluetoothProfile.STATE_CONNECTED)
     {
-      if (callbackContext == null)
-      {
-        return;
+      //Changing MTU is only available in API 21+
+      int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+      if (currentapiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP){
+        gatt.requestMtu(64);
       }
+      else
+      {
+        if (callbackContext == null)
+        {
+          return;
+        }
 
-      addProperty(returnObj, keyStatus, statusConnected);
+        addProperty(returnObj, keyStatus, statusConnected);
 
-      //Keep connection call back for disconnect
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      callbackContext.sendPluginResult(pluginResult);
+        //Keep connection call back for disconnect
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+        pluginResult.setKeepCallback(true);
+        callbackContext.sendPluginResult(pluginResult);
+      }
     }
     //Device was disconnected
     else if (newState == BluetoothProfile.STATE_DISCONNECTED)
@@ -3135,6 +3143,39 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
       addProperty(returnObj, keyMessage, logRssiFailReturn);
       callbackContext.error(returnObj);
     }
+  }
+
+  @Override
+  public void onMtuChanged (BluetoothGatt gatt, int mtu, int status)
+  {
+    //Get the connected device
+    BluetoothDevice device = gatt.getDevice();
+    String address = device.getAddress();
+
+    HashMap<Object, Object> connection = connections.get(address);
+    if (connection == null)
+    {
+      Log.d(TAG, "BluetoothGatt connection null");
+      return;
+    }
+
+    CallbackContext callbackContext = (CallbackContext)connection.get(operationConnect);
+
+    JSONObject returnObj = new JSONObject();
+
+    addDevice(returnObj, device);
+
+    if (callbackContext == null)
+    {
+      return;
+    }
+
+    addProperty(returnObj, keyStatus, statusConnected);
+
+    //Keep connection call back for disconnect
+    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+    pluginResult.setKeepCallback(true);
+    callbackContext.sendPluginResult(pluginResult);
   }
 }
 }
