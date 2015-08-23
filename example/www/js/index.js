@@ -1,3 +1,8 @@
+//Advertisement support
+//Test two blocking devices
+//WasConnected
+//Name not reutnred on android after scan
+
 var bluetoothle;
 
 var jqmReady = $.Deferred();

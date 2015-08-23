@@ -22,13 +22,9 @@ Bluetooth LE Cordova Plugin
 * Characteristic and descriptor permissions are not returned during discovery. If anyone requests this, I should be able to add it fairly easily, at least for Android.
 
 
-## Want to Help? ##
-
-* If you have an older Samsung model and are experiencing issues with this plugin, please let me know! I really want to resolve these, but am unable to reproduce them on Samsung devices I've borrowed.
-
-
 ## To Do ##
 
+* Support for Peripheral role on iOS 6.0+ and Android 5.0+
 * Full support for Windows Phone 8.1 C#-based projects. Assuming I can follow @MiBLE's process successfully.
 * Support for Windows Phone 8.1 Javascript projects. Currently waiting for better debugging support with Visual Studio.
 * Connect and Reconnect should detect existing connection with better error messages
@@ -45,8 +41,26 @@ If you are using Apache Cordova use this instead:
 
 ```cordova plugin add https://github.com/randdusing/BluetoothLE```
 
+If you are using PhoneGap Build and want to use the PhoneGap Build Plugin (outdated plugin version 2.0.0), add below to config.xml:
 
-## Updating ##
+```<gap:plugin name="com.randdusing.bluetoothle" />```
+
+If you are using PhoneGap Build and want to use the Cordova Plugin Registry (up to date plugin version but PhoneGap Build doesn't support Android API21 yet), add below to config.xml:
+
+```<gap:plugin name="com.randdusing.bluetoothle" source="plugins.cordova.io" />```
+
+
+## Installation Quirks (iOS) ##
+By default, background mode is enabled. If you wish to remove this, follow the steps below:
+1. Click your Project
+2. Click your Target
+3. Click Capabilities
+4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories
+5. Open up BluetoothLePlugin.m
+6. Remove "CBCentralManagerOptionRestoreIdentifierKey:pluginName," from the initWithDelegate call in the initialize function
+7. Remove the willRestoreState function
+8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used
+
 
 Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries. To fix:
 1. Click your project to open the "properties" window
@@ -56,44 +70,29 @@ Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Co
 5. Ensure CoreBluetooth.framework is added to the Link Binary with Libraries
 
 
-## Discovery Android vs iOS ##
+## Installation Quirks (Android) ##
+The latest version of the plugin requires you to set the Android target API to 21.
 
+
+## PhoneGap Build ##
+I'm no longer updating the PhoneGap Build version of this plugin since it costs money and better alternatives like the Cordova Plugin Registry exist. Once PhoneGap Build supports Android API 21 (required for latest version of my plugin), I'll request deactivation of the plugin on PhoneGap Build to remove the out of date version.
+
+
+## Discovery Quirks (iOS vs Android) ##
 Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The Device plugin (http://docs.phonegap.com/en/edge/cordova_device_device.md.html#Device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS.
-
-
-## Android Target SDK ##
-Version 2.1.0 requires you to set the target version SDK to 21 to support the request connection priority functionality. If you have unrecognized symbol issues when compiling, ensure that project.properties in /platform/android has 'target=android-21'. Alternatively the requestConnectionPriority code could be commented out if you don't want to use it. Please let me know if there's a better way to handle this!
 
 
 ## UUIDs ##
 UUIDs can be 16 bits or 128 bits. The "out of the box" UUIDs from the link below are 16 bits.
 Since iOS returns the 16 bit version of the "out of the box" UUIDs even if a 128 bit UUID was used in the parameters, the 16 bit version should always be used for the "out of the box" UUIDs for consistency.
-Android on the other hand only uses the 128 bit version, but the plugin will automatically convert 16 bit UUIDs to the 128 bit version on input and output.
-
-https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
+Android on the other hand only uses the 128 bit version, but the plugin will automatically convert 16 bit UUIDs to the 128 bit version on input and output. For a list of out of the box UUIDS, see https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
 
 
 ## Advertisement Data / MAC Address ##
 On iOS, the MAC address is hidden from the advertisement packet, and the address returned from the scanResult is a generated, device-specific address. This is a problem when using devices like iBeacons where you need the MAC Address. Fortunately the CLBeacon class can be used for this, but unfortunately it's not supported in this plugin.
 One option is to set Manufacturer Specific Data in the advertisement packet if that's possible in your project.
 Another option is to connect to the device and use the "Device Information" (0x180A) service, but connecting to each device is much more energy intensive than scanning for advertisement data.
-
-Some related links:
-https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-energy-peripheral
-https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios
-
-
-## Background Mode (iOS) ##
-By default, background mode is enabled. If you wish to remove this, follow the steps below:
-
-1. Click your Project
-2. Click your Target
-3. Click Capabilities
-4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories
-5. Open up BluetoothLePlugin.m
-6. Remove "CBCentralManagerOptionRestoreIdentifierKey:pluginName," from the initWithDelegate call in the initialize function
-7. Remove the willRestoreState function
-8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used
+See the following for more info: https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-energy-peripheral, https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios
 
 
 ## Methods ##
