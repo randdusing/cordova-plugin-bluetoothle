@@ -262,42 +262,74 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     else if (enableActionName.equals(action))
     {
-      enableAction(callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          enableAction(callbackContext);
+        }
+      });
       return true;
     }
     else if (disableActionName.equals(action))
     {
-      disableAction(callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          disableAction(callbackContext);
+        }
+      });
       return true;
     }
     else if (startScanActionName.equals(action))
     {
-      startScanAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          startScanAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (stopScanActionName.equals(action))
     {
-      stopScanAction(callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          stopScanAction(callbackContext);
+        }
+      });
       return true;
     }
     else if (retrieveConnectedActionName.equals(action))
     {
-      retrieveConnectedAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          retrieveConnectedAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (connectActionName.equals(action))
     {
-      connectAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          connectAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (reconnectActionName.equals(action))
     {
-      reconnectAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          reconnectAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (disconnectActionName.equals(action))
     {
-      disconnectAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          disconnectAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (servicesActionName.equals(action))
@@ -326,77 +358,137 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     else if (closeActionName.equals(action))
     {
-      closeAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          closeAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (discoverActionName.equals(action))
     {
-      discoverAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          discoverAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (readActionName.equals(action))
     {
-      readAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          readAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (subscribeActionName.equals(action))
     {
-      subscribeAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          subscribeAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (unsubscribeActionName.equals(action))
     {
-      unsubscribeAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          unsubscribeAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (writeActionName.equals(action))
     {
-      writeAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          writeAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (readDescriptorActionName.equals(action))
     {
-      readDescriptorAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          readDescriptorAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (writeDescriptorActionName.equals(action))
     {
-      writeDescriptorAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          writeDescriptorAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (rssiActionName.equals(action))
     {
-      rssiAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          rssiAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (isInitializedActionName.equals(action))
     {
-      isInitializedAction(callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          isInitializedAction(callbackContext);
+        }
+      });
       return true;
     }
     else if (isEnabledActionName.equals(action))
     {
-      isEnabledAction(callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          isEnabledAction(callbackContext);
+        }
+      });
       return true;
     }
     else if (isScanningActionName.equals(action))
     {
-      isScanningAction(callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          isScanningAction(callbackContext);
+        }
+      });
       return true;
     }
     else if (isConnectedActionName.equals(action))
     {
-      isConnectedAction(args,callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          isConnectedAction(args,callbackContext);
+        }
+      });
       return true;
     }
     else if (isDiscoveredActionName.equals(action))
     {
-      isDiscoveredAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          isDiscoveredAction(args, callbackContext);
+        }
+      });
       return true;
     }
     else if (requestConnectionPriorityActionName.equals(action))
     {
-      requestConnectionPriorityAction(args, callbackContext);
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          requestConnectionPriorityAction(args, callbackContext);
+        }
+      });
       return true;
     }
     return false;
@@ -633,39 +725,39 @@ public class BluetoothLePlugin extends CordovaPlugin
   	{
   		return;
   	}
-  	
+
     /*JSONObject obj = getArgsObject(args);
-    
+
     UUID[] serviceUuids = null;
-    
+
     if (obj != null)
     {
       serviceUuids = getServiceUuids(obj);
     }*/
-    
+
     JSONArray returnArray = new JSONArray();
-    
+
     Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
     for (BluetoothDevice device : devices)
     {
     	/*if (serviceUuids != null)
-    	{	
+    	{
 	    	ParcelUuid[] uuids = device.getUuids();
-	    	
+
 	    	if (uuids == null)
 	    	{
 	    		continue;
 	    	}
-	    	
+
 	    	Set<UUID> set = new HashSet<UUID>();
-	    	
+
 	    	for (ParcelUuid uuid : uuids)
 	    	{
 	    		set.add(uuid.getUuid());
 	    	}
-    	
+
 	    	boolean flag = false;
-	    	
+
 	    	for (UUID uuid : serviceUuids)
 	    	{
 	    		if (!set.contains(uuid))
@@ -674,20 +766,20 @@ public class BluetoothLePlugin extends CordovaPlugin
 	    			break;
 	    		}
 	    	}
-	    	
+
 	    	if (flag)
 	    	{
 	    		continue;
 	    	}
     	}*/
-    	
+
     	JSONObject returnObj = new JSONObject();
-    	
+
     	addDevice(returnObj, device);
-    	
+
     	returnArray.put(returnObj);
     }
-    
+
     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnArray);
     pluginResult.setKeepCallback(true);
     callbackContext.sendPluginResult(pluginResult);
@@ -1717,7 +1809,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
 
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
-    
+
     if (Build.VERSION.SDK_INT < 21)
     {
       JSONObject returnObj = new JSONObject();
@@ -2708,7 +2800,7 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
       connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
 
       connections.put(device.getAddress(), connection);
-      
+
       if (callbackContext == null)
       {
         return;
@@ -2716,9 +2808,9 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
 
       addProperty(returnObj, keyError, errorConnect);
       addProperty(returnObj, keyMessage, logConnectFail);
-      
+
       callbackContext.error(returnObj);
-      
+
       return;
     }
 
