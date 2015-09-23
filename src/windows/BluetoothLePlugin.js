@@ -1,4 +1,4 @@
-﻿var bluetooth = Windows.Devices.Bluetooth;
+var bluetooth = Windows.Devices.Bluetooth;
 var gatt = Windows.Devices.Bluetooth.GenericAttributeProfile;
 var deviceInfo = Windows.Devices.Enumeration.DeviceInformation;
 var wsc = Windows.Security.Cryptography;
@@ -249,10 +249,6 @@ module.exports = {
       var isNotification = params[0].isNotification;
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
-        characteristic.onvaluechanged = function (result) {
-          var value = wsc.CryptographicBuffer.encodeToBase64String(result.characteristicValue);
-          successCallback({ status: "subscribedResult", value: value, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId }, { keepCallback: true });
-        };
         var descriptorValue;
         if (isNotification || isNotification == null) {
           descriptorValue = gatt.GattClientCharacteristicConfigurationDescriptorValue.notify;
@@ -262,6 +258,10 @@ module.exports = {
         characteristic.writeClientCharacteristicConfigurationDescriptorAsync(descriptorValue).done(function (result) {
           if (result == gatt.GattCommunicationStatus.success) {
             successCallback({ status: "subscribed", characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId }, { keepCallback: true });
+            characteristic.onvaluechanged = function (result) {
+              var value = wsc.CryptographicBuffer.encodeToBase64String(result.characteristicValue);
+              successCallback({ status: "subscribedResult", value: value, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId }, { keepCallback: true });
+            };
           } else {
             errorCallback({ error: "subscribe", message: "Device unreachable." });
           }
