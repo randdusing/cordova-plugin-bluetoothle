@@ -35,6 +35,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+@SuppressWarnings("unchecked")
+
 public class BluetoothLePlugin extends CordovaPlugin
 {
   //Initialization related variables
@@ -82,6 +84,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String isDiscoveredActionName = "isDiscovered";
   private final String isConnectedActionName = "isConnected";
   private final String requestConnectionPriorityActionName = "requestConnectionPriority";
+  private final String mtuActionName = "mtu";
 
   //Object keys
   private final String keyStatus = "status";
@@ -113,6 +116,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyState = "state";
   private final String keyDiscoveredState = "discoveredState";
   private final String keyConnectionPriority = "connectionPriority";
+  private final String keyMtu = "mtu";
 
   //Write Types
   private final String writeTypeNoResponse = "noResponse";
@@ -137,6 +141,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String statusWrittenDescriptor = "writtenDescriptor";
   private final String statusRssi = "rssi";
   private final String statusConnectionPriorityRequested = "connectionPriorityRequested";
+  private final String statusMtu = "mtu";
 
   //Properties
   private final String propertyBroadcast = "broadcast";
@@ -180,6 +185,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String errorCharacteristic = "characteristic";
   private final String errorDescriptor = "descriptor";
   private final String errorRequestConnectionPriority = "requestConnectPriority";
+  private final String errorMtu = "mtu";
 
   //Error Messages
   //Initialization
@@ -230,7 +236,11 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logRequestConnectionPriorityNull = "Request connection priority not set";
   private final String logRequestConnectionPriorityInvalid = "Request connection priority is invalid";
   private final String logRequestConnectionPriorityFailed = "Request connection priority failed";
-  private final String logRequestConnectionPrioritySdk = "Request connection priority requires API level 21";
+  //MTU
+  private final String logMtuFail = "Unable to set MTU";
+  private final String logMtuFailReturn = "Unable to set MTU on return";
+
+  private final String logRequiresAPI21 = "Requires API level 21";
 
   private final String operationConnect = "connect";
   private final String operationDiscover = "discover";
@@ -239,6 +249,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String operationSubscribe = "subscribe";
   private final String operationUnsubscribe = "unsubscribe";
   private final String operationWrite = "write";
+  private final String operationMtu = "mtu";
 
   private final String baseUuidStart = "0000";
   private final String baseUuidEnd = "-0000-1000-8000-00805f9b34fb";
@@ -491,6 +502,15 @@ public class BluetoothLePlugin extends CordovaPlugin
       });
       return true;
     }
+    else if (mtuActionName.equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          mtuAction(args, callbackContext);
+        }
+      });
+      return true;
+    }
     return false;
   }
 
@@ -720,11 +740,11 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void retrieveConnectedAction(JSONArray args, CallbackContext callbackContext)
   {
-  	//Filtering by service UUID only works if the service UUIDs have already been discovered/cached previously
-  	if (isNotInitialized(callbackContext, true))
-  	{
-  		return;
-  	}
+    //Filtering by service UUID only works if the service UUIDs have already been discovered/cached previously
+    if (isNotInitialized(callbackContext, true))
+    {
+      return;
+    }
 
     /*JSONObject obj = getArgsObject(args);
 
@@ -740,44 +760,44 @@ public class BluetoothLePlugin extends CordovaPlugin
     Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
     for (BluetoothDevice device : devices)
     {
-    	/*if (serviceUuids != null)
-    	{
-	    	ParcelUuid[] uuids = device.getUuids();
+      /*if (serviceUuids != null)
+      {
+        ParcelUuid[] uuids = device.getUuids();
 
-	    	if (uuids == null)
-	    	{
-	    		continue;
-	    	}
+        if (uuids == null)
+        {
+          continue;
+        }
 
-	    	Set<UUID> set = new HashSet<UUID>();
+        Set<UUID> set = new HashSet<UUID>();
 
-	    	for (ParcelUuid uuid : uuids)
-	    	{
-	    		set.add(uuid.getUuid());
-	    	}
+        for (ParcelUuid uuid : uuids)
+        {
+          set.add(uuid.getUuid());
+        }
 
-	    	boolean flag = false;
+        boolean flag = false;
 
-	    	for (UUID uuid : serviceUuids)
-	    	{
-	    		if (!set.contains(uuid))
-	    		{
-	    			flag = true;
-	    			break;
-	    		}
-	    	}
+        for (UUID uuid : serviceUuids)
+        {
+          if (!set.contains(uuid))
+          {
+            flag = true;
+            break;
+          }
+        }
 
-	    	if (flag)
-	    	{
-	    		continue;
-	    	}
-    	}*/
+        if (flag)
+        {
+          continue;
+        }
+      }*/
 
-    	JSONObject returnObj = new JSONObject();
+      JSONObject returnObj = new JSONObject();
 
-    	addDevice(returnObj, device);
+      addDevice(returnObj, device);
 
-    	returnArray.put(returnObj);
+      returnArray.put(returnObj);
     }
 
     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnArray);
@@ -1663,6 +1683,74 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
   }
 
+  private void mtuAction(JSONArray args, CallbackContext callbackContext)
+  {
+    if (isNotInitialized(callbackContext, true))
+    {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext))
+    {
+      return;
+    }
+
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext))
+    {
+      return;
+    }
+
+    HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
+    if (connection == null)
+    {
+      return;
+    }
+
+    BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
+    BluetoothDevice device = bluetoothGatt.getDevice();
+
+    if (Build.VERSION.SDK_INT < 21)
+    {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorMtu);
+      addProperty(returnObj, keyMessage, logRequiresAPI21);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    if (isNotConnected(connection, device, callbackContext))
+    {
+      return;
+    }
+
+    connection.put(operationMtu, callbackContext);
+
+    int mtu = getMtu(obj);
+
+    boolean result = bluetoothGatt.requestMtu(mtu);
+
+    if (!result)
+    {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorMtu);
+      addProperty(returnObj, keyMessage, logMtuFail);
+
+      callbackContext.error(returnObj);
+
+      connection.remove(operationMtu);
+      return;
+    }
+  }
+
   private void isInitializedAction(CallbackContext callbackContext)
   {
     boolean result = (bluetoothAdapter != null);
@@ -1817,7 +1905,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       addDevice(returnObj, bluetoothGatt.getDevice());
 
       addProperty(returnObj, keyError, errorRequestConnectionPriority);
-      addProperty(returnObj, keyMessage, logRequestConnectionPrioritySdk);
+      addProperty(returnObj, keyMessage, logRequiresAPI21);
 
       callbackContext.error(returnObj);
       return;
@@ -2509,7 +2597,11 @@ public class BluetoothLePlugin extends CordovaPlugin
     //Believe exception only occurs when adding duplicate keys, so just ignore it
     try
     {
-      obj.put(key, value);
+      if (value == null) {
+        obj.put(key, JSONObject.NULL);
+      } else {
+        obj.put(key, value);
+      }
     }
     catch (JSONException e)
     {
@@ -2651,6 +2743,18 @@ public class BluetoothLePlugin extends CordovaPlugin
     return BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
   }
 
+  private int getMtu(JSONObject obj)
+  {
+    int mtu = obj.optInt(keyMtu);
+
+    if (mtu == 0)
+    {
+      return 23;
+    }
+
+    return mtu;
+  }
+
   private JSONObject getDiscovery(BluetoothGatt bluetoothGatt)
   {
     JSONObject deviceObject = new JSONObject();
@@ -2769,464 +2873,501 @@ public class BluetoothLePlugin extends CordovaPlugin
     return propertiesObject;
   }
 
-//Bluetooth callback for connecting, discovering, reading and writing
-
-private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
-{
-  @Override
-  public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
+  //Bluetooth callback for connecting, discovering, reading and writing
+  private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
   {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
+    @Override
+    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
     {
-      return;
-    }
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
 
-    CallbackContext callbackContext = (CallbackContext)connection.get(operationConnect);
-
-    JSONObject returnObj = new JSONObject();
-
-    addDevice(returnObj, device);
-
-    if (status != BluetoothGatt.GATT_SUCCESS)
-    {
-    	//Clear out all the callbacks
-      connection = new HashMap<Object, Object>();
-      connection.put(keyPeripheral, gatt);
-      connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
-
-      connections.put(device.getAddress(), connection);
-
-      if (callbackContext == null)
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
       {
         return;
       }
 
-      addProperty(returnObj, keyError, errorConnect);
-      addProperty(returnObj, keyMessage, logConnectFail);
+      CallbackContext callbackContext = (CallbackContext)connection.get(operationConnect);
 
-      callbackContext.error(returnObj);
+      JSONObject returnObj = new JSONObject();
 
-      return;
-    }
+      addDevice(returnObj, device);
 
-    connection.put(keyState, newState);
-
-    //Device was connected
-    if (newState == BluetoothProfile.STATE_CONNECTED)
-    {
-      if (callbackContext == null)
+      if (status != BluetoothGatt.GATT_SUCCESS)
       {
-        return;
-      }
+        //Clear out all the callbacks
+        connection = new HashMap<Object, Object>();
+        connection.put(keyPeripheral, gatt);
+        connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
 
-      addProperty(returnObj, keyStatus, statusConnected);
+        connections.put(device.getAddress(), connection);
 
-      //Keep connection call back for disconnect
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      callbackContext.sendPluginResult(pluginResult);
-    }
-    //Device was disconnected
-    else if (newState == BluetoothProfile.STATE_DISCONNECTED)
-    {
-      //Clear out all the callbacks
-      connection = new HashMap<Object, Object>();
-      connection.put(keyPeripheral, gatt);
-      connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
-
-      connections.put(device.getAddress(), connection);
-
-      if (callbackContext == null)
-      {
-        return;
-      }
-
-      addProperty(returnObj, keyStatus, statusDisconnected);
-
-      callbackContext.success(returnObj);
-    }
-  }
-
-  @Override
-  public void onServicesDiscovered(BluetoothGatt gatt, int status)
-  {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
-    {
-      return;
-    }
-
-    int discoveredState = (status == BluetoothGatt.GATT_SUCCESS) ? STATE_DISCOVERED : STATE_UNDISCOVERED;
-    connection.put(keyDiscoveredState, discoveredState);
-
-    CallbackContext callbackContext = (CallbackContext) connection.get(operationDiscover);
-    connection.remove(operationDiscover);
-
-    //Shouldn't happen, but check for null callback
-    if (callbackContext == null)
-    {
-      return;
-    }
-
-    JSONObject returnObj = new JSONObject();
-
-    addDevice(returnObj, device);
-
-    //If successfully discovered, return list of services, characteristics and descriptors
-    if (status == BluetoothGatt.GATT_SUCCESS)
-    {
-      returnObj = getDiscovery(gatt);
-      callbackContext.success(returnObj);
-    }
-    //Else it failed
-    else
-    {
-      addProperty(returnObj, keyError, errorDiscover);
-      addProperty(returnObj, keyMessage, logDiscoveryFail);
-      callbackContext.error(returnObj);
-    }
-  }
-
-  @Override
-  public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
-  {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
-    {
-      return;
-    }
-
-    UUID characteristicUuid = characteristic.getUuid();
-
-    CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationRead);
-    RemoveCallback(characteristicUuid, connection, operationRead);
-
-    //If no callback, just return
-    if (callbackContext == null)
-    {
-      return;
-    }
-
-    JSONObject returnObj = new JSONObject();
-
-    addCharacteristic(returnObj, characteristic);
-
-    addDevice(returnObj, device);
-
-    //If successfully read, return value
-    if (status == BluetoothGatt.GATT_SUCCESS)
-    {
-      addProperty(returnObj, keyStatus, statusRead);
-      addPropertyBytes(returnObj, keyValue, characteristic.getValue());
-      callbackContext.success(returnObj);
-    }
-    //Else it failed
-    else
-    {
-      addProperty(returnObj, keyError, errorRead);
-      addProperty(returnObj, keyMessage, logReadFailReturn);
-      callbackContext.error(returnObj);
-    }
-  }
-
-  @Override
-  public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
-  {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
-    {
-      return;
-    }
-
-    UUID characteristicUuid = characteristic.getUuid();
-
-    CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationSubscribe);
-
-    //If no callback, just return
-    if (callbackContext == null)
-    {
-      return;
-    }
-
-    JSONObject returnObj = new JSONObject();
-
-    addDevice(returnObj, device);
-
-    addCharacteristic(returnObj, characteristic);
-
-    addProperty(returnObj, keyStatus, statusSubscribedResult);
-    addPropertyBytes(returnObj, keyValue, characteristic.getValue());
-
-    //Return the characteristic value
-    PluginResult result = new PluginResult(PluginResult.Status.OK, returnObj);
-    result.setKeepCallback(true);
-    callbackContext.sendPluginResult(result);
-  }
-
-  @Override
-  public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
-  {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
-    {
-      return;
-    }
-
-    UUID characteristicUuid = characteristic.getUuid();
-
-    CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationWrite);
-    RemoveCallback(characteristicUuid, connection, operationWrite);
-
-    //If no callback, just return
-    if (callbackContext == null)
-    {
-      return;
-    }
-
-    JSONObject returnObj = new JSONObject();
-
-    addDevice(returnObj, device);
-    addCharacteristic(returnObj, characteristic);
-
-    //If write was successful, return the written value
-    if (status == BluetoothGatt.GATT_SUCCESS)
-    {
-      addProperty(returnObj, keyStatus, statusWritten);
-      addPropertyBytes(returnObj, keyValue, characteristic.getValue());
-      callbackContext.success(returnObj);
-    }
-    //Else it failed
-    else
-    {
-      addProperty(returnObj, keyError, errorWrite);
-      addProperty(returnObj, keyMessage, logWriteFailReturn);
-      callbackContext.error(returnObj);
-    }
-  }
-
-  @Override
-  public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
-  {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
-    {
-      return;
-    }
-
-    BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
-    UUID characteristicUuid = characteristic.getUuid();
-    UUID descriptorUuid = descriptor.getUuid();
-
-    CallbackContext callbackContext = GetDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
-    RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
-
-    //If callback is null, just return
-    if (callbackContext == null)
-    {
-      return;
-    }
-
-    JSONObject returnObj = new JSONObject();
-
-    addDevice(returnObj, device);
-
-    addDescriptor(returnObj, descriptor);
-
-    //If descriptor was successful, return the written value
-    if (status == BluetoothGatt.GATT_SUCCESS)
-    {
-      addProperty(returnObj, keyStatus, statusReadDescriptor);
-      addPropertyBytes(returnObj, keyValue, descriptor.getValue());
-      callbackContext.success(returnObj);
-    }
-    //Else it failed
-    else
-    {
-      addProperty(returnObj, keyError, errorReadDescriptor);
-      addProperty(returnObj, keyMessage, logReadDescriptorFailReturn);
-      callbackContext.error(returnObj);
-    }
-  }
-
-  @Override
-  public void onDescriptorWrite (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
-  {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
-    {
-      return;
-    }
-
-    BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
-    UUID characteristicUuid = characteristic.getUuid();
-    UUID descriptorUuid = descriptor.getUuid();
-
-    JSONObject returnObj = new JSONObject();
-
-    addDevice(returnObj, device);
-
-    addDescriptor(returnObj, descriptor);
-
-    //See if notification/indication is enabled or disabled and use subscribe/unsubscribe callback instead
-    if (descriptorUuid.equals(clientConfigurationDescriptorUuid))
-    {
-      if (descriptor.getValue() == BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
-      {
-        //Unsubscribe to the characteristic
-        boolean result = gatt.setCharacteristicNotification(characteristic, false);
-
-        CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationUnsubscribe);
-
-        //If no callback, just return
         if (callbackContext == null)
         {
           return;
         }
 
-        if (status != BluetoothGatt.GATT_SUCCESS)
-        {
-          addProperty(returnObj, keyError, errorSubscription);
-          addProperty(returnObj, keyMessage, logUnsubscribeFail);
-          callbackContext.error(returnObj);
-          return;
-        }
+        addProperty(returnObj, keyError, errorConnect);
+        addProperty(returnObj, keyMessage, logConnectFail);
 
-        if (!result)
-        {
-          addProperty(returnObj, keyError, errorSubscription);
-          addProperty(returnObj, keyMessage, logUnsubscribeFail);
-          callbackContext.error(returnObj);
-          return;
-        }
+        callbackContext.error(returnObj);
 
-        //Get the unsubscribed operation callback and clear
-        addProperty(returnObj, keyStatus, statusUnsubscribed);
-
-        callbackContext.success(returnObj);
+        return;
       }
-      else
+
+      connection.put(keyState, newState);
+
+      //Device was connected
+      if (newState == BluetoothProfile.STATE_CONNECTED)
       {
-        //Subscribe to the characteristic
-        boolean result = gatt.setCharacteristicNotification(characteristic, true);
-
-        CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationSubscribe);
-
-        //If no callback, just return
         if (callbackContext == null)
         {
           return;
         }
 
-        if (!result)
-        {
-          addProperty(returnObj, keyError, errorSubscription);
-          addProperty(returnObj, keyMessage, logSubscribeFail);
-          callbackContext.error(returnObj);
-          return;
-        }
+        addProperty(returnObj, keyStatus, statusConnected);
 
-        addProperty(returnObj, keyStatus, statusSubscribed);
-
+        //Keep connection call back for disconnect
         PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
         pluginResult.setKeepCallback(true);
         callbackContext.sendPluginResult(pluginResult);
       }
+      //Device was disconnected
+      else if (newState == BluetoothProfile.STATE_DISCONNECTED)
+      {
+        //Clear out all the callbacks
+        connection = new HashMap<Object, Object>();
+        connection.put(keyPeripheral, gatt);
+        connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
 
-      return;
+        connections.put(device.getAddress(), connection);
+
+        if (callbackContext == null)
+        {
+          return;
+        }
+
+        addProperty(returnObj, keyStatus, statusDisconnected);
+
+        callbackContext.success(returnObj);
+      }
     }
 
-    CallbackContext callbackContext = GetDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
-    RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
-
-    //If callback is null, just return
-    if (callbackContext == null)
+    @Override
+    public void onServicesDiscovered(BluetoothGatt gatt, int status)
     {
-      return;
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      int discoveredState = (status == BluetoothGatt.GATT_SUCCESS) ? STATE_DISCOVERED : STATE_UNDISCOVERED;
+      connection.put(keyDiscoveredState, discoveredState);
+
+      CallbackContext callbackContext = (CallbackContext) connection.get(operationDiscover);
+      connection.remove(operationDiscover);
+
+      //Shouldn't happen, but check for null callback
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      //If successfully discovered, return list of services, characteristics and descriptors
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        returnObj = getDiscovery(gatt);
+        callbackContext.success(returnObj);
+      }
+      //Else it failed
+      else
+      {
+        addProperty(returnObj, keyError, errorDiscover);
+        addProperty(returnObj, keyMessage, logDiscoveryFail);
+        callbackContext.error(returnObj);
+      }
     }
 
-    //If descriptor was written, return written value
-    if (status == BluetoothGatt.GATT_SUCCESS)
+    @Override
+    public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
     {
-      addProperty(returnObj, keyStatus, statusWrittenDescriptor);
-      addPropertyBytes(returnObj, keyValue, descriptor.getValue());
-      callbackContext.success(returnObj);
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      UUID characteristicUuid = characteristic.getUuid();
+
+      CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationRead);
+      RemoveCallback(characteristicUuid, connection, operationRead);
+
+      //If no callback, just return
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      addCharacteristic(returnObj, characteristic);
+
+      addDevice(returnObj, device);
+
+      //If successfully read, return value
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        addProperty(returnObj, keyStatus, statusRead);
+        addPropertyBytes(returnObj, keyValue, characteristic.getValue());
+        callbackContext.success(returnObj);
+      }
+      //Else it failed
+      else
+      {
+        addProperty(returnObj, keyError, errorRead);
+        addProperty(returnObj, keyMessage, logReadFailReturn);
+        callbackContext.error(returnObj);
+      }
     }
-    //Else it failed
-    else
+
+    @Override
+    public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
     {
-      addProperty(returnObj, keyError, errorWriteDescriptor);
-      addProperty(returnObj, keyMessage, logWriteDescriptorFailReturn);
-      callbackContext.error(returnObj);
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      UUID characteristicUuid = characteristic.getUuid();
+
+      CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationSubscribe);
+
+      //If no callback, just return
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addCharacteristic(returnObj, characteristic);
+
+      addProperty(returnObj, keyStatus, statusSubscribedResult);
+      addPropertyBytes(returnObj, keyValue, characteristic.getValue());
+
+      //Return the characteristic value
+      PluginResult result = new PluginResult(PluginResult.Status.OK, returnObj);
+      result.setKeepCallback(true);
+      callbackContext.sendPluginResult(result);
+    }
+
+    @Override
+    public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
+    {
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      UUID characteristicUuid = characteristic.getUuid();
+
+      CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationWrite);
+      RemoveCallback(characteristicUuid, connection, operationWrite);
+
+      //If no callback, just return
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+      addCharacteristic(returnObj, characteristic);
+
+      //If write was successful, return the written value
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        addProperty(returnObj, keyStatus, statusWritten);
+        addPropertyBytes(returnObj, keyValue, characteristic.getValue());
+        callbackContext.success(returnObj);
+      }
+      //Else it failed
+      else
+      {
+        addProperty(returnObj, keyError, errorWrite);
+        addProperty(returnObj, keyMessage, logWriteFailReturn);
+        callbackContext.error(returnObj);
+      }
+    }
+
+    @Override
+    public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+    {
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
+      UUID characteristicUuid = characteristic.getUuid();
+      UUID descriptorUuid = descriptor.getUuid();
+
+      CallbackContext callbackContext = GetDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
+      RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
+
+      //If callback is null, just return
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addDescriptor(returnObj, descriptor);
+
+      //If descriptor was successful, return the written value
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        addProperty(returnObj, keyStatus, statusReadDescriptor);
+        addPropertyBytes(returnObj, keyValue, descriptor.getValue());
+        callbackContext.success(returnObj);
+      }
+      //Else it failed
+      else
+      {
+        addProperty(returnObj, keyError, errorReadDescriptor);
+        addProperty(returnObj, keyMessage, logReadDescriptorFailReturn);
+        callbackContext.error(returnObj);
+      }
+    }
+
+    @Override
+    public void onDescriptorWrite (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+    {
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
+      UUID characteristicUuid = characteristic.getUuid();
+      UUID descriptorUuid = descriptor.getUuid();
+
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addDescriptor(returnObj, descriptor);
+
+      //See if notification/indication is enabled or disabled and use subscribe/unsubscribe callback instead
+      if (descriptorUuid.equals(clientConfigurationDescriptorUuid))
+      {
+        if (descriptor.getValue() == BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
+        {
+          //Unsubscribe to the characteristic
+          boolean result = gatt.setCharacteristicNotification(characteristic, false);
+
+          CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationUnsubscribe);
+
+          //If no callback, just return
+          if (callbackContext == null)
+          {
+            return;
+          }
+
+          if (status != BluetoothGatt.GATT_SUCCESS)
+          {
+            addProperty(returnObj, keyError, errorSubscription);
+            addProperty(returnObj, keyMessage, logUnsubscribeFail);
+            callbackContext.error(returnObj);
+            return;
+          }
+
+          if (!result)
+          {
+            addProperty(returnObj, keyError, errorSubscription);
+            addProperty(returnObj, keyMessage, logUnsubscribeFail);
+            callbackContext.error(returnObj);
+            return;
+          }
+
+          //Get the unsubscribed operation callback and clear
+          addProperty(returnObj, keyStatus, statusUnsubscribed);
+
+          callbackContext.success(returnObj);
+        }
+        else
+        {
+          //Subscribe to the characteristic
+          boolean result = gatt.setCharacteristicNotification(characteristic, true);
+
+          CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationSubscribe);
+
+          //If no callback, just return
+          if (callbackContext == null)
+          {
+            return;
+          }
+
+          if (!result)
+          {
+            addProperty(returnObj, keyError, errorSubscription);
+            addProperty(returnObj, keyMessage, logSubscribeFail);
+            callbackContext.error(returnObj);
+            return;
+          }
+
+          addProperty(returnObj, keyStatus, statusSubscribed);
+
+          PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+          pluginResult.setKeepCallback(true);
+          callbackContext.sendPluginResult(pluginResult);
+        }
+
+        return;
+      }
+
+      CallbackContext callbackContext = GetDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
+      RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
+
+      //If callback is null, just return
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      //If descriptor was written, return written value
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        addProperty(returnObj, keyStatus, statusWrittenDescriptor);
+        addPropertyBytes(returnObj, keyValue, descriptor.getValue());
+        callbackContext.success(returnObj);
+      }
+      //Else it failed
+      else
+      {
+        addProperty(returnObj, keyError, errorWriteDescriptor);
+        addProperty(returnObj, keyMessage, logWriteDescriptorFailReturn);
+        callbackContext.error(returnObj);
+      }
+    }
+
+    @Override
+    public void onReadRemoteRssi (BluetoothGatt gatt, int rssi, int status)
+    {
+      //Get the connected device
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      CallbackContext callbackContext = (CallbackContext)connection.get(operationRssi);
+      connection.remove(operationRssi);
+
+      //If no callback, just return
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+      addDevice(returnObj, device);
+
+      //If successfully read RSSI, return value
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        addProperty(returnObj, keyStatus, statusRssi);
+        addProperty(returnObj, keyRssi, rssi);
+        callbackContext.success(returnObj);
+      }
+      //Else it failed
+      else
+      {
+        addProperty(returnObj, keyError, errorRssi);
+        addProperty(returnObj, keyMessage, logRssiFailReturn);
+        callbackContext.error(returnObj);
+      }
+    }
+
+    @Override
+    public void onMtuChanged (BluetoothGatt gatt, int mtu, int status)
+    {
+      BluetoothDevice device = gatt.getDevice();
+      String address = device.getAddress();
+
+      HashMap<Object, Object> connection = connections.get(address);
+      if (connection == null)
+      {
+        return;
+      }
+
+      CallbackContext callbackContext = (CallbackContext)connection.get(operationMtu);
+      connection.remove(operationMtu);
+
+      if (callbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+      addDevice(returnObj, device);
+
+      if (status == BluetoothGatt.GATT_SUCCESS)
+      {
+        addProperty(returnObj, keyStatus, statusMtu);
+        addProperty(returnObj, keyMtu, mtu);
+        callbackContext.success(returnObj);
+      }
+      else
+      {
+        addProperty(returnObj, keyError, errorMtu);
+        addProperty(returnObj, keyMessage, logMtuFailReturn);
+        callbackContext.error(returnObj);
+      }
     }
   }
-
-  @Override
-  public void onReadRemoteRssi (BluetoothGatt gatt, int rssi, int status)
-  {
-    //Get the connected device
-    BluetoothDevice device = gatt.getDevice();
-    String address = device.getAddress();
-
-    HashMap<Object, Object> connection = connections.get(address);
-    if (connection == null)
-    {
-      return;
-    }
-
-    CallbackContext callbackContext = (CallbackContext)connection.get(operationRssi);
-    connection.remove(operationRssi);
-
-    //If no callback, just return
-    if (callbackContext == null)
-    {
-      return;
-    }
-
-    JSONObject returnObj = new JSONObject();
-
-    //If successfully read RSSI, return value
-    if (status == BluetoothGatt.GATT_SUCCESS)
-    {
-      addProperty(returnObj, keyStatus, statusRssi);
-      addProperty(returnObj, keyRssi, rssi);
-      callbackContext.success(returnObj);
-    }
-    //Else it failed
-    else
-    {
-      addProperty(returnObj, keyError, errorRssi);
-      addProperty(returnObj, keyMessage, logRssiFailReturn);
-      callbackContext.error(returnObj);
-    }
-  }
-}
 }

@@ -1,7 +1,7 @@
 var bluetoothleName = "BluetoothLePlugin";
 var bluetoothle = {
   initialize: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "initialize", [params]); 
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "initialize", [params]);
   },
   enable: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "enable", []);
@@ -10,7 +10,7 @@ var bluetoothle = {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "disable", []);
   },
   startScan: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]); 
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]);
   },
   stopScan: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "stopScan", []);
@@ -63,11 +63,14 @@ var bluetoothle = {
   rssi: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "rssi", [params]);
   },
+  mtu: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "mtu", [params]);
+  },
   isInitialized: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isInitialized", []);
   },
   isEnabled: function(successCallback) {
-  	cordova.exec(successCallback, successCallback, bluetoothleName, "isEnabled", []);
+    cordova.exec(successCallback, successCallback, bluetoothleName, "isEnabled", []);
   },
   isScanning: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isScanning", []);
@@ -79,7 +82,7 @@ var bluetoothle = {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isDiscovered", [params]);
   },
   requestConnectionPriority: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]); 
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]);
   },
   encodedStringToBytes: function(string) {
     var data = atob(string);
@@ -94,15 +97,15 @@ var bluetoothle = {
     return btoa(String.fromCharCode.apply(null, bytes));
   },
   stringToBytes: function(string) {
-  	var bytes = new ArrayBuffer(string.length * 2);
-		var bytesUint16 = new Uint16Array(bytes);
-		for (var i = 0; i < string.length; i++) {
-			bytesUint16[i] = string.charCodeAt(i);
-		}
-		return new Uint8Array(bytesUint16);
+    var bytes = new ArrayBuffer(string.length * 2);
+    var bytesUint16 = new Uint16Array(bytes);
+    for (var i = 0; i < string.length; i++) {
+      bytesUint16[i] = string.charCodeAt(i);
+    }
+    return new Uint8Array(bytesUint16);
   },
   bytesToString: function(bytes) {
-  	return String.fromCharCode.apply(null, new Uint16Array(bytes));
+    return String.fromCharCode.apply(null, new Uint16Array(bytes));
   }
 }
 module.exports = bluetoothle;

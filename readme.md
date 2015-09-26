@@ -95,6 +95,10 @@ Another option is to connect to the device and use the "Device Information" (0x1
 See the following for more info: https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-energy-peripheral, https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios
 
 
+## Emulator ##
+Neither Android nor iOS support Bluetooth on emulators, so you'll need to test on a real device.
+
+
 ## Methods ##
 
 * [bluetoothle.initialize] (#initialize)
@@ -152,7 +156,8 @@ Whenever the error callback is executed, the return object will contain the erro
 * write - Failed to write (Was a write value provided?)
 * readDescriptor - Failed to read descriptor (Not sure what would cause this)
 * writeDescriptor - Failed to write descriptor (Was a write value provided?)
-* rssiError - Failed to read RSSI (Not sure what would cause this)
+* rssi - Failed to read RSSI (Not sure what would cause this)
+* mtu - Failed to set MTU (Is device Android?)
 * arguments - Invalid arguments (Check arguments)
 * neverConnected - Device never connected (Call connect, not reconnect)
 * isNotDisconnected - Device is not disconnected (Don't call connect, reconnect or close while connected)
@@ -257,13 +262,15 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
 
 ##### Params #####
 * serviceUuids = An array of service IDs to filter the scan or empty array / null
+* allowDuplicates = True/false to allow duplicate advertisement packets, defaults to false. iOS only
 
 ```javascript
 {
   "serviceUuids": [
     "180D",
     "180F"
-  ]
+  ],
+  allowDuplicates: true
 }
 ```
 
@@ -1088,7 +1095,7 @@ var string = "Hello World";
 var bytes = bluetoothle.stringToBytes(string);
 var encodedString = bluetoothle.bytesToEncodedString(encodedString);
 
-{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":encodedString,isNotification:true}
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":encodedString}
 ```
 
 ##### Success #####
@@ -1130,6 +1137,39 @@ bluetoothle.rssi(rssiSuccess, rssiError, params);
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
 }
 ```
+
+
+### mtu ###
+Set MTU of a connected device. Android only.
+
+```javascript
+bluetoothle.mtu(mtuSuccess, mtuError, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+* mtu - Integer value mtu should be set to
+
+```javascript
+{
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "mtu" : 50
+}
+```
+
+##### Success #####
+* status => mtu = MTU set
+  * mtu = mtu value
+
+```javascript
+{
+  "status": "mtu",
+  "mtu": 50,
+  "name": "Polar H7 3B321015",
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+}
+```
+
 
 
 ### isInitialized ###

@@ -29,6 +29,7 @@ NSString *const keyIsScanning = @"isScanning";
 NSString *const keyIsConnected = @"isConnected";
 NSString *const keyIsDiscovered = @"isDiscovered";
 NSString *const keyPeripheral = @"peripheral";
+NSString *const keyAllowDuplicates = @"allowDuplicates";
 
 //Write Type
 NSString *const writeTypeNoResponse = @"noResponse";
@@ -86,6 +87,7 @@ NSString *const errorWrite = @"write";
 NSString *const errorReadDescriptor = @"readDescriptor";
 NSString *const errorWriteDescriptor = @"writeDescriptor";
 NSString *const errorRssi = @"rssi";
+NSString *const errorMtu = @"mtu";
 NSString *const errorNeverConnected = @"neverConnected";
 NSString *const errorIsNotDisconnected = @"isNotDisconnected";
 NSString *const errorIsNotConnected = @"isNotConnected";
@@ -222,7 +224,12 @@ NSString *const operationWrite = @"write";
     NSMutableArray* serviceUuids = nil;
     if (obj != nil)
     {
-        serviceUuids = [self getUuids:obj forType:keyServiceUuids];
+      serviceUuids = [self getUuids:obj forType:keyServiceUuids];
+    }
+
+    NSNumber* allowDuplicates = [NSNumber numberWithBool:NO];
+    if (obj != nil) {
+      allowDuplicates = [self getAllowDuplicates:obj];
     }
 
     //Set the callback
@@ -235,7 +242,7 @@ NSString *const operationWrite = @"write";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:scanCallback];
 
     //Start the scan
-    [centralManager scanForPeripheralsWithServices:serviceUuids options:nil];
+    [centralManager scanForPeripheralsWithServices:serviceUuids options:@{ CBCentralManagerScanOptionAllowDuplicatesKey:allowDuplicates }];
 }
 
 - (void)stopScan:(CDVInvokedUrlCommand *)command
@@ -1181,6 +1188,14 @@ NSString *const operationWrite = @"write";
 
     //Try to read RSSI
     [peripheral readRSSI];
+}
+
+- (void)mtu:(CDVInvokedUrlCommand *)command
+{
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorMtu, keyError, logOperationUnsupported, keyMessage, nil];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)isInitialized:(CDVInvokedUrlCommand *)command
@@ -2554,6 +2569,24 @@ NSString *const operationWrite = @"write";
 
     return request;
 }
+
+-(NSNumber*) getAllowDuplicates:(NSDictionary *)obj
+{
+    NSNumber* allowDuplicates = [obj valueForKey:keyAllowDuplicates];
+
+    if (allowDuplicates == nil)
+    {
+        return [NSNumber numberWithBool:NO];
+    }
+
+    if (![allowDuplicates isKindOfClass:[NSNumber class]])
+    {
+        return [NSNumber numberWithBool:NO];
+    }
+
+    return allowDuplicates;
+}
+
 
 -(NSNumber*) getStatusReceiver:(NSDictionary *)obj
 {

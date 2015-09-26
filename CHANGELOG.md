@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file from 2.1.0 onwards.
 
+## 2.2.0 - 2015-09-27
+### Added
+- Allow duplicate advertisements packets in iOS [\#184](https://github.com/randdusing/BluetoothLE/issues/184)
+- Change MTU on Android [\#183](https://github.com/randdusing/BluetoothLE/pull/183) - Needs additional testing
+
+### Fixed
+- Issue with RSSI callback missing device information
+- Issue when device name is null
+
+### Documentations
+- Many updates pertaining to the changes above
+- Cleaned up the example app's code, removed jQuery Mobile
 
 ## 2.1.0 - 2015-02-26
 ### Added
