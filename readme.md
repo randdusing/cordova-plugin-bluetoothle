@@ -274,7 +274,7 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
   * address = the device's address / identifier for connecting to the object
   * rssi = signal strength
   * advertisement = advertisement data in encoded string of bytes, use bluetoothle.encodedStringToBytes() - Only tested in Android so far!
-  
+
 ```javascript
 {
   "status": "scanStarted"
@@ -537,7 +537,7 @@ Descriptor Object:
       "characteristics": [
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a00",
           "properties": {
@@ -548,7 +548,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a01",
           "properties": {
@@ -557,7 +557,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a02",
           "properties": {
@@ -566,7 +566,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a03",
           "properties": {
@@ -575,7 +575,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a04",
           "properties": {
@@ -616,7 +616,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a38",
           "properties": {
@@ -630,7 +630,7 @@ Descriptor Object:
       "characteristics": [
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a23",
           "properties": {
@@ -639,7 +639,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a24",
           "properties": {
@@ -648,7 +648,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a25",
           "properties": {
@@ -657,7 +657,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a26",
           "properties": {
@@ -666,7 +666,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a27",
           "properties": {
@@ -675,7 +675,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a28",
           "properties": {
@@ -684,7 +684,7 @@ Descriptor Object:
         },
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a29",
           "properties": {
@@ -698,7 +698,7 @@ Descriptor Object:
       "characteristics": [
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "2a19",
           "properties": {
@@ -712,7 +712,7 @@ Descriptor Object:
       "characteristics": [
         {
           "descriptors": [
-            
+
           ],
           "characteristicUuid": "6217ff4c-c8ec-b1fb-1380-3ad986708e2d",
           "properties": {
@@ -756,14 +756,14 @@ bluetoothle.services(servicesSuccess, servicesError, params);
 {
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
   "serviceUuids": [
-    
+
   ]
 }
 ```
 
 ##### Success #####
 * status => services = Services discovered
-	* serviceUuids = Array of service UUIDS
+  * serviceUuids = Array of service UUIDS
 
 ```javascript
 {
@@ -798,17 +798,17 @@ bluetoothle.characteristics(characteristicsSuccess, characteristicsError, params
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
   "serviceUuid": "180d",
   "characteristicUuids": [
-    
+
   ]
 }
 ```
 
 ##### Success #####
 * status => characteristics = Characteristics discovered
-	* serviceUuid = Service UUID
-	* characteristics = Array of characteristics
-		* properties = Object of defined properties
-		* characteristicUuid = Characteristic UUID
+  * serviceUuid = Service UUID
+  * characteristics = Array of characteristics
+    * properties = Object of defined properties
+    * characteristicUuid = Characteristic UUID
 
 ```javascript
 {
@@ -857,10 +857,10 @@ bluetoothle.descriptors(descriptorsSuccess, descriptorsError, params);
 
 ##### Success #####
 * status => descriptors = Descriptors discovered
-	* serviceUuid = Service UUID
-	* characteristicUuid = characteristic UUID
-	* descriptorUuids = Array of Descriptor UUIDs
-	
+  * serviceUuid = Service UUID
+  * characteristicUuid = characteristic UUID
+  * descriptorUuids = Array of Descriptor UUIDs
+
 ```javascript
 {
   "status": "descriptors",
@@ -898,9 +898,9 @@ bluetoothle.read(readSuccess, readError, params);
 
 ##### Success #####
 * status => read = Characteristics read
-	* serviceUuid = Service UUID
-	* characteristicUuid = Characteristic UUID
-	* value = Base64 encoded string of bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
+  * serviceUuid = Service UUID
+  * characteristicUuid = Characteristic UUID
+  * value = Base64 encoded string of bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
 {
@@ -939,9 +939,9 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 ##### Success #####
 * status => subscribed = Subscription has started
 * status => subscribedResult = Subscription result has been received
-	* serviceUuid = Service UUID
-	* characteristicUuid = Characteristic UUID
-	* value = Base64 encoded string of bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
+  * serviceUuid = Service UUID
+  * characteristicUuid = Characteristic UUID
+  * value = Base64 encoded string of bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
 {
@@ -986,8 +986,8 @@ bluetoothle.unsubscribe(unsubscribeSuccess, unsubscribeError, params);
 
 ##### Success #####
 * status => unsubscribed = Characteristics unsubscribed
-	* serviceUuid = Service UUID
-	* characteristicUuid = Characteristic UUID
+  * serviceUuid = Service UUID
+  * characteristicUuid = Characteristic UUID
 
 ```javascript
 {
@@ -1001,7 +1001,7 @@ bluetoothle.unsubscribe(unsubscribeSuccess, unsubscribeError, params);
 
 
 
-### write ### Needs Update
+### write ###
 Write a particular service's characteristic.
 
 ```javascript
@@ -1012,16 +1012,21 @@ bluetoothle.write(writeSuccess, writeError, params);
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 To write without response, set type to "noResponse". Any other value will default to write with response. Note, no callback will occur on write without response.
 ```javascript
+var string = "Hello World";
+var bytes = bluetoothle.stringToBytes(string);
+var encodedString = bluetoothle.bytesToEncodedString(encodedString);
+
 //Note, this example doesn't actually work since it's read only characteristic
-{"value":"","serviceUuid":"180F","characteristicUuid":"2A19","type":"noResponse"}
+{"value":encodedString,"serviceUuid":"180F","characteristicUuid":"2A19","type":"noResponse"}
 ```
 
 ##### Success #####
 Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
-//Write
-{"status":"written","serviceUuid":"180F","characteristicUuid":"2A19","value":""}
+var returnObj = {"status":"written","serviceUuid":"180F","characteristicUuid":"2A19","value":"SGVsbG8gV29ybGQ="}
+var bytes = bluetoothle.encodedStringToBytes(returnObj.value);
+var string = bluetoothle.bytesToString(bytes); //This should equal Hello World!
 ```
 
 
@@ -1050,10 +1055,10 @@ bluetoothle.read(readDescriptorSuccess, readDescriptorError, params);
 
 ##### Success #####
 * status => readDescriptor = Descriptor was read
-	* serviceUuid = Service UUID
-	* characteristicUuid = Characteristic UUID
-	* descriptorUuid = Descriptor UUID
-	* value = Base64 encoded string of bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array.
+  * serviceUuid = Service UUID
+  * characteristicUuid = Characteristic UUID
+  * descriptorUuid = Descriptor UUID
+  * value = Base64 encoded string of bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array.
 
 ```javascript
 {
@@ -1068,25 +1073,31 @@ bluetoothle.read(readDescriptorSuccess, readDescriptorError, params);
 
 
 
-### writeDescriptor ### Needs Update
+### writeDescriptor ###
 Write a particular characteristic's descriptor. Unable to write characteristic configuration directly to keep in line with iOS implementation. Instead use subscribe/unsubscribe, which will automatically enable/disable notification. ***Note, limited testing and likely needs to be made more generic***
 
 ```javascript
-bluetoothle.write(writeDescriptorSuccess, writeDescriptorError, params);
+bluetoothle.writeDescriptor(writeDescriptorSuccess, writeDescriptorError, params);
 ```
 
 ##### Params #####
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 
 ```javascript
-{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":"EnableNotification"}
+var string = "Hello World";
+var bytes = bluetoothle.stringToBytes(string);
+var encodedString = bluetoothle.bytesToEncodedString(encodedString);
+
+{"serviceUuid":"180D","characteristicUuid":"2A37","descriptorUuid":"2902","value":encodedString,isNotification:true}
 ```
 
 ##### Success #####
-Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. 
+Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array.
 
 ```javascript
-{"status":"writeDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":"EnableNotification"}
+{"status":"writeDescriptor","serviceUuid":"180D","characteristicUuid":"2A37", "descriptorUuid":"2902","value":"SGVsbG8gV29ybGQ"}
+var bytes = bluetoothle.encodedStringToBytes(returnObj.value);
+var string = bluetoothle.bytesToString(bytes); //This should equal Hello World!
 ```
 
 
@@ -1312,10 +1323,10 @@ if (obj.status == "subscribedResult")
   //Turn the base64 string into an array of unsigned 8bit integers
   var bytes = bluetoothle.encodedStringToBytes(obj.value);
   if (bytes.length === 0)
-  { 
+  {
     return;
   }
-  
+
   //NOTE: Follow along to understand how the parsing works
   //https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
 
@@ -1340,9 +1351,9 @@ if (obj.status == "subscribedResult")
       //Extract second byte and convert to 8bit unsigned integer
       var u8bytesHr = bytes.buffer.slice(offset, offset + 1);
       var u8Hr = new Uint8Array(u8bytesHr)[0];
-  
+
       //Or I believe I could just do this: var u8Hr = u8bytesHr[offset]
-  
+
       //8 bits takes up 1 byte, so increase offset by one
       offset += 1;
   }
@@ -1360,7 +1371,7 @@ if (obj.status == "subscribedResult")
   {
       //Number of rr intervals
       var rrCount = (bytes.length - offset) / 2;
-  
+
       for (var i = rrCount - 1; i >= 0; i--)
       {
           //Cast to 16 bit unsigned int
