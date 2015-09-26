@@ -2819,17 +2819,25 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
     //Device was connected
     if (newState == BluetoothProfile.STATE_CONNECTED)
     {
-      if (callbackContext == null)
-      {
-        return;
+      //Changing MTU is only available in API 21+
+      int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+      if (currentapiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP){
+        gatt.requestMtu(64);
       }
+      else
+      {
+        if (callbackContext == null)
+        {
+          return;
+        }
 
-      addProperty(returnObj, keyStatus, statusConnected);
+        addProperty(returnObj, keyStatus, statusConnected);
 
-      //Keep connection call back for disconnect
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      callbackContext.sendPluginResult(pluginResult);
+        //Keep connection call back for disconnect
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+        pluginResult.setKeepCallback(true);
+        callbackContext.sendPluginResult(pluginResult);
+      }
     }
     //Device was disconnected
     else if (newState == BluetoothProfile.STATE_DISCONNECTED)
@@ -3227,6 +3235,39 @@ private final class BluetoothGattCallbackExtends extends BluetoothGattCallback
       addProperty(returnObj, keyMessage, logRssiFailReturn);
       callbackContext.error(returnObj);
     }
+  }
+
+  @Override
+  public void onMtuChanged (BluetoothGatt gatt, int mtu, int status)
+  {
+    //Get the connected device
+    BluetoothDevice device = gatt.getDevice();
+    String address = device.getAddress();
+
+    HashMap<Object, Object> connection = connections.get(address);
+    if (connection == null)
+    {
+      Log.d(TAG, "BluetoothGatt connection null");
+      return;
+    }
+
+    CallbackContext callbackContext = (CallbackContext)connection.get(operationConnect);
+
+    JSONObject returnObj = new JSONObject();
+
+    addDevice(returnObj, device);
+
+    if (callbackContext == null)
+    {
+      return;
+    }
+
+    addProperty(returnObj, keyStatus, statusConnected);
+
+    //Keep connection call back for disconnect
+    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+    pluginResult.setKeepCallback(true);
+    callbackContext.sendPluginResult(pluginResult);
   }
 }
 }
