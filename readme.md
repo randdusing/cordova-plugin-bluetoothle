@@ -71,7 +71,7 @@ Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Co
 
 
 ## Installation Quirks (Android) ##
-The latest version of the plugin requires you to set the Android target API to 21.
+The latest version of the plugin requires you to set the Android target API to a minimum of 21.
 
 
 ## PhoneGap Build ##
