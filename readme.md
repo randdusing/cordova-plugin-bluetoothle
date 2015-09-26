@@ -28,26 +28,15 @@ Bluetooth LE Cordova Plugin
 * Full support for Windows Phone 8.1 C#-based projects. Assuming I can follow @MiBLE's process successfully.
 * Support for Windows Phone 8.1 Javascript projects. Currently waiting for better debugging support with Visual Studio.
 * Connect and Reconnect should detect existing connection with better error messages
-* Better documentation and example for write and writeDescriptor
 
 
 ## Installation ##
 
-If you are using PhoneGap add the plugin to your app by running the command below:
+```cordova plugin add cordova-plugin-bluetoothle```
 
-```phonegap local plugin add https://github.com/randdusing/BluetoothLE```
+PhoneGap Build
 
-If you are using Apache Cordova use this instead:
-
-```cordova plugin add https://github.com/randdusing/BluetoothLE```
-
-If you are using PhoneGap Build and want to use the PhoneGap Build Plugin (outdated plugin version 2.0.0), add below to config.xml:
-
-```<gap:plugin name="com.randdusing.bluetoothle" />```
-
-If you are using PhoneGap Build and want to use the Cordova Plugin Registry (up to date plugin version but PhoneGap Build doesn't support Android API21 yet), add below to config.xml:
-
-```<gap:plugin name="com.randdusing.bluetoothle" source="plugins.cordova.io" />```
+```<gap:plugin name="cordova-plugin-bluetoothle" source="npm" />```
 
 
 ## Installation Quirks (iOS) ##
@@ -72,10 +61,6 @@ Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Co
 
 ## Installation Quirks (Android) ##
 The latest version of the plugin requires you to set the Android target API to a minimum of 21.
-
-
-## PhoneGap Build ##
-I'm no longer updating the PhoneGap Build version of this plugin since it costs money and better alternatives like the Cordova Plugin Registry exist. Once PhoneGap Build supports Android API 21 (required for latest version of my plugin), I'll request deactivation of the plugin on PhoneGap Build to remove the out of date version.
 
 
 ## Discovery Quirks (iOS vs Android) ##
