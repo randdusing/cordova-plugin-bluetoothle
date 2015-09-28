@@ -28,6 +28,8 @@ Bluetooth LE Cordova Plugin
 * Full support for Windows Phone 8.1 C#-based projects. Assuming I can follow @MiBLE's process successfully.
 * Support for Windows Phone 8.1 Javascript projects. Currently waiting for better debugging support with Visual Studio.
 * Connect and Reconnect should detect existing connection with better error messages
+* Angular Wrapper
+* Queuing System
 
 
 ## Installation ##
@@ -383,7 +385,7 @@ bluetoothle.connect(connectSuccess, connectError, params);
 Reconnect to a previously connected Bluetooth device. The Cordova app should use a timer to limit the connecting time. If a timeout occurs, the reconnection attempt should be canceled using disconnect().
 
 ```javascript
-bluetoothle.reconnect(reconnectSuccess, reconnectError);
+bluetoothle.reconnect(reconnectSuccess, reconnectError, params);
 ```
 
 ##### Params #####
@@ -425,7 +427,7 @@ bluetoothle.reconnect(reconnectSuccess, reconnectError);
 Disconnect from a Bluetooth LE device.
 
 ```javascript
-bluetoothle.disconnect(disconnectSuccess, disconnectError);
+bluetoothle.disconnect(disconnectSuccess, disconnectError, params);
 ```
 
 ##### Params #####
@@ -1214,7 +1216,7 @@ bluetoothle.isScanning(isScanning);
 Determine whether the device is connected. No error callback. Returns true or false
 
 ```javascript
-bluetoothle.isConnected(isConnected);
+bluetoothle.isConnected(isConnected, params);
 ```
 
 #### Params ####
@@ -1243,7 +1245,7 @@ bluetoothle.isConnected(isConnected);
 Determine whether the device's characteristics and descriptors have been discovered. No error callback. Android support only. iOS will return false.
 
 ```javascript
-bluetoothle.isDiscovered(isDiscovered);
+bluetoothle.isDiscovered(isDiscovered, params);
 ```
 
 #### Params ####
