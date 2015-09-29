@@ -1063,7 +1063,8 @@ bluetoothle.read(readDescriptorSuccess, readDescriptorError, params);
   "value": "AQAAAAAAAAA=",
   "name": "Polar H7 3B321015",
   "descriptorUuid": "2902"
-}```
+}
+```
 
 
 
