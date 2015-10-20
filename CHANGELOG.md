@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file from 2.1.0 onwards.
 
+## 2.4.0 - 2015-10-20
+### Added
+- iOS supports Android style discovery [\#63](https://github.com/randdusing/BluetoothLE/issues/63)
+
+### Fixed
+- isConnected and isDiscovered now have separate error callbacks
+
+## 2.3.0 - 2015-09-27
+### Other
+- Added support for NPM
+
 ## 2.2.0 - 2015-09-27
 ### Added
 - Allow duplicate advertisements packets in iOS [\#184](https://github.com/randdusing/BluetoothLE/issues/184)
@@ -10,7 +21,7 @@ All notable changes to this project will be documented in this file from 2.1.0 o
 - Issue with RSSI callback missing device information
 - Issue when device name is null
 
-### Documentations
+### Documentation
 - Many updates pertaining to the changes above
 - Cleaned up the example app's code, removed jQuery Mobile
 

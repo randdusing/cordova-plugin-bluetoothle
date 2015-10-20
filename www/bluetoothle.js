@@ -75,11 +75,11 @@ var bluetoothle = {
   isScanning: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isScanning", []);
   },
-  isConnected: function(successCallback, params) {
-    cordova.exec(successCallback, successCallback, bluetoothleName, "isConnected", [params]);
+  isConnected: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isConnected", [params]);
   },
-  isDiscovered: function(successCallback, params) {
-    cordova.exec(successCallback, successCallback, bluetoothleName, "isDiscovered", [params]);
+  isDiscovered: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isDiscovered", [params]);
   },
   requestConnectionPriority: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]);

@@ -15,9 +15,11 @@ NSString *const keyProperties = @"properties";
 NSString *const keyRssi = @"rssi";
 NSString *const keyAdvertisement = @"advertisement";
 NSString *const keyServiceUuids = @"serviceUuids";
+NSString *const keyServices = @"services";
 NSString *const keyCharacteristicUuids = @"characteristicUuids";
 NSString *const keyCharacteristics = @"characteristics";
 NSString *const keyDescriptorUuids = @"descriptorUuids";
+NSString *const keyDescriptors = @"descriptors";
 NSString *const keyServiceUuid = @"serviceUuid";
 NSString *const keyCharacteristicUuid = @"characteristicUuid";
 NSString *const keyDescriptorUuid = @"descriptorUuid";
@@ -28,6 +30,7 @@ NSString *const keyIsEnabled = @"isEnabled";
 NSString *const keyIsScanning = @"isScanning";
 NSString *const keyIsConnected = @"isConnected";
 NSString *const keyIsDiscovered = @"isDiscovered";
+NSString *const keyIsDiscoveredQueue = @"isDiscoveredQueue";
 NSString *const keyPeripheral = @"peripheral";
 NSString *const keyAllowDuplicates = @"allowDuplicates";
 
@@ -67,6 +70,7 @@ NSString *const statusWritten = @"written";
 NSString *const statusReadDescriptor = @"readDescriptor";
 NSString *const statusWrittenDescriptor = @"writtenDescriptor";
 NSString *const statusRssi = @"rssi";
+NSString *const statusDiscovered = @"discovered";
 
 //Error Types
 NSString *const errorInitialize = @"initialize";
@@ -125,6 +129,8 @@ NSString *const logNoCharacteristic = @"Characteristic not found";
 NSString *const logNoDescriptor = @"Descriptor not found";
 NSString *const logWriteValueNotFound = @"Write value not found";
 NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not found";
+//Discovery
+NSString *const logAlreadyDiscovering = @"Already discovering device";
 
 NSString *const operationConnect = @"connect";
 NSString *const operationDiscover = @"discover";
@@ -224,12 +230,12 @@ NSString *const operationWrite = @"write";
     NSMutableArray* serviceUuids = nil;
     if (obj != nil)
     {
-      serviceUuids = [self getUuids:obj forType:keyServiceUuids];
+        serviceUuids = [self getUuids:obj forType:keyServiceUuids];
     }
 
     NSNumber* allowDuplicates = [NSNumber numberWithBool:NO];
     if (obj != nil) {
-      allowDuplicates = [self getAllowDuplicates:obj];
+        allowDuplicates = [self getAllowDuplicates:obj];
     }
 
     //Set the callback
@@ -363,9 +369,10 @@ NSString *const operationWrite = @"write";
     //Create connection and set peripheral/connect callback
     NSMutableDictionary* connection = [NSMutableDictionary dictionary];
 
-    //Set periperhal and connect callback
+    //Set periperhal and connect callback and discovered state
     [connection setObject: peripheral forKey:keyPeripheral];
     [connection setObject: command.callbackId forKey:operationConnect];
+    [connection setObject: [NSNumber numberWithInt:0] forKey:keyIsDiscovered];
 
     //Add connection to connections
     [connections setObject:connection forKey:address];
@@ -426,8 +433,9 @@ NSString *const operationWrite = @"write";
         return;
     }
 
-    //Set the connect callback
+    //Set the connect callback and discovered state
     [connection setObject:command.callbackId forKey:operationConnect];
+    [connection setObject: [NSNumber numberWithInt:0] forKey:keyIsDiscovered];
 
     //Return the connecting status callback
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
@@ -569,10 +577,70 @@ NSString *const operationWrite = @"write";
 
 - (void)discover:(CDVInvokedUrlCommand *)command
 {
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscover, keyError, logOperationUnsupported, keyMessage, nil];
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    /*NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorDiscover, keyError, logOperationUnsupported, keyMessage, nil];
+     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+     [pluginResult setKeepCallbackAsBool:false];
+     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];*/
+
+    //Ensure Bluetooth is enabled
+    if ([self isNotInitialized:command])
+    {
+        return;
+    }
+
+    //Get the arguments
+    NSDictionary* obj = [self getArgsObject:command.arguments];
+    if ([self isNotArgsObject:obj :command])
+    {
+        return;
+    }
+
+    //Get the connection address
+    NSUUID* address = [self getAddress:obj];
+    if ([self isNotAddress:address :command])
+    {
+        return;
+    }
+
+    //If never connected or attempted connected, reconnect can't be used
+    NSMutableDictionary* connection = [self wasNeverConnected:address :command];
+    if (connection == nil)
+    {
+        return;
+    }
+
+    //Get the peripheral
+    CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
+
+    //Ensure connection is connected
+    if ([self isNotConnected:peripheral :command])
+    {
+        return;
+    }
+
+    //Check if already discovered
+    if ([self isAlreadyDiscovered:connection :command])
+    {
+        return;
+    }
+
+    //Set the discover callback
+    [connection setObject:command.callbackId forKey:operationDiscover];
+
+    //Create dictionary to managed discovered services/characteristics/descriptors
+    NSMutableDictionary* discoveryQueue = [NSMutableDictionary dictionary];
+    [discoveryQueue setValue:[NSMutableDictionary dictionary] forKey:keyServices];
+    [discoveryQueue setValue:[NSMutableDictionary dictionary] forKey:keyCharacteristics];
+    [connection setObject:discoveryQueue forKey:keyIsDiscoveredQueue];
+
+    //Start a complete discovery
+    [connection setObject:[NSNumber numberWithInt:1] forKey:keyIsDiscovered];
+
+    //Get the serviceUuids to discover
+    NSMutableArray* serviceUuids = [self getUuids:obj forType:keyServiceUuids];
+
+    //Discover the services
+    [peripheral discoverServices:serviceUuids];
 }
 
 - (void)services:(CDVInvokedUrlCommand *)command
@@ -1277,7 +1345,6 @@ NSString *const operationWrite = @"write";
 
 - (void)isDiscovered:(CDVInvokedUrlCommand *)command
 {
-    //Always return false because you can't fully discover iOS like in Android, but try to add information to the return call
     //Ensure Bluetooth is enabled
     if ([self isNotInitialized:command])
     {
@@ -1308,12 +1375,22 @@ NSString *const operationWrite = @"write";
     //Get the peripheral
     CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
 
+    //Ensure connection is connected
+    if ([self isNotConnected:peripheral :command])
+    {
+        return;
+    }
+
     //Return whether isDiscovered or not
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
     [self addDevice:peripheral :returnObj];
 
-    [returnObj setValue:[NSNumber numberWithBool:false] forKey:keyIsDiscovered];
+    if ([[connection objectForKey:keyIsDiscovered] intValue] == 2) {
+        [returnObj setValue:[NSNumber numberWithBool:true] forKey:keyIsDiscovered];
+    } else {
+        [returnObj setValue:[NSNumber numberWithBool:false] forKey:keyIsDiscovered];
+    }
 
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
@@ -1547,46 +1624,73 @@ NSString *const operationWrite = @"write";
         return;
     }
 
-    //Get discover callback
-    NSString* callback = [connection objectForKey:operationDiscover];
-    [connection removeObjectForKey:operationDiscover];
+    //See if complete discovery is enabled
+    if ([[connection objectForKey:keyIsDiscovered] intValue] == 1) {
+        if ([self checkDiscoveryError:connection :error])
+        {
+            return;
+        }
 
-    //Return if callback is null
-    if (callback == nil)
-    {
-        return;
-    }
+        //Get discovery queue
+        NSMutableDictionary* discoveryQueue = [connection objectForKey:keyIsDiscoveredQueue];
+        if (discoveryQueue == nil) {
+            return;
+        }
 
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+        //Get services queue
+        NSMutableDictionary* services = [discoveryQueue objectForKey:keyServices];
+        if (services == nil) {
+            return;
+        }
 
-    [self addDevice:peripheral :returnObj];
+        //Add to queue and discover characteristics
+        for (CBService* service in peripheral.services)
+        {
+            [services setObject:service.UUID forKey: service.UUID];
+            [peripheral discoverCharacteristics:nil forService:service];
+        }
+    } else {
+        //Get discover callback
+        NSString* callback = [connection objectForKey:operationDiscover];
+        [connection removeObjectForKey:operationDiscover];
 
-    //If error is set, send back error
-    if (error != nil)
-    {
-        [returnObj setValue:errorServices forKey:keyError];
-        [returnObj setValue:error.description forKey:keyMessage];
+        //Return if callback is null
+        if (callback == nil)
+        {
+            return;
+        }
 
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+        [self addDevice:peripheral :returnObj];
+
+        //If error is set, send back error
+        if (error != nil)
+        {
+            [returnObj setValue:errorServices forKey:keyError];
+            [returnObj setValue:error.description forKey:keyMessage];
+
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+            [pluginResult setKeepCallbackAsBool:false];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+            return;
+        }
+
+        //Get array of service UUIDs
+        NSMutableArray* services = [[NSMutableArray alloc] init];
+        for (CBService* service in peripheral.services)
+        {
+            [services addObject:[service.UUID representativeString]];
+        }
+
+        //Return service UUIDs
+        [returnObj setValue:statusServices forKey:keyStatus];
+        [returnObj setValue:services forKey:keyServiceUuids];
+
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
-        return;
     }
-
-    //Get array of service UUIDs
-    NSMutableArray* services = [[NSMutableArray alloc] init];
-    for (CBService* service in peripheral.services)
-    {
-        [services addObject:[service.UUID representativeString]];
-    }
-
-    //Return service UUIDs
-    [returnObj setValue:statusServices forKey:keyStatus];
-    [returnObj setValue:services forKey:keyServiceUuids];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error
@@ -1598,52 +1702,88 @@ NSString *const operationWrite = @"write";
         return;
     }
 
-    //Get discover callback
-    NSString* callback = [connection objectForKey:operationDiscover];
-    [connection removeObjectForKey:operationDiscover];
+    //See if complete discovery is enabled
+    if ([[connection objectForKey:keyIsDiscovered] intValue] == 1) {
+        if ([self checkDiscoveryError:connection :error])
+        {
+            return;
+        }
 
-    //Return if callback is null
-    if (callback == nil)
-    {
-        return;
-    }
+        //Get discovery queue
+        NSMutableDictionary* discoveryQueue = [connection objectForKey:keyIsDiscoveredQueue];
+        if (discoveryQueue == nil) {
+            return;
+        }
 
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+        //Get services queue
+        NSMutableDictionary* services = [discoveryQueue objectForKey:keyServices];
+        if (services == nil) {
+            return;
+        }
 
-    [self addDevice:peripheral :returnObj];
+        //Get characteristics queue
+        NSMutableDictionary* characteristics = [discoveryQueue objectForKey:keyCharacteristics];
+        if (services == nil) {
+            return;
+        }
 
-    [self addService:service :returnObj];
+        //Remove service from undiscovered
+        [services removeObjectForKey:service.UUID];
 
-    //Return error if necessary
-    if (error != nil)
-    {
-        [returnObj setValue:errorCharacteristics forKey:keyError];
-        [returnObj setValue:error.description forKey:keyMessage];
+        //Add to queue and discover descriptors
+        for (CBCharacteristic* characteristic in service.characteristics)
+        {
+            [characteristics setObject:characteristic.UUID forKey: characteristic.UUID];
+            [peripheral discoverDescriptorsForCharacteristic:characteristic];
+        }
+    } else {
+        //Get discover callback
+        NSString* callback = [connection objectForKey:operationDiscover];
+        [connection removeObjectForKey:operationDiscover];
 
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        //Return if callback is null
+        if (callback == nil)
+        {
+            return;
+        }
+
+        NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+        [self addDevice:peripheral :returnObj];
+
+        [self addService:service :returnObj];
+
+        //Return error if necessary
+        if (error != nil)
+        {
+            [returnObj setValue:errorCharacteristics forKey:keyError];
+            [returnObj setValue:error.description forKey:keyMessage];
+
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+            [pluginResult setKeepCallbackAsBool:false];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+            return;
+        }
+
+        //Get array of characteristics with their UUIDs and properties
+        NSMutableArray* characteristics = [[NSMutableArray alloc] init];
+        for (CBCharacteristic* characteristic in service.characteristics)
+        {
+            NSMutableDictionary* properties = [self getProperties:characteristic];
+
+            NSDictionary* characteristicObject = [NSDictionary dictionaryWithObjectsAndKeys: [characteristic.UUID representativeString], keyCharacteristicUuid, properties, keyProperties, nil];
+
+            [characteristics addObject:characteristicObject];
+        }
+
+        //Return characteristics
+        [returnObj setValue:statusCharacteristics forKey:keyStatus];
+        [returnObj setValue:characteristics forKey:keyCharacteristics];
+
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
-        return;
     }
-
-    //Get array of characteristics with their UUIDs and properties
-    NSMutableArray* characteristics = [[NSMutableArray alloc] init];
-    for (CBCharacteristic* characteristic in service.characteristics)
-    {
-        NSMutableDictionary* properties = [self getProperties:characteristic];
-
-        NSDictionary* characteristicObject = [NSDictionary dictionaryWithObjectsAndKeys: [characteristic.UUID representativeString], keyCharacteristicUuid, properties, keyProperties, nil];
-
-        [characteristics addObject:characteristicObject];
-    }
-
-    //Return characteristics
-    [returnObj setValue:statusCharacteristics forKey:keyStatus];
-    [returnObj setValue:characteristics forKey:keyCharacteristics];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
@@ -1655,46 +1795,138 @@ NSString *const operationWrite = @"write";
         return;
     }
 
-    //Get discover callback
-    NSString* callback = [connection objectForKey:operationDiscover];
-    [connection removeObjectForKey:operationDiscover];
+    //See if complete discovery is enabled
+    if ([[connection objectForKey:keyIsDiscovered] intValue] == 1) {
+        if ([self checkDiscoveryError:connection :error])
+        {
+            return;
+        }
 
-    //Return if callback is null
-    if (callback == nil)
-    {
-        return;
-    }
+        //Get discovery queue
+        NSMutableDictionary* discoveryQueue = [connection objectForKey:keyIsDiscoveredQueue];
+        if (discoveryQueue == nil) {
+            return;
+        }
 
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+        //Get services queue
+        NSMutableDictionary* servicesCheck = [discoveryQueue objectForKey:keyServices];
+        if (servicesCheck == nil) {
+            return;
+        }
 
-    [self addDevice:peripheral :returnObj];
-    [self addCharacteristic:characteristic :returnObj];
+        //Get characteristics queue
+        NSMutableDictionary* characteristicsCheck = [discoveryQueue objectForKey:keyCharacteristics];
+        if (characteristicsCheck == nil) {
+            return;
+        }
 
-    //Return error if necessary
-    if (error != nil)
-    {
-        [returnObj setValue:errorDescriptors forKey:keyError];
-        [returnObj setValue:error.description forKey:keyMessage];
+        //Remove service from undiscovered
+        [characteristicsCheck removeObjectForKey:characteristic.UUID];
 
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        //See if services and characteristics are empty
+        if ([servicesCheck count] > 0 || [characteristicsCheck count] > 0) {
+            return;
+        }
+
+        //Set discovered to true
+        [connection setObject:[NSNumber numberWithInt:2] forKey:keyIsDiscovered];
+
+        //Get discover callback
+        NSString* callback = [connection objectForKey:operationDiscover];
+        [connection removeObjectForKey:operationDiscover];
+
+        //Return if callback is null
+        if (callback == nil)
+        {
+            return;
+        }
+
+        NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+        [self addDevice:peripheral :returnObj];
+
+        NSMutableArray* services = [[NSMutableArray alloc] init];
+        for (CBService* service in peripheral.services)
+        {
+            NSMutableDictionary* serviceObj = [NSMutableDictionary dictionary];
+            [serviceObj setValue:[service.UUID representativeString] forKey:keyServiceUuid];
+
+            NSMutableArray* characteristics = [[NSMutableArray alloc] init];
+            for (CBCharacteristic* characteristic in service.characteristics)
+            {
+                NSMutableDictionary* characteristicObj = [NSMutableDictionary dictionary];
+                [characteristicObj setValue:[characteristic.UUID representativeString] forKey:keyCharacteristicUuid];
+                [characteristicObj setValue:[self getProperties:characteristic] forKey:keyProperties];
+
+                NSMutableArray* descriptors = [[NSMutableArray alloc] init];
+                for (CBDescriptor* descriptor in characteristic.descriptors)
+                {
+                    NSMutableDictionary* descriptorObj = [NSMutableDictionary dictionary];
+                    [descriptorObj setValue:[descriptor.UUID representativeString] forKey:keyDescriptorUuid];
+
+                    [descriptors addObject:descriptorObj];
+                }
+
+                [characteristicObj setValue:descriptors forKey:keyDescriptors];
+
+
+                [characteristics addObject:characteristicObj];
+            }
+
+            [serviceObj setValue:characteristics forKey:keyCharacteristics];
+
+            [services addObject:serviceObj];
+        }
+
+        [returnObj setValue:services forKey:keyServices];
+
+        [returnObj setValue:statusDiscovered forKey:keyStatus];
+
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
         [pluginResult setKeepCallbackAsBool:false];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
-        return;
+    } else {
+        //Get discover callback
+        NSString* callback = [connection objectForKey:operationDiscover];
+        [connection removeObjectForKey:operationDiscover];
+
+        //Return if callback is null
+        if (callback == nil)
+        {
+            return;
+        }
+
+        NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+        [self addDevice:peripheral :returnObj];
+        [self addCharacteristic:characteristic :returnObj];
+
+        //Return error if necessary
+        if (error != nil)
+        {
+            [returnObj setValue:errorDescriptors forKey:keyError];
+            [returnObj setValue:error.description forKey:keyMessage];
+
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+            [pluginResult setKeepCallbackAsBool:false];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+            return;
+        }
+
+        //Get list of descriptors
+        NSMutableArray* descriptors = [[NSMutableArray alloc] init];
+        for (CBDescriptor* descriptor in characteristic.descriptors)
+        {
+            [descriptors addObject:[descriptor.UUID representativeString]];
+        }
+
+        [returnObj setValue:statusDescriptors forKey:keyStatus];
+        [returnObj setValue:descriptors forKey:keyDescriptorUuids];
+
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+        [pluginResult setKeepCallbackAsBool:false];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
     }
-
-    //Get list of descriptors
-    NSMutableArray* descriptors = [[NSMutableArray alloc] init];
-    for (CBDescriptor* descriptor in characteristic.descriptors)
-    {
-        [descriptors addObject:[descriptor.UUID representativeString]];
-    }
-
-    [returnObj setValue:statusDescriptors forKey:keyStatus];
-    [returnObj setValue:descriptors forKey:keyDescriptorUuids];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
@@ -2417,6 +2649,61 @@ NSString *const operationWrite = @"write";
     }
 
     return false;
+}
+
+- (BOOL) isAlreadyDiscovered:(NSMutableDictionary*) connection :(CDVInvokedUrlCommand *)command
+{
+    if ([[connection objectForKey:keyIsDiscovered] intValue] == 0) {
+        return false;
+    }
+
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+    CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
+    [self addDevice:peripheral :returnObj];
+
+    [returnObj setValue:errorDiscover forKey:keyError];
+    [returnObj setValue:logAlreadyDiscovering forKey:keyMessage];
+
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
+    return true;
+}
+
+- (BOOL) checkDiscoveryError:(NSMutableDictionary*) connection :(NSError *)error
+{
+    if (error == nil) {
+        return false;
+    }
+
+    //Get discover callback
+    NSString* callback = [connection objectForKey:operationDiscover];
+    [connection removeObjectForKey:operationDiscover];
+
+    //Reset discovery state
+    [connection setObject: [NSNumber numberWithInt:0] forKey:keyIsDiscovered];
+
+    //Return if callback is null
+    if (callback == nil)
+    {
+        return true;
+    }
+
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+    CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
+    [self addDevice:peripheral :returnObj];
+
+    [returnObj setValue:errorDiscover forKey:keyError];
+    [returnObj setValue:error.description forKey:keyMessage];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+
+    return true;
 }
 
 -(void) addDevice:(CBPeripheral*)peripheral :(NSDictionary*)returnObj

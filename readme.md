@@ -32,6 +32,10 @@ Bluetooth LE Cordova Plugin
 * Queuing System
 
 
+## Using AngularJS ##
+Check out ng-cordova-bluetoothle [here!](https://github.com/randdusing/ng-cordova-bluetoothle)
+
+
 ## Installation ##
 
 ```cordova plugin add cordova-plugin-bluetoothle```
@@ -66,7 +70,7 @@ The latest version of the plugin requires you to set the Android target API to a
 
 
 ## Discovery Quirks (iOS vs Android) ##
-Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The Device plugin (http://docs.phonegap.com/en/edge/cordova_device_device.md.html#Device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS.
+Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The Device plugin (http://docs.phonegap.com/en/edge/cordova_device_device.md.html#Device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS. **iOS now supports Android style discovery, but use with caution!**
 
 
 ## UUIDs ##
@@ -98,7 +102,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.reconnect] (#reconnect)
 * [bluetoothle.disconnect] (#disconnect)
 * [bluetoothle.close] (#close)
-* [bluetoothle.discover] (#discover) (Android)
+* [bluetoothle.discover] (#discover)
 * [bluetoothle.services] (#services) (iOS)
 * [bluetoothle.characteristics] (#characteristics) (iOS)
 * [bluetoothle.descriptors] (#descriptors)  (iOS)
@@ -113,7 +117,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isEnabled] (#isenabled)
 * [bluetoothle.isScanning] (#isscanning)
 * [bluetoothle.isConnected] (#isconnected)
-* [bluetoothle.isDiscovered] (#isdiscovered)  (Android)
+* [bluetoothle.isDiscovered] (#isdiscovered)
 * [bluetoothle.encodedStringToBytes] (#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
@@ -131,7 +135,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * retrieveConnected - Failed to retrieve connected devices (Is the device iOS?)
 * connect - Connection attempt failed (Is the device address correct?)
 * reconnect - Reconnection attempt failed (Was the device ever connected?)
-* discover - Failed to discover device (Is the device already discovered or discovering? Is the device Android?)
+* discover - Failed to discover device (Is the device already discovered or discovering?)
 * services - Failed to discover services (Is the device iOS?)
 * characteristics - Failed to discover characteristics (Is the device iOS?)
 * descriptors - Failed to discover descriptors (Is the device iOS?)
@@ -173,7 +177,7 @@ https://developer.apple.com/library/mac/documentation/CoreBluetooth/Reference/CB
 1. initialize
 2. scan (if device address is unknown)
 3. connect
-4. discover (Android) OR services/characteristics/descriptors (iOS)
+4. discover OR services/characteristics/descriptors (iOS)
 5. read/subscribe/write characteristics AND read/write descriptors
 6. disconnect
 7. close
@@ -488,7 +492,7 @@ bluetoothle.close(closeSuccess, closeError, params);
 
 
 ### discover ###
-Discover all the devices services, characteristics and descriptors. Doesn't need to be called again after disconnecting and then reconnecting. Android support only.
+Discover all the devices services, characteristics and descriptors. Doesn't need to be called again after disconnecting and then reconnecting. If using iOS, you shouldn't use discover and services/characteristics/descriptors on the same device.
 
 ```javascript
 bluetoothle.discover(discoverSuccess, discoverError, params);
@@ -1214,10 +1218,10 @@ bluetoothle.isScanning(isScanning);
 
 
 ### isConnected ###
-Determine whether the device is connected. No error callback. Returns true or false
+Determine whether the device is connected, or error if not initialized or never connected to device.
 
 ```javascript
-bluetoothle.isConnected(isConnected, params);
+bluetoothle.isConnected(isConnectedSuccess, isConnectedError, params);
 ```
 
 #### Params ####
@@ -1243,10 +1247,10 @@ bluetoothle.isConnected(isConnected, params);
 
 
 ### isDiscovered ###
-Determine whether the device's characteristics and descriptors have been discovered. No error callback. Android support only. iOS will return false.
+Determine whether the device's characteristics and descriptors have been discovered, or error if not initialized or never connected to device.
 
 ```javascript
-bluetoothle.isDiscovered(isDiscovered, params);
+bluetoothle.isDiscovered(isDiscoveredSuccess, isDiscoveredError, params);
 ```
 
 #### Params ####
