@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file from 2.1.0 onwards.
 
+## 2.5.0 - 2015-11-10
+### Fixed
+- Scan now works on Android 6.0, but requires ACCESS_COARSE_LOCATION permission. The permission will be requested when startScan is called. If the permission isn't granted, an error of "permissions" will be returned. [\#204](https://github.com/randdusing/BluetoothLE/issues/204)
+
+### Documentation
+- Added information about permissions and targetting SDK 23
+
 ## 2.4.0 - 2015-10-20
 ### Added
 - iOS supports Android style discovery [\#63](https://github.com/randdusing/BluetoothLE/issues/63)

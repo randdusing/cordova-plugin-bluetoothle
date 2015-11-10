@@ -66,7 +66,7 @@ Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Co
 
 
 ## Installation Quirks (Android) ##
-The latest version of the plugin requires you to set the Android target API to a minimum of 21.
+The latest version of the plugin requires you to set the Android target API to a minimum of 23 to support permission requirements for scanning. If you can't target 23, please use plugin version 2.4.0 or below.
 
 
 ## Discovery Quirks (iOS vs Android) ##
@@ -131,6 +131,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * enable - Bluetooth isn't enabled (Request user to enable Bluetooth)
 * disable - Bluetooth isn't disabled (Can't enabled if already disabled)
 * startScan - Scan couldn't be started (Is the scan already running?)
+* permissions - ACCESS_COARSE_LOCATION permission not granted, which is required for scanning in API >= 23
 * stopScan - Scan couldn't be stopped (Is the scan already stopped?)
 * retrieveConnected - Failed to retrieve connected devices (Is the device iOS?)
 * connect - Connection attempt failed (Is the device address correct?)
@@ -245,7 +246,7 @@ The successCallback isn't actually used. Listen to initialize callbacks for chan
 
 
 ### startScan ###
-Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator.
+Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions!
 
 ```javascript
 bluetoothle.startScan(startScanSuccess, startScanError, params);
