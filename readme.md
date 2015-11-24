@@ -537,7 +537,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a00",
+          "characteristicUuid": "2a00", // [Device Name](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.gap.device_name.xml)
           "properties": {
             "write": true,
             "writeWithoutResponse": true,
@@ -548,7 +548,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a01",
+          "characteristicUuid": "2a01", // [Appearance](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.gap.appearance.xml)
           "properties": {
             "read": true
           }
@@ -557,7 +557,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a02",
+          "characteristicUuid": "2a02", // [Peripheral Privacy Flag](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.gap.peripheral_privacy_flag.xml)
           "properties": {
             "read": true
           }
@@ -566,7 +566,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a03",
+          "characteristicUuid": "2a03", // [Reconnection Address](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.gap.reconnection_address.xml)
           "properties": {
             "write": true
           }
@@ -575,13 +575,13 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a04",
+          "characteristicUuid": "2a04", // [Pheripheral Preferred Connection Parameters](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.gap.peripheral_preferred_connection_parameters.xml)
           "properties": {
             "read": true
           }
         }
       ],
-      "serviceUuid": "1800"
+      "serviceUuid": "1800" // [Generic Access](https://developer.bluetooth.org/gatt/services/Pages/ServiceViewer.aspx?u=org.bluetooth.service.generic_access.xml)
     },
     {
       "characteristics": [
@@ -591,13 +591,13 @@ Descriptor Object:
               "descriptorUuid": "2902"
             }
           ],
-          "characteristicUuid": "2a05",
+          "characteristicUuid": "2a05", // [Service Changed](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.gatt.service_changed.xml)
           "properties": {
             "indicate": true
           }
         }
       ],
-      "serviceUuid": "1801"
+      "serviceUuid": "1801" // [Generic Attribute](https://developer.bluetooth.org/gatt/services/Pages/ServiceViewer.aspx?u=org.bluetooth.service.generic_attribute.xml)
     },
     {
       "characteristics": [
@@ -607,7 +607,7 @@ Descriptor Object:
               "descriptorUuid": "2902"
             }
           ],
-          "characteristicUuid": "2a37",
+          "characteristicUuid": "2a37", // [Heart Rate Measurement](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml)
           "properties": {
             "notify": true
           }
@@ -616,13 +616,13 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a38",
+          "characteristicUuid": "2a38", // [Body Sensor Location](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.body_sensor_location.xml)
           "properties": {
             "read": true
           }
         }
       ],
-      "serviceUuid": "180d"
+      "serviceUuid": "180d" // [Heart Rate](https://developer.bluetooth.org/gatt/services/Pages/ServiceViewer.aspx?u=org.bluetooth.service.heart_rate.xml)
     },
     {
       "characteristics": [
@@ -630,7 +630,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a23",
+          "characteristicUuid": "2a23", // [System ID](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.system_id.xml)
           "properties": {
             "read": true
           }
@@ -639,7 +639,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a24",
+          "characteristicUuid": "2a24", // [Model Number String](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.model_number_string.xml)
           "properties": {
             "read": true
           }
@@ -648,7 +648,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a25",
+          "characteristicUuid": "2a25", // [Serial Number String](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.serial_number_string.xml)
           "properties": {
             "read": true
           }
@@ -657,7 +657,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a26",
+          "characteristicUuid": "2a26", // [Firmware Revision String](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.firmware_revision_string.xml)
           "properties": {
             "read": true
           }
@@ -666,7 +666,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a27",
+          "characteristicUuid": "2a27", // [hardware Revision String](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.hardware_revision_string.xml)
           "properties": {
             "read": true
           }
@@ -675,7 +675,7 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a28",
+          "characteristicUuid": "2a28", // [Software Revision String](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.software_revision_string.xml)
           "properties": {
             "read": true
           }
@@ -684,13 +684,13 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a29",
+          "characteristicUuid": "2a29", // [Manufacturer Name String](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.manufacturer_name_string.xml)
           "properties": {
             "read": true
           }
         }
       ],
-      "serviceUuid": "180a"
+      "serviceUuid": "180a" // [Device Information](https://developer.bluetooth.org/gatt/services/Pages/ServiceViewer.aspx?u=org.bluetooth.service.device_information.xml)
     },
     {
       "characteristics": [
@@ -698,13 +698,13 @@ Descriptor Object:
           "descriptors": [
 
           ],
-          "characteristicUuid": "2a19",
+          "characteristicUuid": "2a19", // [Battery Level](https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.battery_level.xml)
           "properties": {
             "read": true
           }
         }
       ],
-      "serviceUuid": "180f"
+      "serviceUuid": "180f" // [Battery Service](https://developer.bluetooth.org/gatt/services/Pages/ServiceViewer.aspx?u=org.bluetooth.service.battery_service.xml)
     },
     {
       "characteristics": [
