@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file from 2.1.0 onwards.
 
+## 2.6.0 - 2015-12-30
+## Fixed
+- Instead of automatically requesting permissions on scan. It can now be done via the hasPermission and requestPermission functions available for Android. This only needs to be done on Android 6.0 / SDK 23.
+
 ## 2.5.0 - 2015-11-10
 ### Fixed
 - Scan now works on Android 6.0, but requires ACCESS_COARSE_LOCATION permission. The permission will be requested when startScan is called. If the permission isn't granted, an error of "permissions" will be returned. [\#204](https://github.com/randdusing/BluetoothLE/issues/204)
