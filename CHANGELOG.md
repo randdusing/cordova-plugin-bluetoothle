@@ -1,8 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file from 2.1.0 onwards.
 
+## 2.7.0 - 2015-12-30
+## Changes
+- Close can now be called if the device isn't already disconnected.
+
 ## 2.6.0 - 2015-12-30
-## Fixed
+## Changes
 - Instead of automatically requesting permissions on scan. It can now be done via the hasPermission and requestPermission functions available for Android. This only needs to be done on Android 6.0 / SDK 23.
 
 ## 2.5.0 - 2015-11-10

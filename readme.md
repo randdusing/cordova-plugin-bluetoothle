@@ -152,7 +152,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * mtu - Failed to set MTU (Is device Android?)
 * arguments - Invalid arguments (Check arguments)
 * neverConnected - Device never connected (Call connect, not reconnect)
-* isNotDisconnected - Device is not disconnected (Don't call connect, reconnect or close while connected)
+* isNotDisconnected - Device is not disconnected (Don't call connect or reconnect while connected)
 * isNotConnected - Device isn't connected (Don't call discover or any read/write operations)
 * isDisconnected - Device is disconnected (Don't call disconnect)
 * requestConnectionPriority - Failed to request connection priority (Is the device iOS?)
@@ -464,7 +464,7 @@ bluetoothle.disconnect(disconnectSuccess, disconnectError, params);
 
 
 ### close ###
-Close/dispose a Bluetooth LE device. Must disconnect before closing.
+Close/dispose a Bluetooth LE device. Prior to 2.7.0, you needed to disconnect to the device before closing, but this is no longer the case. 
 
 ```javascript
 bluetoothle.close(closeSuccess, closeError, params);

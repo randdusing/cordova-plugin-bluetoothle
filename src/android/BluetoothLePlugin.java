@@ -1069,10 +1069,12 @@ public class BluetoothLePlugin extends CordovaPlugin
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
     BluetoothDevice device = bluetoothGatt.getDevice();
 
+    /* Make disconnect/close less annoying
     if (isNotDisconnected(connection, device, callbackContext))
     {
       return;
     }
+    */
 
     JSONObject returnObj = new JSONObject();
 

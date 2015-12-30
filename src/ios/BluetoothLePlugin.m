@@ -553,12 +553,14 @@ NSString *const operationWrite = @"write";
     //Get the peripheral
     CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
 
+    /* Make disconnect/close less annoying
     //If currently connected, reconnect can't be used
     if ([self isNotDisconnected:peripheral :command])
     {
         return;
     }
-
+    */
+    
     //Create dictionary with status message and optionally add connection information
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
