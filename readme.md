@@ -28,7 +28,6 @@ Bluetooth LE Cordova Plugin
 * Full support for Windows Phone 8.1 C#-based projects. Assuming I can follow @MiBLE's process successfully.
 * Support for Windows Phone 8.1 Javascript projects. Currently waiting for better debugging support with Visual Studio.
 * Connect and Reconnect should detect existing connection with better error messages
-* Angular Wrapper
 * Queuing System
 
 
@@ -66,7 +65,7 @@ Updating the plugin for iOS causes BluetoothLePlugin.m to be removed from the Co
 
 
 ## Installation Quirks (Android) ##
-The latest version of the plugin requires you to set the Android target API to a minimum of 21.
+The latest version of the plugin requires you to set the Android target API to a minimum of 23 to support permission requirements for scanning. If you can't target 23, please use plugin version 2.4.0 or below.
 
 
 ## Discovery Quirks (iOS vs Android) ##
@@ -118,6 +117,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isScanning] (#isscanning)
 * [bluetoothle.isConnected] (#isconnected)
 * [bluetoothle.isDiscovered] (#isdiscovered)
+* [bluetoothle.hasPermission] (#haspermission) (Android)
+* [bluetoothle.requestPermission] (#requestpermission) (Android)
 * [bluetoothle.encodedStringToBytes] (#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
@@ -245,7 +246,7 @@ The successCallback isn't actually used. Listen to initialize callbacks for chan
 
 
 ### startScan ###
-Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator.
+Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions!
 
 ```javascript
 bluetoothle.startScan(startScanSuccess, startScanError, params);
@@ -1270,6 +1271,42 @@ bluetoothle.isDiscovered(isDiscoveredSuccess, isDiscoveredError, params);
   "name": "Polar H7 3B321015",
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
   "isDiscovered": false
+}
+```
+
+
+
+### hasPermission ###
+Determine whether coarse location privileges are granted since scanning for unpaired devices requies it in Android API 23
+
+```javascript
+bluetoothle.hasPermission(hasPermissionSuccess);
+```
+
+##### Success #####
+* status => hasPermission = true/false
+
+```javascript
+{
+  "hasPermission": true
+}
+```
+
+
+
+### requestPermission ###
+Request coarse location privileges since scanning for unpaired devices requies it in Android API 23.
+
+```javascript
+bluetoothle.requestPermission(requestPermissionSuccess);
+```
+
+##### Success #####
+* status => requestPermission = true/false
+
+```javascript
+{
+  "requestPermission": true
 }
 ```
 

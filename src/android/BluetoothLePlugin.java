@@ -4,11 +4,12 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 
+import android.Manifest;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.ParcelUuid;
 import android.os.Build;
 import android.util.Base64;
 
@@ -26,7 +27,6 @@ import android.bluetooth.BluetoothProfile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -41,12 +41,14 @@ public class BluetoothLePlugin extends CordovaPlugin
 {
   //Initialization related variables
   private final int REQUEST_BT_ENABLE = 59627; /*Random integer*/
+  private final int REQUEST_ACCESS_COARSE_LOCATION = 59628;
   private BluetoothAdapter bluetoothAdapter;
   private boolean isReceiverRegistered = false;
 
   //General callback variables
   private CallbackContext initCallbackContext;
   private CallbackContext scanCallbackContext;
+  private CallbackContext permissionsCallback;
 
   //Store connections and all their callbacks
   private HashMap<Object, HashMap<Object,Object>> connections;
@@ -85,6 +87,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String isConnectedActionName = "isConnected";
   private final String requestConnectionPriorityActionName = "requestConnectionPriority";
   private final String mtuActionName = "mtu";
+  private final String hasPermissionName = "hasPermission";
+  private final String requestPermissionName = "requestPermission";
 
   //Object keys
   private final String keyStatus = "status";
@@ -511,7 +515,52 @@ public class BluetoothLePlugin extends CordovaPlugin
       });
       return true;
     }
+    else if (hasPermissionName.equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          hasPermissionAction(callbackContext);
+        }
+      });
+      return true;
+    }
+    else if (requestPermissionName.equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          requestPermissionAction(callbackContext);
+        }
+      });
+      return true;
+    }
     return false;
+  }
+  
+  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
+  {
+    if (permissionsCallback == null) {
+      return;
+    }
+    
+    //Just call hasPermission again to verify
+    JSONObject returnObj = new JSONObject();
+
+    addProperty(returnObj, "requestPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
+
+    permissionsCallback.success(returnObj);
+  }
+  
+  public void hasPermissionAction(CallbackContext callbackContext) {
+    JSONObject returnObj = new JSONObject();
+
+    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
+
+    callbackContext.success(returnObj);
+  }
+
+  public void requestPermissionAction(CallbackContext callbackContext) {
+    permissionsCallback = callbackContext;
+    cordova.requestPermission(this, REQUEST_ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
   }
 
   private void initializeAction(JSONArray args, CallbackContext callbackContext)
