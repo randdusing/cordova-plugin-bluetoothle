@@ -5,7 +5,6 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 
 import android.Manifest;
-import android.content.pm.PackageManager;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -49,9 +48,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //General callback variables
   private CallbackContext initCallbackContext;
   private CallbackContext scanCallbackContext;
-
-  private CallbackContext scanPermissionsCallback;
-  private JSONArray scanPermissionsArgs;
+  private CallbackContext permissionsCallback;
 
   //Store connections and all their callbacks
   private HashMap<Object, HashMap<Object,Object>> connections;
@@ -90,6 +87,8 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String isConnectedActionName = "isConnected";
   private final String requestConnectionPriorityActionName = "requestConnectionPriority";
   private final String mtuActionName = "mtu";
+  private final String hasPermissionName = "hasPermission";
+  private final String requestPermissionName = "requestPermission";
 
   //Object keys
   private final String keyStatus = "status";
@@ -168,7 +167,6 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String errorEnable = "enable";
   private final String errorDisable = "disable";
   private final String errorArguments = "arguments";
-  private final String errorPermissions = "permissions";
   private final String errorStartScan = "startScan";
   private final String errorStopScan = "stopScan";
   private final String errorConnect = "connect";
@@ -201,7 +199,6 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logOperationUnsupported = "Operation unsupported";
   //Scanning
   private final String logAlreadyScanning = "Scanning already in progress";
-  private final String logPermissions = "Scanning needs permissions";
   private final String logScanStartFail = "Scan failed to start";
   private final String logNotScanning = "Not scanning";
   //Connection
@@ -518,7 +515,52 @@ public class BluetoothLePlugin extends CordovaPlugin
       });
       return true;
     }
+    else if (hasPermissionName.equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          hasPermissionAction(callbackContext);
+        }
+      });
+      return true;
+    }
+    else if (requestPermissionName.equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          requestPermissionAction(callbackContext);
+        }
+      });
+      return true;
+    }
     return false;
+  }
+  
+  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
+  {
+    if (permissionsCallback == null) {
+      return;
+    }
+    
+    //Just call hasPermission again to verify
+    JSONObject returnObj = new JSONObject();
+
+    addProperty(returnObj, "requestPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
+
+    permissionsCallback.success(returnObj);
+  }
+  
+  public void hasPermissionAction(CallbackContext callbackContext) {
+    JSONObject returnObj = new JSONObject();
+
+    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
+
+    callbackContext.success(returnObj);
+  }
+
+  public void requestPermissionAction(CallbackContext callbackContext) {
+    permissionsCallback = callbackContext;
+    cordova.requestPermission(this, REQUEST_ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
   }
 
   private void initializeAction(JSONArray args, CallbackContext callbackContext)
@@ -656,54 +698,23 @@ public class BluetoothLePlugin extends CordovaPlugin
     //Else listen to initialize callback for disabling
   }
 
-  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
-  {
-    if (requestCode != REQUEST_ACCESS_COARSE_LOCATION) {
-      return;
-    }
-
-    if (scanPermissionsCallback == null) {
-      return;
-    }
-
-    for (int i = 0; i < permissions.length; i++) {
-      if (permissions[i].equals(Manifest.permission.ACCESS_COARSE_LOCATION) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-        startScanAction(scanPermissionsArgs, scanPermissionsCallback);
-        return;
-      }
-    }
-
-    JSONObject returnObj = new JSONObject();
-    addProperty(returnObj, keyError, errorPermissions);
-    addProperty(returnObj, keyMessage, logPermissions);
-    scanPermissionsCallback.error(returnObj);
-  }
-
   private void startScanAction(JSONArray args, CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext, true)) {
-      return;
-    }
-
-    if (!cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
-      cordova.requestPermission(this, REQUEST_ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
-      scanPermissionsCallback = callbackContext;
-      scanPermissionsArgs = args;
+    if (isNotInitialized(callbackContext, true))
+    {
       return;
     }
 
     JSONObject returnObj = new JSONObject();
 
     //If the adapter is already scanning, don't call another scan.
-    if (scanCallbackContext != null) {
+    if (scanCallbackContext != null)
+    {
       addProperty(returnObj, keyError, errorStartScan);
       addProperty(returnObj, keyMessage, logAlreadyScanning);
       callbackContext.error(returnObj);
       return;
     }
-
-    //Save the callback context for reporting back found connections. Also the isScanning flag
-    scanCallbackContext = callbackContext;
 
     //Get the service UUIDs from the arguments
     JSONObject obj = getArgsObject(args);
@@ -714,6 +725,9 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
       serviceUuids = getServiceUuids(obj);
     }
+
+    //Save the callback context for reporting back found connections. Also the isScanning flag
+    scanCallbackContext = callbackContext;
 
     //Start the scan with or without service UUIDs
     boolean result;

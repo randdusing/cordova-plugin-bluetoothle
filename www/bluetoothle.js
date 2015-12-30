@@ -84,6 +84,12 @@ var bluetoothle = {
   requestConnectionPriority: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]);
   },
+  hasPermission: function(successCallback) {
+    cordova.exec(successCallback, successCallback, bluetoothleName, "hasPermission", []);
+  },
+  requestPermission: function(successCallback) {
+    cordova.exec(successCallback, successCallback, bluetoothleName, "requestPermission", []);
+  },
   encodedStringToBytes: function(string) {
     var data = atob(string);
     var bytes = new Uint8Array(data.length);

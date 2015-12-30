@@ -28,7 +28,6 @@ Bluetooth LE Cordova Plugin
 * Full support for Windows Phone 8.1 C#-based projects. Assuming I can follow @MiBLE's process successfully.
 * Support for Windows Phone 8.1 Javascript projects. Currently waiting for better debugging support with Visual Studio.
 * Connect and Reconnect should detect existing connection with better error messages
-* Angular Wrapper
 * Queuing System
 
 
@@ -118,6 +117,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isScanning] (#isscanning)
 * [bluetoothle.isConnected] (#isconnected)
 * [bluetoothle.isDiscovered] (#isdiscovered)
+* [bluetoothle.hasPermission] (#haspermission) (Android)
+* [bluetoothle.requestPermission] (#requestpermission) (Android)
 * [bluetoothle.encodedStringToBytes] (#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
@@ -131,7 +132,6 @@ Whenever the error callback is executed, the return object will contain the erro
 * enable - Bluetooth isn't enabled (Request user to enable Bluetooth)
 * disable - Bluetooth isn't disabled (Can't enabled if already disabled)
 * startScan - Scan couldn't be started (Is the scan already running?)
-* permissions - ACCESS_COARSE_LOCATION permission not granted, which is required for scanning in API >= 23
 * stopScan - Scan couldn't be stopped (Is the scan already stopped?)
 * retrieveConnected - Failed to retrieve connected devices (Is the device iOS?)
 * connect - Connection attempt failed (Is the device address correct?)
@@ -1271,6 +1271,42 @@ bluetoothle.isDiscovered(isDiscoveredSuccess, isDiscoveredError, params);
   "name": "Polar H7 3B321015",
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
   "isDiscovered": false
+}
+```
+
+
+
+### hasPermission ###
+Determine whether coarse location privileges are granted since scanning for unpaired devices requies it in Android API 23
+
+```javascript
+bluetoothle.hasPermission(hasPermissionSuccess);
+```
+
+##### Success #####
+* status => hasPermission = true/false
+
+```javascript
+{
+  "hasPermission": true
+}
+```
+
+
+
+### requestPermission ###
+Request coarse location privileges since scanning for unpaired devices requies it in Android API 23.
+
+```javascript
+bluetoothle.requestPermission(requestPermissionSuccess);
+```
+
+##### Success #####
+* status => requestPermission = true/false
+
+```javascript
+{
+  "requestPermission": true
 }
 ```
 
