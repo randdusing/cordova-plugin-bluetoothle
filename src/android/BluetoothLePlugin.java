@@ -48,6 +48,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //General callback variables
   private CallbackContext initCallbackContext;
   private CallbackContext scanCallbackContext;
+  private Object scanLock = new Object();
   private CallbackContext permissionsCallback;
 
   //Store connections and all their callbacks
@@ -535,13 +536,13 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
     return false;
   }
-  
+
   public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
   {
     if (permissionsCallback == null) {
       return;
     }
-    
+
     //Just call hasPermission again to verify
     JSONObject returnObj = new JSONObject();
 
@@ -549,7 +550,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
     permissionsCallback.success(returnObj);
   }
-  
+
   public void hasPermissionAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
@@ -700,91 +701,95 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void startScanAction(JSONArray args, CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext, true))
-    {
-      return;
+    synchronized(scanLock) {
+      if (isNotInitialized(callbackContext, true))
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      //If the adapter is already scanning, don't call another scan.
+      if (scanCallbackContext != null)
+      {
+        addProperty(returnObj, keyError, errorStartScan);
+        addProperty(returnObj, keyMessage, logAlreadyScanning);
+        callbackContext.error(returnObj);
+        return;
+      }
+
+      //Get the service UUIDs from the arguments
+      JSONObject obj = getArgsObject(args);
+
+      UUID[] serviceUuids = null;
+
+      if (obj != null)
+      {
+        serviceUuids = getServiceUuids(obj);
+      }
+
+      //Save the callback context for reporting back found connections. Also the isScanning flag
+      scanCallbackContext = callbackContext;
+
+      //Start the scan with or without service UUIDs
+      boolean result;
+      if (serviceUuids == null || serviceUuids.length == 0)
+      {
+        result = bluetoothAdapter.startLeScan(scanCallback);
+      }
+      else
+      {
+        result = bluetoothAdapter.startLeScan(serviceUuids, scanCallback);
+      }
+
+      //If the scan didn't start...
+      if (!result)
+      {
+        addProperty(returnObj, keyError, errorStartScan);
+        addProperty(returnObj, keyMessage, logScanStartFail);
+        callbackContext.error(returnObj);
+        scanCallbackContext = null;
+        return;
+      }
+
+      //Notify user of started scan and save callback
+      addProperty(returnObj, keyStatus, statusScanStarted);
+
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(true);
+      callbackContext.sendPluginResult(pluginResult);
     }
-
-    JSONObject returnObj = new JSONObject();
-
-    //If the adapter is already scanning, don't call another scan.
-    if (scanCallbackContext != null)
-    {
-      addProperty(returnObj, keyError, errorStartScan);
-      addProperty(returnObj, keyMessage, logAlreadyScanning);
-      callbackContext.error(returnObj);
-      return;
-    }
-
-    //Get the service UUIDs from the arguments
-    JSONObject obj = getArgsObject(args);
-
-    UUID[] serviceUuids = null;
-
-    if (obj != null)
-    {
-      serviceUuids = getServiceUuids(obj);
-    }
-
-    //Save the callback context for reporting back found connections. Also the isScanning flag
-    scanCallbackContext = callbackContext;
-
-    //Start the scan with or without service UUIDs
-    boolean result;
-    if (serviceUuids == null || serviceUuids.length == 0)
-    {
-      result = bluetoothAdapter.startLeScan(scanCallback);
-    }
-    else
-    {
-      result = bluetoothAdapter.startLeScan(serviceUuids, scanCallback);
-    }
-
-    //If the scan didn't start...
-    if (!result)
-    {
-      addProperty(returnObj, keyError, errorStartScan);
-      addProperty(returnObj, keyMessage, logScanStartFail);
-      callbackContext.error(returnObj);
-      scanCallbackContext = null;
-      return;
-    }
-
-    //Notify user of started scan and save callback
-    addProperty(returnObj, keyStatus, statusScanStarted);
-
-    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-    pluginResult.setKeepCallback(true);
-    callbackContext.sendPluginResult(pluginResult);
   }
 
   private void stopScanAction(CallbackContext callbackContext)
   {
-    if (isNotInitialized(callbackContext, true))
-    {
-      return;
+    synchronized(scanLock) {
+      if (isNotInitialized(callbackContext, true))
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      //Check if already scanning
+      if (scanCallbackContext == null)
+      {
+        addProperty(returnObj, keyError, errorStopScan);
+        addProperty(returnObj, keyMessage, logNotScanning);
+        callbackContext.error(returnObj);
+        return;
+      }
+
+      //Stop the scan
+      bluetoothAdapter.stopLeScan(scanCallback);
+
+      //Set scanning state
+      scanCallbackContext = null;
+
+      //Inform user
+      addProperty(returnObj, keyStatus, statusScanStopped);
+      callbackContext.success(returnObj);
     }
-
-    JSONObject returnObj = new JSONObject();
-
-    //Check if already scanning
-    if (scanCallbackContext == null)
-    {
-      addProperty(returnObj, keyError, errorStopScan);
-      addProperty(returnObj, keyMessage, logNotScanning);
-      callbackContext.error(returnObj);
-      return;
-    }
-
-    //Stop the scan
-    bluetoothAdapter.stopLeScan(scanCallback);
-
-    //Set scanning state
-    scanCallbackContext = null;
-
-    //Inform user
-    addProperty(returnObj, keyStatus, statusScanStopped);
-    callbackContext.success(returnObj);
   }
 
   private void retrieveConnectedAction(JSONArray args, CallbackContext callbackContext)
@@ -2064,7 +2069,9 @@ public class BluetoothLePlugin extends CordovaPlugin
             addProperty(returnObj, keyMessage, logNotEnabled);
 
             connections = new HashMap<Object, HashMap<Object,Object>>();
-            scanCallbackContext = null;
+            synchronized(scanLock) {
+              scanCallbackContext = null;
+            }
 
             pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
             pluginResult.setKeepCallback(true);
@@ -2117,22 +2124,24 @@ public class BluetoothLePlugin extends CordovaPlugin
     @Override
     public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
     {
-      if (scanCallbackContext == null)
-      {
-        return;
+      synchronized(scanLock) {
+        if (scanCallbackContext == null)
+        {
+          return;
+        }
+
+        JSONObject returnObj = new JSONObject();
+
+        addDevice(returnObj, device);
+
+        addProperty(returnObj, keyRssi, rssi);
+        addPropertyBytes(returnObj, keyAdvertisement, scanRecord);
+        addProperty(returnObj, keyStatus, statusScanResult);
+
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+        pluginResult.setKeepCallback(true);
+        scanCallbackContext.sendPluginResult(pluginResult);
       }
-
-      JSONObject returnObj = new JSONObject();
-
-      addDevice(returnObj, device);
-
-      addProperty(returnObj, keyRssi, rssi);
-      addPropertyBytes(returnObj, keyAdvertisement, scanRecord);
-      addProperty(returnObj, keyStatus, statusScanResult);
-
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      scanCallbackContext.sendPluginResult(pluginResult);
     }
   };
 
