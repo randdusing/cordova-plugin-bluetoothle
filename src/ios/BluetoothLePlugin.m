@@ -560,7 +560,7 @@ NSString *const operationWrite = @"write";
         return;
     }
     */
-    
+
     //Create dictionary with status message and optionally add connection information
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
@@ -1589,6 +1589,19 @@ NSString *const operationWrite = @"write";
         return;
     }
 
+    NSArray* callbacks = [self getCallbacks:connection];
+    for (NSString* callback in callbacks) {
+      NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+      [self addDevice:peripheral :returnObj];
+      [returnObj setValue:errorIsDisconnected forKey:keyError];
+      [returnObj setValue:logIsDisconnected forKey:keyMessage];
+
+      CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+      [pluginResult setKeepCallbackAsBool:false];
+      [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+    }
+
     //Get connect callback
     NSString* callback = [connection objectForKey:operationConnect];
 
@@ -2186,8 +2199,6 @@ NSString *const operationWrite = @"write";
         return;
     }
 
-
-
     //Create the initial return object
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
@@ -2336,6 +2347,36 @@ NSString *const operationWrite = @"write";
 
     //Return the callback for a particular operation, which may be null
     return [characteristicCallbacks objectForKey:operationType];
+}
+
+- (NSArray*) getCallbacks: (NSMutableDictionary*)connection
+{
+  //TODO need to store this in a cleaner format, support for other actions like descriptors, rssi, etc
+  NSMutableArray* callbacks = [[NSMutableArray alloc] init];
+  NSArray* keys = [connection allKeys];
+  int count = [keys count];
+  for (int i = 0; i < count; i++) {
+    id key = [keys objectAtIndex: i];
+    if (![key isKindOfClass:[CBUUID class]]) {
+      continue;
+    }
+    id characteristic = [connection objectForKey: key];
+    NSArray* keysCallback = [characteristic allKeys];
+    int countCallback = [keysCallback count];
+    for (int j = 0; j < countCallback; j++) {
+      id keyCallback = [keysCallback objectAtIndex: j];
+      if (![keyCallback isKindOfClass:[NSString class]]) {
+        continue;
+      }
+      id callback = [characteristic objectForKey:keyCallback];
+      if (!callback) {
+        continue;
+      }
+      [callbacks addObject:callback];
+    }
+  }
+
+  return callbacks;
 }
 
 - (void) removeCallback: (CBUUID *) characteristicUuid forConnection: (NSMutableDictionary*)connection forOperationType:(NSString*) operationType

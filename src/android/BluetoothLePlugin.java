@@ -2299,6 +2299,34 @@ public class BluetoothLePlugin extends CordovaPlugin
     return (CallbackContext)characteristicCallbacks.get(operationType);
   }
 
+  private CallbackContext[] GetCallbacks(HashMap<Object, Object> connection)
+  {
+    ArrayList<CallbackContext> callbacks = new ArrayList<CallbackContext>();
+
+    for (Object key : connection.keySet()) {
+      if (!(key instanceof UUID)) {
+        continue;
+      }
+
+      HashMap<Object, Object> characteristic = (HashMap<Object,Object>) connection.get(key);
+      for (Object keyCallback : characteristic.keySet()) {
+        if (!(keyCallback instanceof String)) {
+          continue;
+        }
+
+        CallbackContext callback = (CallbackContext)characteristic.get(keyCallback);
+
+        if (callback == null) {
+          continue;
+        }
+
+        callbacks.add(callback);
+      }
+    }
+
+    return callbacks.toArray(new CallbackContext[callbacks.size()]);
+  }
+
   private void RemoveCallback(UUID characteristicUuid, HashMap<Object, Object> connection, String operationType)
   {
     HashMap<Object, Object> characteristicCallbacks = (HashMap<Object, Object>)connection.get(characteristicUuid);
@@ -2955,7 +2983,8 @@ public class BluetoothLePlugin extends CordovaPlugin
 
       addDevice(returnObj, device);
 
-      if (status != BluetoothGatt.GATT_SUCCESS)
+      int oldState = Integer.valueOf(connection.get(keyState).toString());
+      if (status != BluetoothGatt.GATT_SUCCESS && oldState == BluetoothProfile.STATE_CONNECTING)
       {
         //Clear out all the callbacks
         connection = new HashMap<Object, Object>();
@@ -2997,6 +3026,17 @@ public class BluetoothLePlugin extends CordovaPlugin
       //Device was disconnected
       else if (newState == BluetoothProfile.STATE_DISCONNECTED)
       {
+        CallbackContext[] callbacks = GetCallbacks(connection);
+        addProperty(returnObj, keyError, errorIsDisconnected);
+        addProperty(returnObj, keyMessage, logIsDisconnected);
+
+        for (CallbackContext callback : callbacks){
+          callback.error(returnObj);
+        }
+
+        returnObj.remove(keyError);
+        returnObj.remove(keyMessage);
+
         //Clear out all the callbacks
         connection = new HashMap<Object, Object>();
         connection.put(keyPeripheral, gatt);
