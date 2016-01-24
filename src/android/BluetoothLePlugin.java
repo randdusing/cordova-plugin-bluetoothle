@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.ParcelUuid;
 import android.util.Base64;
 
 import android.app.Activity;
@@ -24,6 +25,11 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.ScanSettings;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.BluetoothLeScanner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -705,57 +711,55 @@ public class BluetoothLePlugin extends CordovaPlugin
       return;
     }
 
-    JSONObject returnObj = new JSONObject();
-
     //If the adapter is already scanning, don't call another scan.
     if (scanCallbackContext != null)
     {
+      JSONObject returnObj = new JSONObject();
       addProperty(returnObj, keyError, errorStartScan);
       addProperty(returnObj, keyMessage, logAlreadyScanning);
       callbackContext.error(returnObj);
       return;
     }
 
-    //Get the service UUIDs from the arguments
+    /* get the service UUIDs from the arguments */
     JSONObject obj = getArgsObject(args);
 
-    UUID[] serviceUuids = null;
+    /* build the ScanFilters */
+    ArrayList<ScanFilter> scanfilter = new ArrayList<ScanFilter>();
+    for (UUID uuid : getServiceUuids(obj)) {
+      ScanFilter.Builder b = new ScanFilter.Builder();
+      b.setServiceUuid(new ParcelUuid(uuid));
+      scanfilter.add(b.build());
+    }
 
-    if (obj != null)
+    /* build the ScanSetting */
+    ScanSettings.Builder scansettings = new ScanSettings.Builder();
+    scansettings.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
+    scansettings.setReportDelay(0);
+
+    if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
     {
-      serviceUuids = getServiceUuids(obj);
+      scansettings.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE);
+      scansettings.setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT);
+      scansettings.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
     }
 
     //Save the callback context for reporting back found connections. Also the isScanning flag
     scanCallbackContext = callbackContext;
 
     //Start the scan with or without service UUIDs
-    boolean result;
-    if (serviceUuids == null || serviceUuids.length == 0)
-    {
-      result = bluetoothAdapter.startLeScan(scanCallback);
-    }
-    else
-    {
-      result = bluetoothAdapter.startLeScan(serviceUuids, scanCallback);
-    }
+    bluetoothAdapter.getBluetoothLeScanner().startScan(scanfilter,scansettings.build(),scanCallback);
 
-    //If the scan didn't start...
-    if (!result)
     {
-      addProperty(returnObj, keyError, errorStartScan);
-      addProperty(returnObj, keyMessage, logScanStartFail);
-      callbackContext.error(returnObj);
-      scanCallbackContext = null;
-      return;
+      JSONObject returnObj = new JSONObject();
+
+      //Notify user of started scan and save callback
+      addProperty(returnObj, keyStatus, statusScanStarted);
+
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(true);
+      callbackContext.sendPluginResult(pluginResult);
     }
-
-    //Notify user of started scan and save callback
-    addProperty(returnObj, keyStatus, statusScanStarted);
-
-    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-    pluginResult.setKeepCallback(true);
-    callbackContext.sendPluginResult(pluginResult);
   }
 
   private void stopScanAction(CallbackContext callbackContext)
@@ -777,7 +781,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
 
     //Stop the scan
-    bluetoothAdapter.stopLeScan(scanCallback);
+    bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
 
     //Set scanning state
     scanCallbackContext = null;
@@ -2112,22 +2116,36 @@ public class BluetoothLePlugin extends CordovaPlugin
   }
 
   //Scan Callback
-  private LeScanCallback scanCallback = new LeScanCallback()
+  private ScanCallback scanCallback = new ScanCallback()
   {
     @Override
-    public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
-    {
+    public void onBatchScanResults(List<ScanResult> results) {
       if (scanCallbackContext == null)
-      {
         return;
-      }
+    }
+
+    @Override
+    public void onScanFailed(int errorCode) {
+      if (scanCallbackContext == null)
+        return;
+
+      JSONObject returnObj = new JSONObject();
+      addProperty(returnObj, keyError, errorStartScan);
+      addProperty(returnObj, keyMessage, logScanStartFail);
+      scanCallbackContext.error(returnObj);
+      scanCallbackContext = null;
+    }
+
+    @Override
+    public void onScanResult(int callbackType, ScanResult result) {
+      if (scanCallbackContext == null)
+        return;
 
       JSONObject returnObj = new JSONObject();
 
-      addDevice(returnObj, device);
-
-      addProperty(returnObj, keyRssi, rssi);
-      addPropertyBytes(returnObj, keyAdvertisement, scanRecord);
+      addDevice(returnObj, result.getDevice());
+      addProperty(returnObj, keyRssi, result.getRssi());
+      addPropertyBytes(returnObj, keyAdvertisement, result.getScanRecord().getBytes());
       addProperty(returnObj, keyStatus, statusScanResult);
 
       PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
@@ -2707,9 +2725,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     JSONArray array = obj.optJSONArray(keyServiceUuids);
 
     if (array == null)
-    {
-      return null;
-    }
+      return new UUID[] {};
 
     //Create temporary array list for building array of UUIDs
     ArrayList<UUID> arrayList = new ArrayList<UUID>();
@@ -2745,9 +2761,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     int size = arrayList.size();
 
     if (size == 0)
-    {
-      return null;
-    }
+      return new UUID[] {};
 
     UUID[] uuids = new UUID[size];
     uuids = arrayList.toArray(uuids);
