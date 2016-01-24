@@ -112,6 +112,10 @@ var bluetoothle = {
   },
   bytesToString: function(bytes) {
     return String.fromCharCode.apply(null, new Uint16Array(bytes));
-  }
-}
+  },
+  SCAN_MODE_OPPORTUNISTIC: -1,
+  SCAN_MODE_LOW_POWER: 0,
+  SCAN_MODE_BALANCED: 1,
+  SCAN_MODE_LOW_LATENCY: 2
+};
 module.exports = bluetoothle;

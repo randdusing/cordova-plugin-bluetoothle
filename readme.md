@@ -255,6 +255,7 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
 ##### Params #####
 * serviceUuids = An array of service IDs to filter the scan or empty array / null
 * allowDuplicates = True/false to allow duplicate advertisement packets, defaults to false. iOS only
+* scanMode = one of Android's scanMode. See [scanMode](http://developer.android.com/reference/android/bluetooth/le/ScanSettings.html#SCAN_MODE_BALANCED). Available from Android Lollipop (API 21), SCAN_MODE_OPPORTUNISTIC from 23 on.
 
 ```javascript
 {
@@ -262,7 +263,8 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
     "180D",
     "180F"
   ],
-  allowDuplicates: true
+  allowDuplicates: true,
+  scanMode: bluetoothle.SCAN_MODE_LOW_POWER
 }
 ```
 

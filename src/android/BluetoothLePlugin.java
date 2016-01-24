@@ -100,6 +100,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyStatus = "status";
   private final String keyError = "error";
   private final String keyMessage = "message";
+  private final String keyScanMode= "scanMode";
   private final String keyRequest = "request";
   private final String keyStatusReceiver = "statusReceiver";
   private final String keyName = "name";
@@ -707,9 +708,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private void startScanAction(JSONArray args, CallbackContext callbackContext)
   {
     if (isNotInitialized(callbackContext, true))
-    {
       return;
-    }
 
     //If the adapter is already scanning, don't call another scan.
     if (scanCallbackContext != null)
@@ -751,12 +750,18 @@ public class BluetoothLePlugin extends CordovaPlugin
         ScanFilter.Builder b = new ScanFilter.Builder();
         b.setServiceUuid(new ParcelUuid(uuid));
         scanfilter.add(b.build());
+        System.out.println(uuid);
       }
 
       /* build the ScanSetting */
       ScanSettings.Builder scansettings = new ScanSettings.Builder();
-      scansettings.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
       scansettings.setReportDelay(0);
+
+      int scanMode = obj.optInt(keyScanMode, ScanSettings.SCAN_MODE_LOW_POWER);
+      try { scansettings.setScanMode(scanMode); }
+      catch(java.lang.IllegalArgumentException e) {
+        System.err.println(e.toString());
+      }
 
       if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
       {
