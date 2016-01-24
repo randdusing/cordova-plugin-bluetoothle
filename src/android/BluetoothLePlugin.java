@@ -721,34 +721,53 @@ public class BluetoothLePlugin extends CordovaPlugin
       return;
     }
 
-    /* get the service UUIDs from the arguments */
-    JSONObject obj = getArgsObject(args);
-
-    /* build the ScanFilters */
-    ArrayList<ScanFilter> scanfilter = new ArrayList<ScanFilter>();
-    for (UUID uuid : getServiceUuids(obj)) {
-      ScanFilter.Builder b = new ScanFilter.Builder();
-      b.setServiceUuid(new ParcelUuid(uuid));
-      scanfilter.add(b.build());
-    }
-
-    /* build the ScanSetting */
-    ScanSettings.Builder scansettings = new ScanSettings.Builder();
-    scansettings.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
-    scansettings.setReportDelay(0);
-
-    if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-    {
-      scansettings.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE);
-      scansettings.setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT);
-      scansettings.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
-    }
-
     //Save the callback context for reporting back found connections. Also the isScanning flag
     scanCallbackContext = callbackContext;
 
-    //Start the scan with or without service UUIDs
-    bluetoothAdapter.getBluetoothLeScanner().startScan(scanfilter,scansettings.build(),scanCallback);
+    /* get the service UUIDs from the arguments */
+    JSONObject obj = getArgsObject(args);
+
+    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP)
+    {
+      UUID uuids[] = getServiceUuids(obj);
+      boolean result = uuids.length==0 ? bluetoothAdapter.startLeScan(scanCallbackKitKat)
+                                 : bluetoothAdapter.startLeScan(uuids,scanCallbackKitKat);
+
+      if (!result) // scan did not start
+      {
+        JSONObject returnObj = new JSONObject();
+        addProperty(returnObj, keyError, errorStartScan);
+        addProperty(returnObj, keyMessage, logScanStartFail);
+        callbackContext.error(returnObj);
+        scanCallbackContext = null;
+        return;
+      }
+    }
+    else
+    {
+      /* build the ScanFilters */
+      ArrayList<ScanFilter> scanfilter = new ArrayList<ScanFilter>();
+      for (UUID uuid : getServiceUuids(obj)) {
+        ScanFilter.Builder b = new ScanFilter.Builder();
+        b.setServiceUuid(new ParcelUuid(uuid));
+        scanfilter.add(b.build());
+      }
+
+      /* build the ScanSetting */
+      ScanSettings.Builder scansettings = new ScanSettings.Builder();
+      scansettings.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
+      scansettings.setReportDelay(0);
+
+      if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+      {
+        scansettings.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE);
+        scansettings.setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT);
+        scansettings.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
+      }
+
+      //Start the scan with or without service UUIDs
+      bluetoothAdapter.getBluetoothLeScanner().startScan(scanfilter,scansettings.build(),scanCallback);
+    }
 
     {
       JSONObject returnObj = new JSONObject();
@@ -2115,6 +2134,31 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
   }
 
+  //Scan Callback for KitKat
+  private LeScanCallback scanCallbackKitKat = new LeScanCallback()
+  {
+    @Override
+    public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
+    {
+      if (scanCallbackContext == null)
+      {
+        return;
+      }
+
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyRssi, rssi);
+      addPropertyBytes(returnObj, keyAdvertisement, scanRecord);
+      addProperty(returnObj, keyStatus, statusScanResult);
+
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(true);
+      scanCallbackContext.sendPluginResult(pluginResult);
+    }
+  };
+
   //Scan Callback
   private ScanCallback scanCallback = new ScanCallback()
   {
@@ -2722,6 +2766,9 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private UUID[] getServiceUuids(JSONObject obj)
   {
+    if (obj == null)
+      return new UUID[] {};
+
     JSONArray array = obj.optJSONArray(keyServiceUuids);
 
     if (array == null)
