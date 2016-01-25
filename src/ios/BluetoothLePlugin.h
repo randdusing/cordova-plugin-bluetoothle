@@ -34,12 +34,14 @@
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)rssi:(CDVInvokedUrlCommand *)command;
 - (void)mtu:(CDVInvokedUrlCommand *)command;
+- (void)requestConnectionPriority:(CDVInvokedUrlCommand *)command;
 - (void)isInitialized:(CDVInvokedUrlCommand *)command;
 - (void)isEnabled:(CDVInvokedUrlCommand *)command;
 - (void)isScanning:(CDVInvokedUrlCommand *)command;
 - (void)isConnected:(CDVInvokedUrlCommand *)command;
 - (void)isDiscovered:(CDVInvokedUrlCommand *)command;
-- (void)requestConnectionPriority:(CDVInvokedUrlCommand *)command;
+- (void)hasPermission:(CDVInvokedUrlCommand *)command;
+- (void)requestPermission:(CDVInvokedUrlCommand *)command;
 
 @end
 
