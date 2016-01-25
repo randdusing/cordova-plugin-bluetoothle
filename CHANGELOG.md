@@ -1,12 +1,31 @@
 # Change Log
-All notable changes to this project will be documented in this file from 2.1.0 onwards.
+
+## 3.0.0 - 2016-01-25
+- Removed connecting / disconnecting statuses since they didn't provide much value and complicated the callback logic.
+- Shortened serviceUuid, characteristicUuid, descriptorUuid to uuid or service/characteristic/descriptor depending on the context. See the readme for more info.
+- Removed error callback from initialize. The success callback will be used to provide enabled or disabled status updates. [\#227](https://github.com/randdusing/BluetoothLE/issues/227)
+- Read/Write/Subscribe/Unsubscribe now return the error callback on unexpected disconnects. For example, iOS 9 wouldn't automatically call the error callback for a read operation when unexpectedly disconnected. On iOS 8 and Android, it would. Future versions will add this to other operations like rssi, readDescriptor, writeDescriptor, etc.
+- More advertisement data provided on iOS. [\#110](https://github.com/randdusing/BluetoothLE/issues/110)
+- Support for new and improved Android scanning. [\#232](https://github.com/randdusing/BluetoothLE/issues/232) Thanks [pscholl](https://github.com/pscholl)
+- Fixed bug with scan race condition [\#223](https://github.com/randdusing/BluetoothLE/issues/223)
+- Fixed bug where unsubscribe wouldn't throw an error when already unsubscribed and subscribe wouldn't throw an error when already subscribed.
+- Fixed bug where error callback was used instead of success callback when the device unexpectedly disconnected. [\#209](https://github.com/randdusing/BluetoothLE/issues/209)
+- Fixed bug where non-BLE devices were returned with retrieveConnected on Android
+- Added permissions information to Android discovery.
+- Updated and simplified Angular wrapper. Timeouts can now specified for almost any type of operation. Improved its example.
+- Removed example. Use the Angular wrapper's example instead. Keeping both examples up to date was too time consuming.
+- Changed license to MIT.
+
+## 2.7.1 - 2016-01-12
+### Changes
+- Forgot to increment version
 
 ## 2.7.0 - 2015-12-30
-## Changes
+### Changes
 - Close can now be called if the device isn't already disconnected.
 
 ## 2.6.0 - 2015-12-30
-## Changes
+### Changes
 - Instead of automatically requesting permissions on scan. It can now be done via the hasPermission and requestPermission functions available for Android. This only needs to be done on Android 6.0 / SDK 23.
 
 ## 2.5.0 - 2015-11-10

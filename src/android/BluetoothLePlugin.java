@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.ParcelUuid;
 import android.util.Base64;
 
 import android.app.Activity;
@@ -24,6 +25,11 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.ScanSettings;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.BluetoothLeScanner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +40,8 @@ import java.util.UUID;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.util.Log;
 
 @SuppressWarnings("unchecked")
 
@@ -100,14 +108,19 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String keyName = "name";
   private final String keyAddress = "address";
   private final String keyRssi = "rssi";
+  private final String keyScanMode = "scanMode";
+  private final String keyMatchMode = "matchMode";
+  private final String keyMatchNum = "matchNum";
+  private final String keyCallbackType = "callbackType";
   private final String keyAdvertisement = "advertisement";
-  private final String keyServiceUuids = "serviceUuids";
-  private final String keyServiceUuid = "serviceUuid";
-  private final String keyCharacteristicUuid = "characteristicUuid";
-  private final String keyDescriptorUuid = "descriptorUuid";
+  private final String keyUuid = "uuid";
+  private final String keyService = "service";
   private final String keyServices = "services";
+  private final String keyCharacteristic = "characteristic";
   private final String keyCharacteristics = "characteristics";
   private final String keyProperties = "properties";
+  private final String keyPermissions = "permissions";
+  private final String keyDescriptor = "descriptor";
   private final String keyDescriptors = "descriptors";
   private final String keyValue = "value";
   private final String keyType = "type";
@@ -128,13 +141,12 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   //Status Types
   private final String statusEnabled = "enabled";
+  private final String statusDisabled = "disabled";
   private final String statusScanStarted = "scanStarted";
   private final String statusScanStopped = "scanStopped";
   private final String statusScanResult = "scanResult";
   private final String statusConnected = "connected";
-  private final String statusConnecting = "connecting";
   private final String statusDisconnected = "disconnected";
-  private final String statusDisconnecting = "disconnecting";
   private final String statusClosed = "closed";
   private final String statusDiscovered = "discovered";
   private final String statusRead = "read";
@@ -162,6 +174,16 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String propertyConnectionPriorityHigh = "high";
   private final String propertyConnectionPriorityLow = "low";
   private final String propertyConnectionPriorityBalanced = "balanced";
+
+  //Permissions
+  private final String permissionRead = "read";
+  private final String permissionReadEncrypted = "readEncrypted";
+  private final String permissionReadEncryptedMITM = "readEncryptedMITM";
+  private final String permissionWrite = "write";
+  private final String permissionWriteEncrypted = "writeEncrypted";
+  private final String permissionWriteEncryptedMITM = "writeEncryptedMITM";
+  private final String permissionWriteSigned = "writeSigned";
+  private final String permissionWriteSignedMITM = "writeSignedMITM";
 
   //Error Types
   private final String errorInitialize = "initialize";
@@ -223,7 +245,9 @@ public class BluetoothLePlugin extends CordovaPlugin
   private final String logReadFail = "Unable to read";
   private final String logReadFailReturn = "Unable to read on return";
   private final String logSubscribeFail = "Unable to subscribe";
+  private final String logSubscribeAlready = "Already subscribed";
   private final String logUnsubscribeFail = "Unable to unsubscribe";
+  private final String logUnsubscribeAlready = "Already unsubscribed";
   private final String logWriteFail = "Unable to write";
   private final String logWriteFailReturn = "Unable to write on return";
   private final String logWriteValueNotFound = "Write value not found";
@@ -584,10 +608,10 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
       else
       {
-        addProperty(returnObj, keyError, errorEnable);
+        addProperty(returnObj, keyStatus, statusDisabled);
         addProperty(returnObj, keyMessage, logNotEnabled);
 
-        pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+        pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
         pluginResult.setKeepCallback(true);
         initCallbackContext.sendPluginResult(pluginResult);
       }
@@ -640,9 +664,9 @@ public class BluetoothLePlugin extends CordovaPlugin
     //No request, so send back not enabled
     else
     {
-      addProperty(returnObj, keyError, errorEnable);
+      addProperty(returnObj, keyStatus, statusDisabled);
       addProperty(returnObj, keyMessage, logNotEnabled);
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
       pluginResult.setKeepCallback(true);
       initCallbackContext.sendPluginResult(pluginResult);
     }
@@ -707,11 +731,10 @@ public class BluetoothLePlugin extends CordovaPlugin
         return;
       }
 
-      JSONObject returnObj = new JSONObject();
-
       //If the adapter is already scanning, don't call another scan.
       if (scanCallbackContext != null)
       {
+        JSONObject returnObj = new JSONObject();
         addProperty(returnObj, keyError, errorStartScan);
         addProperty(returnObj, keyMessage, logAlreadyScanning);
         callbackContext.error(returnObj);
@@ -720,44 +743,77 @@ public class BluetoothLePlugin extends CordovaPlugin
 
       //Get the service UUIDs from the arguments
       JSONObject obj = getArgsObject(args);
-
-      UUID[] serviceUuids = null;
-
-      if (obj != null)
-      {
-        serviceUuids = getServiceUuids(obj);
-      }
+      UUID[] uuids = getServiceUuids(obj);
 
       //Save the callback context for reporting back found connections. Also the isScanning flag
       scanCallbackContext = callbackContext;
-
-      //Start the scan with or without service UUIDs
-      boolean result;
-      if (serviceUuids == null || serviceUuids.length == 0)
+      
+      if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP)
       {
-        result = bluetoothAdapter.startLeScan(scanCallback);
+        boolean result = uuids.length==0 ? bluetoothAdapter.startLeScan(scanCallbackKitKat) : bluetoothAdapter.startLeScan(uuids, scanCallbackKitKat);
+
+        if (!result) // scan did not start
+        {
+          JSONObject returnObj = new JSONObject();
+          addProperty(returnObj, keyError, errorStartScan);
+          addProperty(returnObj, keyMessage, logScanStartFail);
+          callbackContext.error(returnObj);
+          scanCallbackContext = null;
+          return;
+        }
       }
       else
       {
-        result = bluetoothAdapter.startLeScan(serviceUuids, scanCallback);
+        /* build the ScanFilters */
+        ArrayList<ScanFilter> scanFilter = new ArrayList<ScanFilter>();
+        for (UUID uuid : getServiceUuids(obj)) {
+          ScanFilter.Builder builder = new ScanFilter.Builder();
+          builder.setServiceUuid(new ParcelUuid(uuid));
+          scanFilter.add(builder.build());
+        }
+
+        /* build the ScanSetting */
+        ScanSettings.Builder scanSettings = new ScanSettings.Builder();
+        scanSettings.setReportDelay(0);
+
+        int scanMode = obj.optInt(keyScanMode, ScanSettings.SCAN_MODE_LOW_LATENCY);
+        try { scanSettings.setScanMode(scanMode); }
+        catch(java.lang.IllegalArgumentException e) {
+        }
+
+        if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+        {
+          int matchMode = obj.optInt(keyMatchMode, ScanSettings.MATCH_MODE_AGGRESSIVE);
+          try { scanSettings.setMatchMode(matchMode); }
+          catch(java.lang.IllegalArgumentException e) {
+          }
+          
+          int matchNum = obj.optInt(keyMatchNum, ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT);
+          try { scanSettings.setNumOfMatches(matchNum); }
+          catch(java.lang.IllegalArgumentException e) {
+          }
+          
+          int callbackType = obj.optInt(keyCallbackType, ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
+          try { scanSettings.setCallbackType(callbackType); }
+          catch(java.lang.IllegalArgumentException e) {
+          }
+        }
+
+        //Start the scan with or without service UUIDs
+        bluetoothAdapter.getBluetoothLeScanner().startScan(scanFilter, scanSettings.build(), scanCallback);
       }
 
-      //If the scan didn't start...
-      if (!result)
       {
-        addProperty(returnObj, keyError, errorStartScan);
-        addProperty(returnObj, keyMessage, logScanStartFail);
-        callbackContext.error(returnObj);
-        scanCallbackContext = null;
-        return;
+        JSONObject returnObj = new JSONObject();
+
+        //Notify user of started scan and save callback
+        addProperty(returnObj, keyStatus, statusScanStarted);
+
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+        pluginResult.setKeepCallback(true);
+        callbackContext.sendPluginResult(pluginResult);
       }
-
-      //Notify user of started scan and save callback
-      addProperty(returnObj, keyStatus, statusScanStarted);
-
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      callbackContext.sendPluginResult(pluginResult);
+      
     }
   }
 
@@ -779,9 +835,15 @@ public class BluetoothLePlugin extends CordovaPlugin
         callbackContext.error(returnObj);
         return;
       }
-
-      //Stop the scan
-      bluetoothAdapter.stopLeScan(scanCallback);
+      
+      if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP)
+      {
+        bluetoothAdapter.stopLeScan(scanCallbackKitKat);
+      }
+      else
+      {
+        bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+      }
 
       //Set scanning state
       scanCallbackContext = null;
@@ -802,18 +864,17 @@ public class BluetoothLePlugin extends CordovaPlugin
 
     /*JSONObject obj = getArgsObject(args);
 
-    UUID[] serviceUuids = null;
-
-    if (obj != null)
-    {
-      serviceUuids = getServiceUuids(obj);
-    }*/
+    UUID[] serviceUuids = serviceUuids = getServiceUuids(obj);*/
 
     JSONArray returnArray = new JSONArray();
 
     Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
     for (BluetoothDevice device : devices)
     {
+      if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE) {
+        continue;
+      }
+      
       /*if (serviceUuids != null)
       {
         ParcelUuid[] uuids = device.getUuids();
@@ -907,16 +968,6 @@ public class BluetoothLePlugin extends CordovaPlugin
     connection.put(keyPeripheral, bluetoothGatt);
 
     connections.put(device.getAddress(), connection);
-
-    //Return connecting status
-    addProperty(returnObj, keyStatus, statusConnecting);
-
-    addDevice(returnObj, device);
-
-    //Keep the callback
-    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-    pluginResult.setKeepCallback(true);
-    callbackContext.sendPluginResult(pluginResult);
   }
 
   private void reconnectAction(JSONArray args, CallbackContext callbackContext)
@@ -969,13 +1020,6 @@ public class BluetoothLePlugin extends CordovaPlugin
     connection.put(keyState, BluetoothProfile.STATE_CONNECTING);
     connection.put(keyDiscoveredState, STATE_UNDISCOVERED);
     connection.put(operationConnect, callbackContext);
-
-    //Return connecting status and keep callback
-    addProperty(returnObj, keyStatus, statusConnecting);
-
-    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-    pluginResult.setKeepCallback(true);
-    callbackContext.sendPluginResult(pluginResult);
   }
 
   private void disconnectAction(JSONArray args, CallbackContext callbackContext)
@@ -1033,13 +1077,6 @@ public class BluetoothLePlugin extends CordovaPlugin
     //Very unlikely that this is DISCONNECTING
     else
     {
-      addProperty(returnObj, keyStatus, statusDisconnecting);
-      connection.put(keyState, BluetoothProfile.STATE_DISCONNECTING);
-
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      callbackContext.sendPluginResult(pluginResult);
-
       connection.put(operationConnect, callbackContext);
     }
 
@@ -1286,6 +1323,15 @@ public class BluetoothLePlugin extends CordovaPlugin
     addDevice(returnObj, device);
 
     addCharacteristic(returnObj, characteristic);
+    
+    CallbackContext checkExisting = GetCallback(characteristicUuid, connection, operationSubscribe);
+    if (checkExisting != null)
+    {
+      addProperty(returnObj, keyError, errorSubscription);
+      addProperty(returnObj, keyMessage, logSubscribeAlready);
+      callbackContext.error(returnObj);
+      return;
+    }
 
     boolean result = false;
 
@@ -1383,6 +1429,16 @@ public class BluetoothLePlugin extends CordovaPlugin
     addDevice(returnObj, device);
 
     addCharacteristic(returnObj, characteristic);
+    
+    CallbackContext checkExisting = GetCallback(characteristicUuid, connection, operationSubscribe);
+    if (checkExisting == null)
+    {
+      addProperty(returnObj, keyError, errorSubscription);
+      addProperty(returnObj, keyMessage, logUnsubscribeAlready);
+      callbackContext.error(returnObj);
+      return;
+    }
+    RemoveCallback(characteristicUuid, connection, operationSubscribe);
 
     //Set the descriptor for disabling notification/indication
     boolean result = descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
@@ -2065,7 +2121,7 @@ public class BluetoothLePlugin extends CordovaPlugin
           //case BluetoothAdapter.STATE_TURNING_OFF:
           //case BluetoothAdapter.STATE_TURNING_ON:
 
-            addProperty(returnObj, keyError, errorEnable);
+            addProperty(returnObj, keyStatus, statusDisabled);
             addProperty(returnObj, keyMessage, logNotEnabled);
 
             connections = new HashMap<Object, HashMap<Object,Object>>();
@@ -2073,7 +2129,7 @@ public class BluetoothLePlugin extends CordovaPlugin
               scanCallbackContext = null;
             }
 
-            pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
+            pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
             pluginResult.setKeepCallback(true);
             initCallbackContext.sendPluginResult(pluginResult);
 
@@ -2108,7 +2164,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       if (!bluetoothAdapter.isEnabled())
       {
         JSONObject returnObj = new JSONObject();
-        addProperty(returnObj, keyError, errorEnable);
+        addProperty(returnObj, keyStatus, statusDisabled);
         addProperty(returnObj, keyMessage, logNotEnabled);
 
         PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
@@ -2118,8 +2174,8 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
   }
 
-  //Scan Callback
-  private LeScanCallback scanCallback = new LeScanCallback()
+  //Scan Callback for KitKat
+  private LeScanCallback scanCallbackKitKat = new LeScanCallback()
   {
     @Override
     public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
@@ -2144,6 +2200,61 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
     }
   };
+  
+  //Scan Callback
+  private ScanCallback scanCallback = new ScanCallback()
+  {
+    @Override
+    public void onBatchScanResults(List<ScanResult> results) {
+      if (scanCallbackContext == null)
+        return;
+    }
+
+    @Override
+    public void onScanFailed(int errorCode) {
+      synchronized(scanLock) {
+        if (scanCallbackContext == null)
+          return;
+
+        JSONObject returnObj = new JSONObject();
+        addProperty(returnObj, keyError, errorStartScan);
+        
+        if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
+          addProperty(returnObj, keyMessage, "Scan already started");
+        } else if (errorCode == ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
+          addProperty(returnObj, keyMessage, "Application registration failed");
+        } else if (errorCode == ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED) {
+          addProperty(returnObj, keyMessage, "Feature unsupported");
+        } else if (errorCode == ScanCallback.SCAN_FAILED_INTERNAL_ERROR) {
+          addProperty(returnObj, keyMessage, "Internal error");
+        } else {
+          addProperty(returnObj, keyMessage, logScanStartFail);
+        }
+
+        scanCallbackContext.error(returnObj);
+        scanCallbackContext = null;
+      }
+    }
+
+    @Override
+    public void onScanResult(int callbackType, ScanResult result) {
+      synchronized(scanLock) {
+        if (scanCallbackContext == null)
+          return;
+
+        JSONObject returnObj = new JSONObject();
+
+        addDevice(returnObj, result.getDevice());
+        addProperty(returnObj, keyRssi, result.getRssi());
+        addPropertyBytes(returnObj, keyAdvertisement, result.getScanRecord().getBytes());
+        addProperty(returnObj, keyStatus, statusScanResult);
+
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+        pluginResult.setKeepCallback(true);
+        scanCallbackContext.sendPluginResult(pluginResult);
+      }
+    }
+  };
 
   private String formatUuid(UUID uuid)
   {
@@ -2160,7 +2271,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //Helpers for BluetoothGatt classes
   private BluetoothGattService getService(BluetoothGatt bluetoothGatt, JSONObject obj)
   {
-    String uuidServiceValue = obj.optString(keyServiceUuid, null);
+    String uuidServiceValue = obj.optString(keyService, null);
 
     if (uuidServiceValue == null)
     {
@@ -2195,7 +2306,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private BluetoothGattCharacteristic getCharacteristic(JSONObject obj, BluetoothGattService service)
   {
-    String uuidCharacteristicValue = obj.optString(keyCharacteristicUuid, null);
+    String uuidCharacteristicValue = obj.optString(keyCharacteristic, null);
 
     if (uuidCharacteristicValue == null)
     {
@@ -2230,7 +2341,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private BluetoothGattDescriptor getDescriptor(JSONObject obj, BluetoothGattCharacteristic characteristic)
   {
-    String uuidDescriptorValue = obj.optString(keyDescriptorUuid, null);
+    String uuidDescriptorValue = obj.optString(keyDescriptor, null);
 
     if (uuidDescriptorValue == null)
     {
@@ -2669,14 +2780,14 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private void addCharacteristic(JSONObject returnObj, BluetoothGattCharacteristic characteristic)
   {
-    addProperty(returnObj, keyServiceUuid, formatUuid(characteristic.getService().getUuid()));
-    addProperty(returnObj, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
+    addProperty(returnObj, keyService, formatUuid(characteristic.getService().getUuid()));
+    addProperty(returnObj, keyCharacteristic, formatUuid(characteristic.getUuid()));
   }
 
   private void addDescriptor(JSONObject returnObj, BluetoothGattDescriptor descriptor)
   {
     addCharacteristic(returnObj, descriptor.getCharacteristic());
-    addProperty(returnObj, keyDescriptorUuid, formatUuid(descriptor.getUuid()));
+    addProperty(returnObj, keyDescriptor, formatUuid(descriptor.getUuid()));
   }
 
   //General Helpers
@@ -2741,11 +2852,15 @@ public class BluetoothLePlugin extends CordovaPlugin
 
   private UUID[] getServiceUuids(JSONObject obj)
   {
-    JSONArray array = obj.optJSONArray(keyServiceUuids);
+    if (obj == null) {
+      return new UUID[] {};
+    }
+    
+    JSONArray array = obj.optJSONArray(keyServices);
 
     if (array == null)
     {
-      return null;
+      return new UUID[] {};
     }
 
     //Create temporary array list for building array of UUIDs
@@ -2766,7 +2881,6 @@ public class BluetoothLePlugin extends CordovaPlugin
         value = baseUuidStart + value + baseUuidEnd;
       }
 
-
       //Try converting string to UUID and add to list
       try
       {
@@ -2778,15 +2892,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
     }
 
-    //If anything was actually added, convert list to array
-    int size = arrayList.size();
-
-    if (size == 0)
-    {
-      return null;
-    }
-
-    UUID[] uuids = new UUID[size];
+    UUID[] uuids = new UUID[arrayList.size()];
     uuids = arrayList.toArray(uuids);
     return uuids;
   }
@@ -2861,7 +2967,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     {
       JSONObject serviceObject = new JSONObject();
 
-      addProperty(serviceObject, keyServiceUuid, formatUuid(service.getUuid()));
+      addProperty(serviceObject, keyUuid, formatUuid(service.getUuid()));
 
       JSONArray characteristicsArray = new JSONArray();
 
@@ -2871,8 +2977,9 @@ public class BluetoothLePlugin extends CordovaPlugin
       {
         JSONObject characteristicObject = new JSONObject();
 
-        addProperty(characteristicObject, keyCharacteristicUuid, formatUuid(characteristic.getUuid()));
+        addProperty(characteristicObject, keyUuid, formatUuid(characteristic.getUuid()));
         addProperty(characteristicObject, keyProperties, getProperties(characteristic));
+        addProperty(characteristicObject, keyPermissions, getPermissions(characteristic));
 
         JSONArray descriptorsArray = new JSONArray();
 
@@ -2882,7 +2989,7 @@ public class BluetoothLePlugin extends CordovaPlugin
         {
           JSONObject descriptorObject = new JSONObject();
 
-          addProperty(descriptorObject, keyDescriptorUuid, formatUuid(descriptor.getUuid()));
+          addProperty(descriptorObject, keyUuid, formatUuid(descriptor.getUuid()));
 
           descriptorsArray.put(descriptorObject);
         }
@@ -2959,6 +3066,55 @@ public class BluetoothLePlugin extends CordovaPlugin
     }
 
     return propertiesObject;
+  }
+
+  private JSONObject getPermissions(BluetoothGattCharacteristic characteristic)
+  {
+    int permissions = characteristic.getPermissions();
+    
+    JSONObject permissionsObject = new JSONObject();
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_READ) == BluetoothGattCharacteristic.PERMISSION_READ)
+    {
+      addProperty(permissionsObject, permissionRead, true);
+    }
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED) == BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED)
+    {
+      addProperty(permissionsObject, permissionReadEncrypted, true);
+    }
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM) == BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM)
+    {
+      addProperty(permissionsObject, permissionReadEncryptedMITM, true);
+    }
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_WRITE) == BluetoothGattCharacteristic.PERMISSION_WRITE)
+    {
+      addProperty(permissionsObject, permissionWrite, true);
+    }
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED) == BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED)
+    {
+      addProperty(permissionsObject, permissionWriteEncrypted, true);
+    }
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM) == BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM)
+    {
+      addProperty(permissionsObject, permissionWriteEncryptedMITM, true);
+    }
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED) == BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED)
+    {
+      addProperty(permissionsObject, permissionWriteSigned, true);
+    }
+
+    if ((permissions & BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED_MITM) == BluetoothGattCharacteristic.PERMISSION_WRITE_SIGNED_MITM)
+    {
+      addProperty(permissionsObject, permissionWriteSignedMITM, true);
+    }
+
+    return permissionsObject;
   }
 
   //Bluetooth callback for connecting, discovering, reading and writing
