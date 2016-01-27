@@ -1,5 +1,8 @@
 # Change Log
 
+## 3.0.1 - 2016-01-26
+- Fixed issue with API21+ code running on earlier API versions and causing the plugin to crash.
+
 ## 3.0.0 - 2016-01-25
 - Removed connecting / disconnecting statuses since they didn't provide much value and complicated the callback logic.
 - Shortened serviceUuid, characteristicUuid, descriptorUuid to uuid or service/characteristic/descriptor depending on the context. See the readme for more info.

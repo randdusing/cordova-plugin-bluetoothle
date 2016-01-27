@@ -2202,59 +2202,68 @@ public class BluetoothLePlugin extends CordovaPlugin
   };
   
   //Scan Callback
-  private ScanCallback scanCallback = new ScanCallback()
-  {
-    @Override
-    public void onBatchScanResults(List<ScanResult> results) {
-      if (scanCallbackContext == null)
-        return;
+  private ScanCallback scanCallback = null;
+  
+  //TODO Is there a cleaner way to prevent this from running on KitKat
+  protected void pluginInitialize() {
+    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
+      return;
     }
-
-    @Override
-    public void onScanFailed(int errorCode) {
-      synchronized(scanLock) {
+    
+    scanCallback = new ScanCallback()
+    {
+      @Override
+      public void onBatchScanResults(List<ScanResult> results) {
         if (scanCallbackContext == null)
           return;
+      }
 
-        JSONObject returnObj = new JSONObject();
-        addProperty(returnObj, keyError, errorStartScan);
-        
-        if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
-          addProperty(returnObj, keyMessage, "Scan already started");
-        } else if (errorCode == ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
-          addProperty(returnObj, keyMessage, "Application registration failed");
-        } else if (errorCode == ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED) {
-          addProperty(returnObj, keyMessage, "Feature unsupported");
-        } else if (errorCode == ScanCallback.SCAN_FAILED_INTERNAL_ERROR) {
-          addProperty(returnObj, keyMessage, "Internal error");
-        } else {
-          addProperty(returnObj, keyMessage, logScanStartFail);
+      @Override
+      public void onScanFailed(int errorCode) {
+        synchronized(scanLock) {
+          if (scanCallbackContext == null)
+            return;
+
+          JSONObject returnObj = new JSONObject();
+          addProperty(returnObj, keyError, errorStartScan);
+
+          if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
+            addProperty(returnObj, keyMessage, "Scan already started");
+          } else if (errorCode == ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
+            addProperty(returnObj, keyMessage, "Application registration failed");
+          } else if (errorCode == ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED) {
+            addProperty(returnObj, keyMessage, "Feature unsupported");
+          } else if (errorCode == ScanCallback.SCAN_FAILED_INTERNAL_ERROR) {
+            addProperty(returnObj, keyMessage, "Internal error");
+          } else {
+            addProperty(returnObj, keyMessage, logScanStartFail);
+          }
+
+          scanCallbackContext.error(returnObj);
+          scanCallbackContext = null;
         }
-
-        scanCallbackContext.error(returnObj);
-        scanCallbackContext = null;
       }
-    }
 
-    @Override
-    public void onScanResult(int callbackType, ScanResult result) {
-      synchronized(scanLock) {
-        if (scanCallbackContext == null)
-          return;
+      @Override
+      public void onScanResult(int callbackType, ScanResult result) {
+        synchronized(scanLock) {
+          if (scanCallbackContext == null)
+            return;
 
-        JSONObject returnObj = new JSONObject();
+          JSONObject returnObj = new JSONObject();
 
-        addDevice(returnObj, result.getDevice());
-        addProperty(returnObj, keyRssi, result.getRssi());
-        addPropertyBytes(returnObj, keyAdvertisement, result.getScanRecord().getBytes());
-        addProperty(returnObj, keyStatus, statusScanResult);
+          addDevice(returnObj, result.getDevice());
+          addProperty(returnObj, keyRssi, result.getRssi());
+          addPropertyBytes(returnObj, keyAdvertisement, result.getScanRecord().getBytes());
+          addProperty(returnObj, keyStatus, statusScanResult);
 
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-        pluginResult.setKeepCallback(true);
-        scanCallbackContext.sendPluginResult(pluginResult);
+          PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+          pluginResult.setKeepCallback(true);
+          scanCallbackContext.sendPluginResult(pluginResult);
+        }
       }
-    }
-  };
+    };
+  }
 
   private String formatUuid(UUID uuid)
   {
