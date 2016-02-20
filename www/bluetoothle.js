@@ -90,6 +90,35 @@ var bluetoothle = {
   requestPermission: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "requestPermission", []);
   },
+  
+  initializePeripheral: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "initializePeripheral", [params]);
+  },
+  addService: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "addService", [params]);
+  },
+  removeService: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "removeService", [params]);
+  },
+  removeAllServices: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "removeAllServices", [params]);
+  },
+  startAdvertising: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "startAdvertising", [params]);
+  },
+  stopAdvertising: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "stopAdvertising", [params]);
+  },
+  isAdvertising: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isAdvertising", []);
+  },
+  respondToRequest: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "respondToRequest", [params]);
+  },
+  updateValue: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "updateValue", [params]);
+  },
+  
   encodedStringToBytes: function(string) {
     var data = atob(string);
     var bytes = new Uint8Array(data.length);

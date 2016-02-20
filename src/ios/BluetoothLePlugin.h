@@ -5,11 +5,17 @@
 {
     CBCentralManager *centralManager;
     NSNumber* statusReceiver;
-
     NSString* initCallback;
     NSString* scanCallback;
-
     NSMutableDictionary* connections;
+  
+    CBPeripheralManager* peripheralManager;
+    NSString* initPeripheralCallback;
+    NSString* addServiceCallback;
+    NSString* advertisingCallback;
+    int requestId;
+    NSMutableDictionary* requestsHash;
+    NSMutableDictionary* servicesHash;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;
@@ -42,6 +48,16 @@
 - (void)isDiscovered:(CDVInvokedUrlCommand *)command;
 - (void)hasPermission:(CDVInvokedUrlCommand *)command;
 - (void)requestPermission:(CDVInvokedUrlCommand *)command;
+
+- (void)initializePeripheral:(CDVInvokedUrlCommand *)command;
+- (void)addService:(CDVInvokedUrlCommand *)command;
+- (void)removeService:(CDVInvokedUrlCommand *)command;
+- (void)removeAllServices:(CDVInvokedUrlCommand *)command;
+- (void)startAdvertising:(CDVInvokedUrlCommand *)command;
+- (void)stopAdvertising:(CDVInvokedUrlCommand *)command;
+- (void)isAdvertising:(CDVInvokedUrlCommand *)command;
+- (void)respondToRequest:(CDVInvokedUrlCommand *)command;
+- (void)updateValue:(CDVInvokedUrlCommand *)command;
 
 @end
 

@@ -62,6 +62,8 @@ By default, background mode is enabled. If you wish to remove this, follow the s
 7. Remove the willRestoreState function  
 8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used  
 
+//TODO Add for peripheral mode
+
 
 Updating the plugin for iOS sometimes causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries. To fix:
 1. Click your project to open the "properties" window  
@@ -126,6 +128,16 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isDiscovered] (#isdiscovered)
 * [bluetoothle.hasPermission] (#haspermission) (Android)
 * [bluetoothle.requestPermission] (#requestpermission) (Android)
+
+* [bluetoothle.initializePeripheral] (#initializeperipheral)
+* [bluetoothle.addService] (#addservice)
+* [bluetoothle.removeService] (#removeservice)
+* [bluetoothle.removeAllServices] (#removeallservices)
+* [bluetoothle.startAdvertising] (#startadvertising)
+* [bluetoothle.stopAdvertising] (#stopadvertising)
+* [bluetoothle.respondToRequest] (#respondtorequest)
+* [bluetoothle.updateValue] (#updatevalue)
+
 * [bluetoothle.encodedStringToBytes] (#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
@@ -184,7 +196,7 @@ Characteristics can have the following different properties: broadcast, read, wr
 
 
 
-## Life Cycle ##
+## Central Life Cycle ##
 
 1. initialize
 2. scan (if device address is unknown)
@@ -194,11 +206,103 @@ Characteristics can have the following different properties: broadcast, read, wr
 6. disconnect
 7. close
 
+## Peripheral Life Cycle ##
+
+1. initializePeripheral
+2. addService
+3. startAdvertising
+4. Listen for events on initializePeripheral callback
+5. Respond to events using respondToRequest or updateValue
+6. stopAdvertising
+7. removeService / removeAllServices
+
 
 ## Functions ##
 
+### initializePeripheral ###
+Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must readd services, start advertising, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. This function should only be called once.
+
+Additionally this where new events are delivered for responding to reads, writes, subscriptions, etc. See the success section for more details.
+
+```javascript
+bluetoothle.initializePeripheral(success, error, params);
+```
+
+##### Params #####
+* request = true / false (default) - Should user be prompted to enable Bluetooth
+
+```javascript
+{
+  "request": true
+}
+```
+
+
+##### Success #####
+* status => enabled = Bluetooth is enabled
+* status => disabled = Bluetooth is disabled
+* status => readRequestReceived = Respond to a read request with responseToRequest()
+* status => writeRequestReceived = Respond to a write request with responseToRequest()
+* status => subscribedToCharacteristic = Subscription started request, use updateValue() to send new data
+* status => unsubscribedToCharacteristic = Subscription ended request, stop sending data.
+* status => peripheralManagerIsReadyToUpdateSubscribers = Resume sending subscription updates
+
+```javascript
+{
+  "status": "enabled"
+}
+```
+
+
+
+### addService ###
+Add a service with characteristics and descriptors. If more than one service is added, add them sequentially.
+
+```javascript
+bluetoothle.initializePeripheral(success, error, params);
+```
+
+##### Params #####
+```javascript
+var params = {
+  uuid: "1234",
+  characteristics: [
+    {
+      uuid: "ABCD",
+      permissions: {
+        readable: true,
+        writeable: true,
+        //readEncryptionRequired: true,
+        //writeEncryptionRequired: true,
+      },
+      properties : {
+        read: true,
+        writeWithoutResponse: true,
+        write: true,
+        notify: true,
+        indicate: true,
+        //authenticatedSignedWrites: true,
+        //notifyEncryptionRequired: true,
+        //indicateEncryptionRequired: true,
+      },
+      value: "base64encodedstring"
+    }
+  ]
+};
+```
+
+
+##### Return #####
+```javascript
+{
+  "service":"1234"
+}
+```
+
+
+
 ### initialize ###
-Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must connect to the device, start a read/write operation, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. Also, this function should only be called once.
+Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must connect to the device, start a read/write operation, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. This function should only be called once.
 
 ```javascript
 bluetoothle.initialize(initializeSuccess, initializeError, params);

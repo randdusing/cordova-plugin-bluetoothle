@@ -141,6 +141,511 @@ NSString *const operationWrite = @"write";
 
 @implementation BluetoothLePlugin
 
+//Peripheral Manager Functions
+- (void)initializePeripheral:(CDVInvokedUrlCommand *)command {
+  initPeripheralCallback = command.callbackId;
+
+  requestId = 0;
+  requestsHash = [[NSMutableDictionary alloc] init];
+  servicesHash = [[NSMutableDictionary alloc] init];
+
+  NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
+
+  NSNumber* request = [obj valueForKey:@"request"];
+
+  peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil options:@{ CBPeripheralManagerOptionRestoreIdentifierKey:pluginName, CBPeripheralManagerOptionShowPowerAlertKey:request }];
+}
+
+- (void)addService:(CDVInvokedUrlCommand *)command {
+  NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
+  CBUUID* serviceUuid = [CBUUID UUIDWithString:[obj valueForKey:@"uuid"]];
+
+  CBMutableService* service = [[CBMutableService alloc] initWithType:serviceUuid primary:YES];
+
+  NSArray* characteristicsIn = [obj valueForKey:@"characteristics"];
+  NSMutableArray* characteristics = [[NSMutableArray alloc] init];
+
+  for (NSDictionary* characteristicIn in characteristicsIn) {
+      CBUUID* characteristicUuid = [CBUUID UUIDWithString:[characteristicIn valueForKey:@"uuid"]];
+
+      NSDictionary* propertiesIn = [characteristicIn valueForKey:@"properties"];
+      CBCharacteristicProperties properties = 0;
+
+      if (propertiesIn) {
+          if ([propertiesIn valueForKey:@"read"]) {
+              properties |= CBCharacteristicPropertyRead;
+          }
+
+          if ([propertiesIn valueForKey:@"writeWithoutResponse"]) {
+              properties |= CBCharacteristicPropertyWriteWithoutResponse;
+          }
+
+          if ([propertiesIn valueForKey:@"write"]) {
+              properties |= CBCharacteristicPropertyWrite;
+          }
+
+          if ([propertiesIn valueForKey:@"notify"]) {
+              properties |= CBCharacteristicPropertyNotify;
+          }
+
+          if ([propertiesIn valueForKey:@"indicate"]) {
+              properties |= CBCharacteristicPropertyIndicate;
+          }
+
+          if ([propertiesIn valueForKey:@"authenticatedSignedWrites"]) {
+              properties |= CBCharacteristicPropertyAuthenticatedSignedWrites;
+          }
+
+          if ([propertiesIn valueForKey:@"notifyEncryptionRequired"]) {
+              properties |= CBCharacteristicPropertyNotifyEncryptionRequired;
+          }
+
+          if ([propertiesIn valueForKey:@"indicateEncryptionRequired"]) {
+              properties |= CBCharacteristicPropertyIndicateEncryptionRequired;
+          }
+      }
+
+      NSData* value = [self getValue:characteristicIn];
+
+      NSDictionary* permissionsIn = [characteristicIn valueForKey:@"permissions"];
+      CBAttributePermissions permissions = 0;
+
+      if (permissionsIn) {
+          if ([permissionsIn valueForKey:@"readable"]) {
+              permissions |= CBAttributePermissionsReadable;
+          }
+
+          if ([permissionsIn valueForKey:@"writeable"]) {
+              permissions |= CBAttributePermissionsWriteable;
+          }
+
+          if ([permissionsIn valueForKey:@"readEncryptionRequired"]) {
+              permissions |= CBAttributePermissionsReadEncryptionRequired;
+          }
+
+          if ([permissionsIn valueForKey:@"writeEncryptionRequired"]) {
+              permissions |= CBAttributePermissionsWriteEncryptionRequired;
+          }
+      }
+
+      CBCharacteristic* characteristic = [[CBMutableCharacteristic alloc] initWithType:characteristicUuid properties:properties value:value permissions:permissions];
+
+      [characteristics addObject:characteristic];
+  }
+
+  service.characteristics = characteristics;
+
+  addServiceCallback = command.callbackId;
+
+  [peripheralManager addService:service];
+}
+
+- (void)removeService:(CDVInvokedUrlCommand *)command {
+  NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
+  CBUUID* uuid = [CBUUID UUIDWithString:[obj valueForKey:@"uuid"]];
+
+  CBService* service = [servicesHash objectForKey:uuid];
+  if (!service) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:uuid.UUIDString forKey:@"service"];
+    [returnObj setValue:@"service" forKey:@"error"];
+    [returnObj setValue:@"Service doesn't exist" forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+  }
+
+  [peripheralManager removeService:service];
+
+  [servicesHash removeObjectForKey:service.UUID];
+
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+  [returnObj setValue:service.UUID.UUIDString forKey:@"service"];
+  [returnObj setValue:@"serviceRemoved" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)removeAllServices:(CDVInvokedUrlCommand *)command {
+  [peripheralManager removeAllServices];
+
+  servicesHash = [[NSMutableDictionary alloc] init];
+
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+  [returnObj setValue:@"allServicesRemoved" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)startAdvertising:(CDVInvokedUrlCommand *)command {
+  if (peripheralManager.isAdvertising) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:@"startAdvertising" forKey:@"error"];
+    [returnObj setValue:@"Advertising already started" forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+  }
+
+  NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
+  NSMutableArray* services = [self getUuids:obj forType:@"services"];
+  NSString* name = [obj valueForKey:@"name"];
+
+  advertisingCallback = command.callbackId;
+
+  [peripheralManager startAdvertising:@{ CBAdvertisementDataServiceUUIDsKey : services, CBAdvertisementDataLocalNameKey: name}];
+}
+
+- (void)stopAdvertising:(CDVInvokedUrlCommand *)command {
+  if (!peripheralManager.isAdvertising) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:@"stopAdvertising" forKey:@"error"];
+    [returnObj setValue:@"Advertising already stopped" forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+  }
+
+  [peripheralManager stopAdvertising];
+
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+  [returnObj setValue:@"advertisingStopped" forKey:@"status"];
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)isAdvertising:(CDVInvokedUrlCommand *)command {
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+  [returnObj setValue:[NSNumber numberWithBool:peripheralManager.isAdvertising] forKey:@"isAdvertising"];
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)respondToRequest:(CDVInvokedUrlCommand *)command {
+  NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
+
+  NSNumber* checkRequestId = [obj valueForKey:@"requestId"];
+
+  CBATTRequest* request = [requestsHash objectForKey:checkRequestId];
+  if (!request) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:checkRequestId forKey:@"request"];
+    [returnObj setValue:@"request" forKey:@"error"];
+    [returnObj setValue:@"Request doesn't exist" forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    return;
+  }
+
+  NSData* value = [self getValue:obj];
+
+  CBATTError code = CBATTErrorSuccess;
+
+  NSString* checkCode = [obj valueForKey:@"code"];
+  if (checkCode) {
+    if ([checkCode isEqualToString:@"invalidHandle"]) {
+      code = CBATTErrorInvalidHandle;
+    } else if ([checkCode isEqualToString:@"readNotPermitted"]) {
+      code = CBATTErrorReadNotPermitted;
+    } else if ([checkCode isEqualToString:@"writeNotPermitted"]) {
+      code = CBATTErrorWriteNotPermitted;
+    } else if ([checkCode isEqualToString:@"invalidPdu"]) {
+      code = CBATTErrorInvalidPdu;
+    } else if ([checkCode isEqualToString:@"insufficientAuthentication"]) {
+      code = CBATTErrorInsufficientAuthentication;
+    } else if ([checkCode isEqualToString:@"requestNotSupported"]) {
+      code = CBATTErrorRequestNotSupported;
+    } else if ([checkCode isEqualToString:@"invalidOffset"]) {
+      code = CBATTErrorInvalidOffset;
+    } else if ([checkCode isEqualToString:@"insufficientAuthorization"]) {
+      code = CBATTErrorInsufficientAuthorization;
+    } else if ([checkCode isEqualToString:@"prepareQueueFull"]) {
+      code = CBATTErrorPrepareQueueFull;
+    } else if ([checkCode isEqualToString:@"attributeNotFound"]) {
+      code = CBATTErrorAttributeNotFound;
+    } else if ([checkCode isEqualToString:@"attributeNotLong"]) {
+      code = CBATTErrorAttributeNotLong;
+    } else if ([checkCode isEqualToString:@"insufficientEncryptionKeySize"]) {
+      code = CBATTErrorInsufficientEncryptionKeySize;
+    } else if ([checkCode isEqualToString:@"invalidAttributeValueLength"]) {
+      code = CBATTErrorInvalidAttributeValueLength;
+    } else if ([checkCode isEqualToString:@"unlikelyError"]) {
+      code = CBATTErrorUnlikelyError;
+    } else if ([checkCode isEqualToString:@"insufficientEncryption"]) {
+      code = CBATTErrorInsufficientEncryption;
+    } else if ([checkCode isEqualToString:@"unsupportedGroupType"]) {
+      code = CBATTErrorUnsupportedGroupType;
+    } else if ([checkCode isEqualToString:@"invalidHandle"]) {
+      code = CBATTErrorInsufficientResources;
+    }
+  }
+
+  request.value = value;
+  [peripheralManager respondToRequest:request withResult:code];
+
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+  [returnObj setValue:@"respondedToRequest" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)updateValue:(CDVInvokedUrlCommand *)command {
+  NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
+
+  CBUUID* serviceUuid = [CBUUID UUIDWithString:[obj valueForKey:@"service"]];
+  CBService* service = [servicesHash objectForKey:serviceUuid];
+  if (!service) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:serviceUuid.UUIDString forKey:@"service"];
+    [returnObj setValue:@"service" forKey:@"error"];
+    [returnObj setValue:@"Service doesn't exist" forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    return;
+  }
+
+  CBUUID* characteristicUuid = [CBUUID UUIDWithString:[obj valueForKey:@"characteristic"]];
+  CBCharacteristic* checkCharacteristic = nil;
+  for (CBCharacteristic* characteristic in service.characteristics) {
+    if ([characteristic.UUID isEqual:characteristicUuid]) {
+      checkCharacteristic = characteristic;
+      break;
+    }
+  }
+
+  if (!checkCharacteristic) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:characteristicUuid.UUIDString forKey:@"characteristic"];
+    [returnObj setValue:@"characteristic" forKey:@"error"];
+    [returnObj setValue:@"Characteristic doesn't exist" forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    return;
+  }
+
+  NSData* value = [self getValue:obj];
+
+  BOOL result = [peripheralManager updateValue:value forCharacteristic:checkCharacteristic onSubscribedCentrals:nil];
+
+  NSNumber* resultAsObject = [NSNumber numberWithBool:result];
+
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+  [returnObj setValue:@"updateValue" forKey:@"status"];
+  [returnObj setValue:resultAsObject forKey:@"sent"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+//Peripheral Manage Delegates
+- (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral {
+  NSString* error = nil;
+  switch ([peripheral state]) {
+    case CBPeripheralManagerStatePoweredOff: {
+      error = logPoweredOff;
+      break;
+    }
+
+    case CBPeripheralManagerStateUnauthorized: {
+      error = logUnauthorized;
+      break;
+    }
+
+    case CBPeripheralManagerStateUnknown: {
+      error = logUnknown;
+      break;
+    }
+
+    case CBPeripheralManagerStateResetting: {
+      error = logResetting;
+      break;
+    }
+
+    case CBPeripheralManagerStateUnsupported: {
+      error = logUnsupported;
+      break;
+    }
+
+    case CBPeripheralManagerStatePoweredOn: {
+      //Bluetooth on!
+      break;
+    }
+  }
+
+  NSDictionary* returnObj = nil;
+  CDVPluginResult* pluginResult = nil;
+
+  if (error) {
+    returnObj = [NSDictionary dictionaryWithObjectsAndKeys: @"disabled", @"status", error, @"message", nil];
+  } else {
+    returnObj = [NSDictionary dictionaryWithObjectsAndKeys: @"enabled", @"status", nil];
+  }
+
+  pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:true];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:initPeripheralCallback];
+}
+
+- (void)peripheralManager:(CBPeripheralManager *)peripheral didAddService:(CBService *)service error:(NSError *)error {
+  if (!addServiceCallback) {
+    return;
+  }
+
+  if (error) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:service.UUID.UUIDString forKey:@"service"];
+    [returnObj setValue:@"service" forKey:@"error"];
+    [returnObj setValue:[error localizedDescription] forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:addServiceCallback];
+    return;
+  }
+
+  [servicesHash setObject:service forKey:service.UUID];
+
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+  [returnObj setValue:service.UUID.UUIDString forKey:@"service"];
+  [returnObj setValue:@"serviceAdded" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:addServiceCallback];
+}
+
+- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(NSError *)error {
+  if (!advertisingCallback) {
+    return;
+  }
+
+  if (error) {
+    //TODO add error
+    NSLog(@"Error starting advertising: %@", [error localizedDescription]);
+    return;
+  }
+
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+  [returnObj setValue:@"advertisingStarted" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:advertisingCallback];
+}
+
+- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveReadRequest:(CBATTRequest *)request {
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+  [returnObj setValue:request.characteristic.service.UUID.UUIDString forKey:@"service"];
+  [returnObj setValue:request.characteristic.UUID.UUIDString forKey:@"characteristic"];
+
+  [returnObj setValue:request.central.identifier.UUIDString forKey:@"address"];
+  [returnObj setValue:[NSNumber numberWithInteger:request.central.maximumUpdateValueLength] forKey:@"maximumUpdateValueLength"];
+
+  [returnObj setValue:@"readRequestReceived" forKey:@"status"];
+
+  [requestsHash setObject:request forKey:[NSNumber numberWithInt:requestId]];
+  [returnObj setValue:[NSNumber numberWithInteger:requestId] forKey:@"requestId"];
+  requestId++;
+
+  [returnObj setValue:[NSNumber numberWithInteger:request.offset]  forKey:@"offset"];
+  [self addValue:request.value toDictionary:returnObj];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:true];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:initPeripheralCallback];
+}
+
+- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray *)requests {
+  for (CBATTRequest* request in requests) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+    [returnObj setValue:request.characteristic.service.UUID.UUIDString forKey:@"service"];
+    [returnObj setValue:request.characteristic.UUID.UUIDString forKey:@"characteristic"];
+
+    [returnObj setValue:request.central.identifier.UUIDString forKey:@"address"];
+    [returnObj setValue:[NSNumber numberWithInteger:request.central.maximumUpdateValueLength]  forKey:@"maximumUpdateValueLength"];
+
+    [returnObj setValue:@"writeRequestReceived" forKey:@"status"];
+
+    [requestsHash setObject:request forKey:[NSNumber numberWithInt:requestId]];
+    [returnObj setValue:[NSNumber numberWithInteger:requestId]  forKey:@"requestId"];
+    requestId++;
+
+    [returnObj setValue:[NSNumber numberWithInteger:request.offset] forKey:@"offset"];
+    [self addValue:request.value toDictionary:returnObj];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:true];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:initPeripheralCallback];
+  }
+}
+
+- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didSubscribeToCharacteristic:(CBCharacteristic *)characteristic {
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+  [returnObj setValue:characteristic.service.UUID.UUIDString forKey:@"service"];
+  [returnObj setValue:characteristic.UUID.UUIDString forKey:@"characteristic"];
+
+  [returnObj setValue:central.identifier.UUIDString forKey:@"address"];
+  [returnObj setValue:[NSNumber numberWithInteger:central.maximumUpdateValueLength]  forKey:@"maximumUpdateValueLength"];
+
+  [returnObj setValue:@"subscribedToCharacteristic" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:true];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:initPeripheralCallback];
+}
+
+- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic {
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+  [returnObj setValue:characteristic.service.UUID.UUIDString forKey:@"service"];
+  [returnObj setValue:characteristic.UUID.UUIDString forKey:@"characteristic"];
+
+  [returnObj setValue:central.identifier.UUIDString forKey:@"address"];
+
+  [returnObj setValue:@"unsubscribedToCharacteristic" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:true];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:initPeripheralCallback];
+}
+
+- (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral {
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+  [returnObj setValue:@"peripheralManagerIsReadyToUpdateSubscribers" forKey:@"status"];
+
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:true];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:initPeripheralCallback];
+}
+
+- (void)peripheralManager:(CBPeripheralManager *)peripheral willRestoreState:(NSDictionary *)dict {
+
+}
+
 //Actions
 - (void)initialize:(CDVInvokedUrlCommand *)command
 {
@@ -834,6 +1339,8 @@ NSString *const operationWrite = @"write";
 
     //Read the value
     [peripheral readValueForCharacteristic:characteristic];
+
+  //http://stackoverflow.com/questions/19280429/reading-long-characteristic-values-using-corebluetooth
 }
 
 - (void)subscribe:(CDVInvokedUrlCommand *)command
@@ -887,7 +1394,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     if (characteristic.isNotifying) {
       NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorSubscription, keyError, logSubscribeAlready, keyMessage, nil];
       CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
@@ -954,7 +1461,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     if (!characteristic.isNotifying) {
       NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorSubscription, keyError, logUnsubscribeAlready, keyMessage, nil];
       CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
@@ -1501,7 +2008,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     NSMutableDictionary* advertisement = [NSMutableDictionary dictionary];
 
     [advertisement setValue:[advertisementData valueForKey:CBAdvertisementDataLocalNameKey] forKey:@"localName"];
@@ -1656,7 +2163,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     //Return disconnected connection information
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 

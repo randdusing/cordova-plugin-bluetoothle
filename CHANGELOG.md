@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.1.0 - 2016-01-XX
+-Support for peripherals on Android and iOS. Still in an experimental state, so I don't recommend using in production apps yet. The function names and required parameters may be changing as well.
+-Minor bug fixes?
+
 ## 3.0.1 - 2016-01-26
 - Fixed issue with API21+ code running on earlier API versions and causing the plugin to crash.
 
