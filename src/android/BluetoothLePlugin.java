@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.provider.Settings;
 import android.util.Base64;
 
 import android.app.Activity;
@@ -558,6 +559,15 @@ public class BluetoothLePlugin extends CordovaPlugin
       });
       return true;
     }
+    else if ("isLocationEnabled".equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          isLocationEnabledAction(callbackContext);
+        }
+      });
+      return true;
+    }
     return false;
   }
 
@@ -584,8 +594,35 @@ public class BluetoothLePlugin extends CordovaPlugin
   }
 
   public void requestPermissionAction(CallbackContext callbackContext) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
+      JSONObject returnObj = new JSONObject();
+      addProperty(returnObj, keyError, "requestPermission");
+      addProperty(returnObj, keyMessage, logOperationUnsupported);
+      callbackContext.error(returnObj);
+      return;
+    }
+
     permissionsCallback = callbackContext;
     cordova.requestPermission(this, REQUEST_ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
+  }
+
+  public void isLocationEnabledAction(CallbackContext callbackContext) {
+    JSONObject returnObj = new JSONObject();
+
+    boolean result = true;
+
+    //Only applies to Android 6.0, which requires the users to have location services enabled to scan for devices
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+      try {
+        result = (Settings.Secure.getInt(cordova.getActivity().getContentResolver(), Settings.Secure.LOCATION_MODE) != Settings.Secure.LOCATION_MODE_OFF);
+      } catch (Settings.SettingNotFoundException e) {
+        result = true; //Probably better to default to true
+      }
+    }
+
+    addProperty(returnObj, "isLocationEnabled", result);
+
+    callbackContext.success(returnObj);
   }
 
   private void initializeAction(JSONArray args, CallbackContext callbackContext)
@@ -747,7 +784,7 @@ public class BluetoothLePlugin extends CordovaPlugin
 
       //Save the callback context for reporting back found connections. Also the isScanning flag
       scanCallbackContext = callbackContext;
-      
+
       if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP)
       {
         boolean result = uuids.length==0 ? bluetoothAdapter.startLeScan(scanCallbackKitKat) : bluetoothAdapter.startLeScan(uuids, scanCallbackKitKat);
@@ -787,12 +824,12 @@ public class BluetoothLePlugin extends CordovaPlugin
           try { scanSettings.setMatchMode(matchMode); }
           catch(java.lang.IllegalArgumentException e) {
           }
-          
+
           int matchNum = obj.optInt(keyMatchNum, ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT);
           try { scanSettings.setNumOfMatches(matchNum); }
           catch(java.lang.IllegalArgumentException e) {
           }
-          
+
           int callbackType = obj.optInt(keyCallbackType, ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
           try { scanSettings.setCallbackType(callbackType); }
           catch(java.lang.IllegalArgumentException e) {
@@ -813,7 +850,7 @@ public class BluetoothLePlugin extends CordovaPlugin
         pluginResult.setKeepCallback(true);
         callbackContext.sendPluginResult(pluginResult);
       }
-      
+
     }
   }
 
@@ -835,7 +872,7 @@ public class BluetoothLePlugin extends CordovaPlugin
         callbackContext.error(returnObj);
         return;
       }
-      
+
       if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP)
       {
         bluetoothAdapter.stopLeScan(scanCallbackKitKat);
@@ -874,7 +911,7 @@ public class BluetoothLePlugin extends CordovaPlugin
       if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE) {
         continue;
       }
-      
+
       /*if (serviceUuids != null)
       {
         ParcelUuid[] uuids = device.getUuids();
@@ -1323,7 +1360,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     addDevice(returnObj, device);
 
     addCharacteristic(returnObj, characteristic);
-    
+
     CallbackContext checkExisting = GetCallback(characteristicUuid, connection, operationSubscribe);
     if (checkExisting != null)
     {
@@ -1429,7 +1466,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     addDevice(returnObj, device);
 
     addCharacteristic(returnObj, characteristic);
-    
+
     CallbackContext checkExisting = GetCallback(characteristicUuid, connection, operationSubscribe);
     if (checkExisting == null)
     {
@@ -2200,16 +2237,16 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
     }
   };
-  
+
   //Scan Callback
   private ScanCallback scanCallback = null;
-  
+
   //TODO Is there a cleaner way to prevent this from running on KitKat
   protected void pluginInitialize() {
     if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
       return;
     }
-    
+
     scanCallback = new ScanCallback()
     {
       @Override
@@ -2864,7 +2901,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     if (obj == null) {
       return new UUID[] {};
     }
-    
+
     JSONArray array = obj.optJSONArray(keyServices);
 
     if (array == null)
@@ -3080,7 +3117,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private JSONObject getPermissions(BluetoothGattCharacteristic characteristic)
   {
     int permissions = characteristic.getPermissions();
-    
+
     JSONObject permissionsObject = new JSONObject();
 
     if ((permissions & BluetoothGattCharacteristic.PERMISSION_READ) == BluetoothGattCharacteristic.PERMISSION_READ)

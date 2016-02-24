@@ -42,6 +42,7 @@
 - (void)isDiscovered:(CDVInvokedUrlCommand *)command;
 - (void)hasPermission:(CDVInvokedUrlCommand *)command;
 - (void)requestPermission:(CDVInvokedUrlCommand *)command;
+- (void)isLocationEnabled:(CDVInvokedUrlCommand *)command;
 
 @end
 
