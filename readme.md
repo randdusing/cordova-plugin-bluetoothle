@@ -38,39 +38,44 @@ I'm available for part time contracting work. This would really help keep the pr
 
 ## Using AngularJS ##
 
-Check out ng-cordova-bluetoothle [here!](https://github.com/randdusing/ng-cordova-bluetoothle)  
+Check out ng-cordova-bluetoothle [here!](https://github.com/randdusing/ng-cordova-bluetoothle)
+
 If timeouts or queueing is needed, please check out the Angular wrapper and its example. I don't plan to implement queuing within the plugin itself anymore.
 
 
 ## Installation ##
 
-Cordova  
+Cordova
+
 ```cordova plugin add cordova-plugin-bluetoothle```
 
-PhoneGap Build  
+PhoneGap Build
+
 ```<gap:plugin name="cordova-plugin-bluetoothle" source="npm" />```
 
 
 ## Installation Quirks (iOS) ##
-By default, background mode is enabled. If you wish to remove this, follow the steps below:  
-1. Click your Project  
-2. Click your Target  
-3. Click Capabilities  
-4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories  
-5. Open up BluetoothLePlugin.m  
-6. Remove "CBCentralManagerOptionRestoreIdentifierKey:pluginName," from the initWithDelegate call in the initialize function  
-7. Remove the willRestoreState function  
-8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used  
+By default, background mode is enabled. If you wish to remove this, follow the steps below:
+
+1.  Click your Project
+2. Click your Target
+3. Click Capabilities
+4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories
+5. Open up BluetoothLePlugin.m
+6. Remove "CBCentralManagerOptionRestoreIdentifierKey:pluginName," from the initWithDelegate call in the initialize function
+7. Remove the willRestoreState function
+8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used
 
 //TODO Add for peripheral mode
 
 
 Updating the plugin for iOS sometimes causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries. To fix:
-1. Click your project to open the "properties" window  
-2. Click your target  
-3. Click Build Phases  
-4. Ensure BluetoothLePlugin.m is added to the Compile Sources  
-5. Ensure CoreBluetooth.framework is added to the Link Binary with Libraries  
+
+1. Click your project to open the "properties" window
+2. Click your target
+3. Click Build Phases
+4. Ensure BluetoothLePlugin.m is added to the Compile Sources
+5. Ensure CoreBluetooth.framework is added to the Link Binary with Libraries
 
 
 ## Installation Quirks (Android) ##
@@ -128,7 +133,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isDiscovered] (#isdiscovered)
 * [bluetoothle.hasPermission] (#haspermission) (Android)
 * [bluetoothle.requestPermission] (#requestpermission) (Android)
-
+* [bluetoothle.isLocationEnabled] (#islocationenabled) (Android)
 * [bluetoothle.initializePeripheral] (#initializeperipheral)
 * [bluetoothle.addService] (#addservice)
 * [bluetoothle.removeService] (#removeservice)
@@ -137,7 +142,6 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.stopAdvertising] (#stopadvertising)
 * [bluetoothle.respondToRequest] (#respondtorequest)
 * [bluetoothle.updateValue] (#updatevalue)
-
 * [bluetoothle.encodedStringToBytes] (#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
@@ -146,7 +150,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 
 ## Errors ##
 
-Whenever the error callback is executed, the return object will contain the error type and a message.  
+Whenever the error callback is executed, the return object will contain the error type and a message.
+
 * initialize - Bluetooth isn't initialized (Try initializing Bluetooth)
 * enable - Bluetooth isn't enabled (Request user to enable Bluetooth)
 * disable - Bluetooth isn't disabled (Can't enabled if already disabled)
@@ -191,7 +196,7 @@ Characteristics can have the following different permissions: read, readEncrypte
 ## Properties ##
 Characteristics can have the following different properties: broadcast, read, writeWithoutResponse, write, notify, indicate, authenticatedSignedWrites, extendedProperties, notifyEncryptionRequired, indicateEncryptionRequired. If the characteristic has a property, it will exist as a key in the characteristic's properties object. See discovery() or characteristics()
 
-[iOS Docs](https://developer.android.com/reference/android/bluetooth/BluetoothGattCharacteristic.html) and 
+[iOS Docs](https://developer.android.com/reference/android/bluetooth/BluetoothGattCharacteristic.html) and
 [Android Docs](https://developer.apple.com/library/mac/documentation/CoreBluetooth/Reference/CBCharacteristic_Class/translated_content/CBCharacteristic.html#//apple_ref/c/tdef/CBCharacteristicProperties)
 
 
@@ -364,7 +369,7 @@ The successCallback isn't actually used. Listen to initialize callbacks for chan
 
 
 ### startScan ###
-Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions to find unpaired devices. Permissions can be requested by using the hasPermission and requestPermission functions.
+Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions to find unpaired devices. Permissions can be requested by using the hasPermission and requestPermission functions. Android API >= 23 also requires location services to be enabled. Use isLocationEnabled to determine whether location services are enabled. If not, you may want to prompt the user to enabled them.
 
 ```javascript
 bluetoothle.startScan(startScanSuccess, startScanError, params);
@@ -1430,10 +1435,10 @@ bluetoothle.hasPermission(hasPermissionSuccess);
 
 
 ### requestPermission ###
-Request coarse location privileges since scanning for unpaired devices requies it in Android API 23.
+Request coarse location privileges since scanning for unpaired devices requires it in Android API 23. Will return an error if called on iOS or Android versions prior to 6.0.
 
 ```javascript
-bluetoothle.requestPermission(requestPermissionSuccess);
+bluetoothle.requestPermission(requestPermissionSuccess, requestPermissionError);
 ```
 
 ##### Success #####
@@ -1442,6 +1447,24 @@ bluetoothle.requestPermission(requestPermissionSuccess);
 ```javascript
 {
   "requestPermission": true
+}
+```
+
+
+
+### isLocationEnabled ###
+Determine if location services are enabled or not. Location Services are required to find devices in Android API 23.
+
+```javascript
+bluetoothle.isLocationEnabled(isLocationEnabledSuccess);
+```
+
+##### Success #####
+* status => isLocationEnabled = true/false
+
+```javascript
+{
+  "isLocationEnabled": true
 }
 ```
 

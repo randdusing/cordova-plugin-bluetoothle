@@ -1,8 +1,12 @@
 # Change Log
 
-## 3.1.0 - 2016-01-XX
+## 3.2.0 - 2016-02-XX
 -Support for peripherals on Android and iOS. Still in an experimental state, so I don't recommend using in production apps yet. The function names and required parameters may be changing as well.
 -Minor bug fixes?
+
+## 3.1.0 - 2016-02-23
+- Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0
+- Added ability to check whether location services are enabled or not. Android 6.0 requires location services to be enabled to find unpaired devices.
 
 ## 3.0.1 - 2016-01-26
 - Fixed issue with API21+ code running on earlier API versions and causing the plugin to crash.

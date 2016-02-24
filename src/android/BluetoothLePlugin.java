@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.provider.Settings;
 import android.util.Base64;
 
 import android.app.Activity;
@@ -626,6 +627,15 @@ public class BluetoothLePlugin extends CordovaPlugin
       });
       return true;
     }
+    else if ("isLocationEnabled".equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          isLocationEnabledAction(callbackContext);
+        }
+      });
+      return true;
+    }
     return false;
   }
 
@@ -996,6 +1006,14 @@ public class BluetoothLePlugin extends CordovaPlugin
   }
 
   public void requestPermissionAction(CallbackContext callbackContext) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
+      JSONObject returnObj = new JSONObject();
+      addProperty(returnObj, keyError, "requestPermission");
+      addProperty(returnObj, keyMessage, logOperationUnsupported);
+      callbackContext.error(returnObj);
+      return;
+    }
+
     permissionsCallback = callbackContext;
     cordova.requestPermission(this, REQUEST_ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
   }
@@ -1012,6 +1030,25 @@ public class BluetoothLePlugin extends CordovaPlugin
     addProperty(returnObj, "requestPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
 
     permissionsCallback.success(returnObj);
+  }
+
+  public void isLocationEnabledAction(CallbackContext callbackContext) {
+    JSONObject returnObj = new JSONObject();
+
+    boolean result = true;
+
+    //Only applies to Android 6.0, which requires the users to have location services enabled to scan for devices
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+      try {
+        result = (Settings.Secure.getInt(cordova.getActivity().getContentResolver(), Settings.Secure.LOCATION_MODE) != Settings.Secure.LOCATION_MODE_OFF);
+      } catch (Settings.SettingNotFoundException e) {
+        result = true; //Probably better to default to true
+      }
+    }
+
+    addProperty(returnObj, "isLocationEnabled", result);
+
+    callbackContext.success(returnObj);
   }
 
   private void initializeAction(JSONArray args, CallbackContext callbackContext)

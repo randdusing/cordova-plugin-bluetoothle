@@ -47,9 +47,9 @@ module.exports = {
     var deviceIdsFound = [];
     var result = [];
     var selector = "System.Devices.InterfaceClassGuid:=\"{6E3BB679-4372-40C8-9EAA-4509DF260CD8}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
-    if (params[0].serviceUuids && params[0].serviceUuids.length > 0) {
-      for (var i = 0; i < params[0].serviceUuids.length; i++) {
-        var uuid = params[0].serviceUuids[i];
+    if (params[0].services && params[0].services.length > 0) {
+      for (var i = 0; i < params[0].services.length; i++) {
+        var uuid = params[0].services[i];
         if (uuid.length == 4) {
             uuid = "0000" + uuid + "-0000-1000-8000-00805F9B34FB";
         }
@@ -118,7 +118,7 @@ module.exports = {
               serviceIds.push(serviceId);
               deviceName = services[i].name;
           }
-          successCallback({ status: "services", serviceUuids: serviceIds, name: deviceName, address: deviceId });
+          successCallback({ status: "services", services: serviceIds, name: deviceName, address: deviceId });
         } else {
           errorCallback({ error: "services", message: "Device not found." });
         }
@@ -136,9 +136,9 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid) {
+    if (params && params.length > 0 && params[0].address && params[0].service) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
+      var serviceId = params[0].service;
 
       getService(deviceId, serviceId).then(function (service) {
         var characteristicsResult = [];
@@ -161,7 +161,7 @@ module.exports = {
             errorCallback({ error: "characteristics", message: "Unknown service, add the service to getServiceInfos() and try again." });
           }
         }
-        successCallback({ status: "characteristics", characteristics: characteristicsResult, name: service.name, serviceUuid: serviceId, address: deviceId });
+        successCallback({ status: "characteristics", characteristics: characteristicsResult, name: service.name, service: serviceId, address: deviceId });
       }, function (error) {
         errorCallback({ error: "characteristics", message: error });
       });
@@ -176,10 +176,10 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid && params[0].characteristicUuid) {
+    if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
-      var characteristicId = params[0].characteristicUuid;
+      var serviceId = params[0].service;
+      var characteristicId = params[0].characteristic;
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
         var descriptorIds = [];
@@ -197,7 +197,7 @@ module.exports = {
             }
           }
         }
-        successCallback({ status: "descriptors", descriptorUuids: descriptorIds, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
+        successCallback({ status: "descriptors", descriptors: descriptorIds, characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId });
       }, function (error) {
         errorCallback({ error: "descriptors", message: error });
       });
@@ -212,16 +212,16 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid && params[0].characteristicUuid) {
+    if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
-      var characteristicId = params[0].characteristicUuid;
+      var serviceId = params[0].service;
+      var characteristicId = params[0].characteristic;
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
         characteristic.readValueAsync(bluetooth.BluetoothCacheMode.uncached).done(function (result) {
           if (result.status == gatt.GattCommunicationStatus.success) {
             var value = wsc.CryptographicBuffer.encodeToBase64String(result.value);
-            successCallback({ status: "read", value: value, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
+            successCallback({ status: "read", value: value, characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId });
           } else {
             errorCallback({ error: "read", message: "Device unreachable." });
           }
@@ -242,10 +242,10 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid && params[0].characteristicUuid && params[0].isNotification != undefined) {
+    if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic && params[0].isNotification != undefined) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
-      var characteristicId = params[0].characteristicUuid;
+      var serviceId = params[0].service;
+      var characteristicId = params[0].characteristic;
       var isNotification = params[0].isNotification;
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
@@ -257,10 +257,10 @@ module.exports = {
         }
         characteristic.writeClientCharacteristicConfigurationDescriptorAsync(descriptorValue).done(function (result) {
           if (result == gatt.GattCommunicationStatus.success) {
-            successCallback({ status: "subscribed", characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId }, { keepCallback: true });
+            successCallback({ status: "subscribed", characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId }, { keepCallback: true });
             characteristic.onvaluechanged = function (result) {
               var value = wsc.CryptographicBuffer.encodeToBase64String(result.characteristicValue);
-              successCallback({ status: "subscribedResult", value: value, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId }, { keepCallback: true });
+              successCallback({ status: "subscribedResult", value: value, characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId }, { keepCallback: true });
             };
           } else {
             errorCallback({ error: "subscribe", message: "Device unreachable." });
@@ -282,16 +282,16 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid && params[0].characteristicUuid) {
+    if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
-      var characteristicId = params[0].characteristicUuid;
+      var serviceId = params[0].service;
+      var characteristicId = params[0].characteristic;
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
         characteristic.onvaluechanged = null;
         characteristic.writeClientCharacteristicConfigurationDescriptorAsync(gatt.GattClientCharacteristicConfigurationDescriptorValue.none).done(function (result) {
           if (result == gatt.GattCommunicationStatus.success) {
-            successCallback({ status: "unsubscribed", characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
+            successCallback({ status: "unsubscribed", characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId });
           } else {
             errorCallback({ error: "unsubscribe", message: "Device unreachable." });
           }
@@ -312,10 +312,10 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid && params[0].characteristicUuid && params[0].value) {
+    if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic && params[0].value) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
-      var characteristicId = params[0].characteristicUuid;
+      var serviceId = params[0].service;
+      var characteristicId = params[0].characteristic;
       var value = params[0].value;
       var writeOption;
       if (params[0].type !== undefined && params[0].type == "noResponse") {
@@ -328,7 +328,7 @@ module.exports = {
         var buffer = wsc.CryptographicBuffer.decodeFromBase64String(value);
         characteristic.writeValueAsync(buffer, writeOption).done(function (result) {
           if (result == gatt.GattCommunicationStatus.success) {
-            successCallback({ status: "written", characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
+            successCallback({ status: "written", characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId });
           } else {
             errorCallback({ error: "write", message: "Device unreachable." });
           }
@@ -349,17 +349,17 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid && params[0].characteristicUuid && params[0].descriptorUuid) {
+    if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic && params[0].descriptor) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
-      var characteristicId = params[0].characteristicUuid;
-      var descriptorId = params[0].descriptorUuid;
+      var serviceId = params[0].service;
+      var characteristicId = params[0].characteristic;
+      var descriptorId = params[0].descriptor;
 
       getDescriptor(deviceId, serviceId, characteristicId, descriptorId).then(function (descriptor, deviceName) {
         descriptor.readValueAsync(bluetooth.BluetoothCacheMode.uncached).done(function (result) {
           if (result.status == gatt.GattCommunicationStatus.success) {
             var value = wsc.CryptographicBuffer.encodeToBase64String(result.value);
-            successCallback({ status: "readDescriptor", value: value, descriptorUuid: descriptorId, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
+            successCallback({ status: "readDescriptor", value: value, descriptor: descriptorId, characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId });
           } else {
             errorCallback({ error: "readDescriptor", message: "Device unreachable." });
           }
@@ -380,18 +380,18 @@ module.exports = {
       return;
     }
 
-    if (params && params.length > 0 && params[0].address && params[0].serviceUuid && params[0].characteristicUuid && params[0].descriptorUuid && params[0].value) {
+    if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic && params[0].descriptor && params[0].value) {
       var deviceId = params[0].address;
-      var serviceId = params[0].serviceUuid;
-      var characteristicId = params[0].characteristicUuid;
-      var descriptorId = params[0].descriptorUuid;
+      var serviceId = params[0].service;
+      var characteristicId = params[0].characteristic;
+      var descriptorId = params[0].descriptor;
       var value = params[0].value;
 
       getDescriptor(deviceId, serviceId, characteristicId, descriptorId).then(function (descriptor, deviceName) {
         var buffer = wsc.CryptographicBuffer.decodeFromBase64String(value);
         descriptor.writeValueAsync(buffer).done(function (result) {
           if (result == gatt.GattCommunicationStatus.success) {
-            successCallback({ status: "writeDescriptor", descriptorUuid: descriptorId, characteristicUuid: characteristicId, name: deviceName, serviceUuid: serviceId, address: deviceId });
+            successCallback({ status: "writeDescriptor", descriptor: descriptorId, characteristic: characteristicId, name: deviceName, service: serviceId, address: deviceId });
           } else {
             errorCallback({ error: "writeDescriptor", message: "Device unreachable." });
           }
@@ -485,7 +485,7 @@ function getDescriptor(deviceId, serviceId, characteristicId, descriptorId) {
 }
 
 function convertCharacteristic(characteristic) {
-  var char = { characteristicUuid: characteristic.uuid.substring(4, 8), properties: new Object() };
+  var char = { uuid: characteristic.uuid.substring(4, 8), properties: new Object() };
   if (characteristic.characteristicProperties & 1) {
     char.properties.broadcast = "true";
   }

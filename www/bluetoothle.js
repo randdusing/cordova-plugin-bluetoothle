@@ -90,7 +90,9 @@ var bluetoothle = {
   requestPermission: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "requestPermission", []);
   },
-  
+  isLocationEnabled: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isLocationEnabled", []);
+  },
   initializePeripheral: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "initializePeripheral", [params]);
   },
@@ -118,7 +120,6 @@ var bluetoothle = {
   updateValue: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "updateValue", [params]);
   },
-  
   encodedStringToBytes: function(string) {
     var data = atob(string);
     var bytes = new Uint8Array(data.length);
