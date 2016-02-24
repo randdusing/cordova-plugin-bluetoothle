@@ -887,7 +887,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     if (characteristic.isNotifying) {
       NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorSubscription, keyError, logSubscribeAlready, keyMessage, nil];
       CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
@@ -954,7 +954,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     if (!characteristic.isNotifying) {
       NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorSubscription, keyError, logUnsubscribeAlready, keyMessage, nil];
       CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
@@ -1409,6 +1409,14 @@ NSString *const operationWrite = @"write";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void)isLocationEnabled:(CDVInvokedUrlCommand *)command
+{
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: @"isLocationEnabled", keyError, logOperationUnsupported, keyMessage, nil];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 //Central Manager Delegates
 - (void) centralManagerDidUpdateState:(CBCentralManager *)central
 {
@@ -1501,7 +1509,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     NSMutableDictionary* advertisement = [NSMutableDictionary dictionary];
 
     [advertisement setValue:[advertisementData valueForKey:CBAdvertisementDataLocalNameKey] forKey:@"localName"];
@@ -1656,7 +1664,7 @@ NSString *const operationWrite = @"write";
     {
         return;
     }
-  
+
     //Return disconnected connection information
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
