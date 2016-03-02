@@ -57,7 +57,7 @@ PhoneGap Build
 ## Installation Quirks (iOS) ##
 By default, background mode is enabled. If you wish to remove this, follow the steps below:
 
-1.  Click your Project
+1. Click your Project
 2. Click your Target
 3. Click Capabilities
 4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories
@@ -186,8 +186,8 @@ Characteristics can have the following different permissions: read, readEncrypte
 ## Properties ##
 Characteristics can have the following different properties: broadcast, read, writeWithoutResponse, write, notify, indicate, authenticatedSignedWrites, extendedProperties, notifyEncryptionRequired, indicateEncryptionRequired. If the characteristic has a property, it will exist as a key in the characteristic's properties object. See discovery() or characteristics()
 
-[iOS Docs](https://developer.android.com/reference/android/bluetooth/BluetoothGattCharacteristic.html) and
-[Android Docs](https://developer.apple.com/library/mac/documentation/CoreBluetooth/Reference/CBCharacteristic_Class/translated_content/CBCharacteristic.html#//apple_ref/c/tdef/CBCharacteristicProperties)
+[Android Docs](https://developer.android.com/reference/android/bluetooth/BluetoothGattCharacteristic.html) and
+[iOS Docs](https://developer.apple.com/library/mac/documentation/CoreBluetooth/Reference/CBCharacteristic_Class/translated_content/CBCharacteristic.html#//apple_ref/c/tdef/CBCharacteristicProperties)
 
 
 
