@@ -1,8 +1,9 @@
 # Change Log
 
 ## 3.1.0 - 2016-02-23
-- Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0
+- Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0.
 - Added ability to check whether location services are enabled or not. Android 6.0 requires location services to be enabled to find unpaired devices.
+- Windows API now compliant with v3.
 
 ## 3.0.1 - 2016-01-26
 - Fixed issue with API21+ code running on earlier API versions and causing the plugin to crash.
