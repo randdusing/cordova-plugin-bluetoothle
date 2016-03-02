@@ -57,7 +57,7 @@ PhoneGap Build
 ## Installation Quirks (iOS) ##
 By default, background mode is enabled. If you wish to remove this, follow the steps below:
 
-1.  Click your Project
+1. Click your Project
 2. Click your Target
 3. Click Capabilities
 4. Scroll down to Background Modes section, and uncheck Uses Bluetooth LE accessories
@@ -66,7 +66,7 @@ By default, background mode is enabled. If you wish to remove this, follow the s
 7. Remove the willRestoreState function
 8. Optionally remove 'NSString *const pluginName = @"bluetoothleplugin";' since it's no longer used
 
-//TODO Add for peripheral mode
+//TODO Make background mode conditional for both central and server.
 
 
 Updating the plugin for iOS sometimes causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries. To fix:
@@ -264,7 +264,7 @@ bluetoothle.initializePeripheral(success, error, params);
 Add a service with characteristics and descriptors. If more than one service is added, add them sequentially.
 
 ```javascript
-bluetoothle.initializePeripheral(success, error, params);
+bluetoothle.addService(success, error, params);
 ```
 
 ##### Params #####

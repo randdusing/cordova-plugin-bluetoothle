@@ -153,6 +153,8 @@ NSString *const operationWrite = @"write";
 
   NSNumber* request = [obj valueForKey:@"request"];
 
+  //TODO allow user to toggle background mode
+
   peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil options:@{ CBPeripheralManagerOptionRestoreIdentifierKey:pluginName, CBPeripheralManagerOptionShowPowerAlertKey:request }];
 }
 
