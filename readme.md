@@ -28,6 +28,10 @@ I'm available for part time contracting work. This would really help keep the pr
 * Instead of specifying serviceUuids, serviceUuid, characteristicUuid, etc in the params, use services, service, characteristic, etc. Check out the scan-related, discovery-related and read/write/subscribe operation functions for more info. Discovery related functions will also return uuid properties instead of serviceUuid, characteristicUuid or descriptorUuid.
 * The connecting and disconnecting events were removed.
 
+## Upgrade 3.x to 4.x ##
+
+* Background modes aren't added automatically. See Installation Quirks (iOS) for details.
+
 
 ## To Do ##
 
@@ -54,6 +58,12 @@ PhoneGap Build
 ```<gap:plugin name="cordova-plugin-bluetoothle" source="npm" />```
 
 
+## Server Support ##
+Server support is still in beta. Method names, parameters, etc may drastically change between versions. To try out server support:
+
+```cordova plugin add cordova-plugin-bluetoothle```
+
+
 ## Installation Quirks (iOS) ##
 By default, background mode is enabled. If you wish to remove this, follow the steps below:
 
@@ -69,13 +79,10 @@ By default, background mode is enabled. If you wish to remove this, follow the s
 //TODO Make background mode conditional for both central and server.
 
 
-Updating the plugin for iOS sometimes causes BluetoothLePlugin.m to be removed from the Compile Sources and CoreBluetooth.framework to be removed from Link Binary with Libraries. To fix:
-
-1. Click your project to open the "properties" window
-2. Click your target
-3. Click Build Phases
-4. Ensure BluetoothLePlugin.m is added to the Compile Sources
-5. Ensure CoreBluetooth.framework is added to the Link Binary with Libraries
+## Background Modes (iOS) ##
+Background modes have been changed.
+1. Background mode(s) are no longer included by default. They can be added manually by editing the plist, or you can use the following plugins: cordova-plugin-background-mode-bluetooth-central and/or cordova-plugin-background-mode-bluetooth-peripheral. //TODO Add links to plugin
+2. Restore identifiers must be specified when calling initialize and/or initializePeripheral using the restoreKey parameter. See initialize and initializePeripheral for details.
 
 
 ## Installation Quirks (Android) ##
@@ -146,6 +153,16 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
 * [bluetoothle.bytesToString] (#bytestostring)
+
+* [bluetoothle.initializePeripheral] (#initializeperipheral)
+* [bluetoothle.addService] (#addservice)
+* [bluetoothle.removeService] (#removeservice)
+* [bluetoothle.removeAllServices] (#removeallservices)
+* [bluetoothle.startAdvertising] (#startadvertising)
+* [bluetoothle.stopAdvertising] (#stopadvertising)
+* [bluetoothle.isAdvertising] (#isadvertising)
+* [bluetoothle.respondToRequest] (#respondtorequest)
+* [bluetoothle.updateValue] (#updatevalue)
 
 
 ## Errors ##
