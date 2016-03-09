@@ -54,6 +54,12 @@ PhoneGap Build
 ```<gap:plugin name="cordova-plugin-bluetoothle" source="npm" />```
 
 
+## 4.0.0 Beta - Server Support ##
+The 4.0.0-dev branch includes server support. Note, this shouldn't be used in production! Current code isn't well tested and still needs improvements to code and documentation.
+
+``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#4.0.0-dev ```
+
+
 ## Installation Quirks (iOS) ##
 By default, background mode is enabled. If you wish to remove this, follow the steps below:
 
