@@ -152,15 +152,22 @@ NSString *const operationWrite = @"write";
   NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
 
   NSNumber* request = [obj valueForKey:@"request"];
+  NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
 
-  //TODO allow user to toggle background mode
+  NSMutableDictionary* options = [NSMutableDictionary dictionary];
+  if (restoreKey) {
+    [options setValue:restoreKey forKey:CBPeripheralManagerOptionRestoreIdentifierKey];
+  }
+  if (request) {
+    [options setValue:request forKey:CBPeripheralManagerOptionShowPowerAlertKey];
+  }
 
-  peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil options:@{ CBPeripheralManagerOptionRestoreIdentifierKey:pluginName, CBPeripheralManagerOptionShowPowerAlertKey:request }];
+  peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil options:options];
 }
 
 - (void)addService:(CDVInvokedUrlCommand *)command {
   NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
-  CBUUID* serviceUuid = [CBUUID UUIDWithString:[obj valueForKey:@"uuid"]];
+  CBUUID* serviceUuid = [CBUUID UUIDWithString:[obj valueForKey:@"service"]];
 
   CBMutableService* service = [[CBMutableService alloc] initWithType:serviceUuid primary:YES];
 
@@ -244,12 +251,12 @@ NSString *const operationWrite = @"write";
 
 - (void)removeService:(CDVInvokedUrlCommand *)command {
   NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
-  CBUUID* uuid = [CBUUID UUIDWithString:[obj valueForKey:@"uuid"]];
+  CBUUID* serviceUuid = [CBUUID UUIDWithString:[obj valueForKey:@"service"]];
 
-  CBService* service = [servicesHash objectForKey:uuid];
+  CBService* service = [servicesHash objectForKey:serviceUuid];
   if (!service) {
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
-    [returnObj setValue:uuid.UUIDString forKey:@"service"];
+    [returnObj setValue:serviceUuid.UUIDString forKey:@"service"];
     [returnObj setValue:@"service" forKey:@"error"];
     [returnObj setValue:@"Service doesn't exist" forKey:@"message"];
 
@@ -690,8 +697,18 @@ NSString *const operationWrite = @"write";
     //Check if status should be returned
     statusReceiver = [self getStatusReceiver:obj];
 
+    NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
+
+    NSMutableDictionary* options = [NSMutableDictionary dictionary];
+    if (restoreKey) {
+      [options setValue:restoreKey forKey:CBCentralManagerOptionRestoreIdentifierKey];
+    }
+    if (request) {
+      [options setValue:request forKey:CBCentralManagerOptionShowPowerAlertKey];
+    }
+
     //Initialize central manager
-    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:pluginName, CBCentralManagerOptionShowPowerAlertKey:request }];
+    centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:options];
 
     //Create dictionary to hold connections and all their callbacks
     connections = [NSMutableDictionary dictionary];

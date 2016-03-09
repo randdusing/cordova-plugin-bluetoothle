@@ -1,8 +1,7 @@
-# Change Log
-
-## 3.2.0 - 2016-02-XX
--Support for peripherals on Android and iOS. Still in an experimental state, so I don't recommend using in production apps yet. The function names and required parameters may be changing as well.
--Minor bug fixes?
+## 4.0.0-dev - 2016-03-09
+-Support for server/peripheral role on iOS and partially Android.
+-Background mode support controlled by other plugins.
+-Require Cordova 5+
 
 ## 3.1.0 - 2016-02-23
 - Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0
