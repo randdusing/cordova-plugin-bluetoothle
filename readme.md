@@ -1045,7 +1045,7 @@ To write without response, set type to "noResponse". Any other value will defaul
 ```javascript
 var string = "Hello World";
 var bytes = bluetoothle.stringToBytes(string);
-var encodedString = bluetoothle.bytesToEncodedString(encodedString);
+var encodedString = bluetoothle.bytesToEncodedString(bytes);
 
 //Note, this example doesn't actually work since it's read only characteristic
 {"value":encodedString,"service":"180F","characteristic":"2A19","type":"noResponse","address":"ABC123"}
@@ -1124,7 +1124,7 @@ Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncod
 ```javascript
 var string = "Hello World";
 var bytes = bluetoothle.stringToBytes(string);
-var encodedString = bluetoothle.bytesToEncodedString(encodedString);
+var encodedString = bluetoothle.bytesToEncodedString(bytes);
 
 {"service":"180D","characteristic":"2A37","descriptor":"2902","value":encodedString,"address":"ABC123"}
 ```
