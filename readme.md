@@ -214,7 +214,7 @@ Characteristics can have the following different properties: broadcast, read, wr
 Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must connect to the device, start a read/write operation, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. Also, this function should only be called once.
 
 ```javascript
-bluetoothle.initialize(initializeSuccess, initializeError, params);
+bluetoothle.initialize(initializeSuccess, params);
 ```
 
 ##### Params #####
