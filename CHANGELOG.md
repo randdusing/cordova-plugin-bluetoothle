@@ -2,7 +2,8 @@
 -Support for server/peripheral role on iOS and partially Android.
 -Background mode support controlled by other plugins.
 -Require Cordova 5+
--Descriptor now includes permissions when discovering on Android
+-Descriptor now includes permissions when discovering on Android...although descriptors never seem to have permissions set.
+-Code cleanup and refactoring
 
 ## 3.1.0 - 2016-02-23
 - Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0
