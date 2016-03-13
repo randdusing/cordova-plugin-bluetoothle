@@ -265,7 +265,7 @@ NSString *const operationWrite = @"write";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
   }
 
-  [peripheralManager removeService:service];
+  [peripheralManager removeService:service]; //Need to store CBMutableService
 
   [servicesHash removeObjectForKey:service.UUID];
 
@@ -339,7 +339,7 @@ NSString *const operationWrite = @"write";
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-- (void)respondToRequest:(CDVInvokedUrlCommand *)command {
+- (void)respond:(CDVInvokedUrlCommand *)command {
   NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
 
   NSNumber* checkRequestId = [obj valueForKey:@"requestId"];
@@ -411,7 +411,7 @@ NSString *const operationWrite = @"write";
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-- (void)updateValue:(CDVInvokedUrlCommand *)command {
+- (void)notify:(CDVInvokedUrlCommand *)command {
   NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
 
   CBUUID* serviceUuid = [CBUUID UUIDWithString:[obj valueForKey:@"service"]];
@@ -451,13 +451,13 @@ NSString *const operationWrite = @"write";
 
   NSData* value = [self getValue:obj];
 
-  BOOL result = [peripheralManager updateValue:value forCharacteristic:checkCharacteristic onSubscribedCentrals:nil];
+  BOOL result = [peripheralManager updateValue:value forCharacteristic:checkCharacteristic onSubscribedCentrals:nil]; //TODO need to store CBMutableCharacteristic
 
   NSNumber* resultAsObject = [NSNumber numberWithBool:result];
 
   NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
-  [returnObj setValue:@"updateValue" forKey:@"status"];
+  [returnObj setValue:@"notified" forKey:@"status"];
   [returnObj setValue:resultAsObject forKey:@"sent"];
 
   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
@@ -571,7 +571,7 @@ NSString *const operationWrite = @"write";
   [returnObj setValue:request.central.identifier.UUIDString forKey:@"address"];
   [returnObj setValue:[NSNumber numberWithInteger:request.central.maximumUpdateValueLength] forKey:@"maximumUpdateValueLength"];
 
-  [returnObj setValue:@"readRequestReceived" forKey:@"status"];
+  [returnObj setValue:@"readRequested" forKey:@"status"];
 
   [requestsHash setObject:request forKey:[NSNumber numberWithInt:requestId]];
   [returnObj setValue:[NSNumber numberWithInteger:requestId] forKey:@"requestId"];
@@ -595,7 +595,7 @@ NSString *const operationWrite = @"write";
     [returnObj setValue:request.central.identifier.UUIDString forKey:@"address"];
     [returnObj setValue:[NSNumber numberWithInteger:request.central.maximumUpdateValueLength]  forKey:@"maximumUpdateValueLength"];
 
-    [returnObj setValue:@"writeRequestReceived" forKey:@"status"];
+    [returnObj setValue:@"writeRequested" forKey:@"status"];
 
     [requestsHash setObject:request forKey:[NSNumber numberWithInt:requestId]];
     [returnObj setValue:[NSNumber numberWithInteger:requestId]  forKey:@"requestId"];
@@ -619,7 +619,7 @@ NSString *const operationWrite = @"write";
   [returnObj setValue:central.identifier.UUIDString forKey:@"address"];
   [returnObj setValue:[NSNumber numberWithInteger:central.maximumUpdateValueLength]  forKey:@"maximumUpdateValueLength"];
 
-  [returnObj setValue:@"subscribedToCharacteristic" forKey:@"status"];
+  [returnObj setValue:@"subscribed" forKey:@"status"];
 
   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
   [pluginResult setKeepCallbackAsBool:true];
@@ -634,7 +634,7 @@ NSString *const operationWrite = @"write";
 
   [returnObj setValue:central.identifier.UUIDString forKey:@"address"];
 
-  [returnObj setValue:@"unsubscribedToCharacteristic" forKey:@"status"];
+  [returnObj setValue:@"unsubscribed" forKey:@"status"];
 
   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
   [pluginResult setKeepCallbackAsBool:true];
@@ -644,7 +644,7 @@ NSString *const operationWrite = @"write";
 - (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral {
   NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
-  [returnObj setValue:@"peripheralManagerIsReadyToUpdateSubscribers" forKey:@"status"];
+  [returnObj setValue:@"notificationReady" forKey:@"status"];
 
   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
   [pluginResult setKeepCallbackAsBool:true];

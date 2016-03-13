@@ -1,14 +1,14 @@
 #import <Cordova/CDV.h>
 #import <CoreBluetooth/CoreBluetooth.h>
 
-@interface BluetoothLePlugin : CDVPlugin <CBCentralManagerDelegate, CBPeripheralDelegate>
+@interface BluetoothLePlugin : CDVPlugin <CBCentralManagerDelegate, CBPeripheralDelegate, CBPeripheralManagerDelegate>
 {
     CBCentralManager *centralManager;
     NSNumber* statusReceiver;
     NSString* initCallback;
     NSString* scanCallback;
     NSMutableDictionary* connections;
-  
+
     CBPeripheralManager* peripheralManager;
     NSString* initPeripheralCallback;
     NSString* addServiceCallback;
@@ -57,8 +57,8 @@
 - (void)startAdvertising:(CDVInvokedUrlCommand *)command;
 - (void)stopAdvertising:(CDVInvokedUrlCommand *)command;
 - (void)isAdvertising:(CDVInvokedUrlCommand *)command;
-- (void)respondToRequest:(CDVInvokedUrlCommand *)command;
-- (void)updateValue:(CDVInvokedUrlCommand *)command;
+- (void)respond:(CDVInvokedUrlCommand *)command;
+- (void)notify:(CDVInvokedUrlCommand *)command;
 
 @end
 

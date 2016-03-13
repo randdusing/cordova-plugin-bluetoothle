@@ -40,6 +40,8 @@ I'm available for part time contracting work. This would really help keep the pr
 * Resolve all callbacks on disconnected event. Currently it's only partially supported.
 * Read and write queueing for Android
 * Long write queueing for Android
+* Code refactoring
+* OSX Support
 
 
 ## Using AngularJS ##
@@ -136,8 +138,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.removeAllServices] (#removeallservices)
 * [bluetoothle.startAdvertising] (#startadvertising)
 * [bluetoothle.stopAdvertising] (#stopadvertising)
-* [bluetoothle.respondToRequest] (#respondtorequest)
-* [bluetoothle.updateValue] (#updatevalue)
+* [bluetoothle.respond] (#respond)
+* [bluetoothle.notify] (#notify)
 * [bluetoothle.encodedStringToBytes] (#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
@@ -1413,12 +1415,26 @@ bluetoothle.requestConnectionPriority(success, error, params);
 2. addService
 3. startAdvertising
 4. Listen for events on initializePeripheral callback
-5. Respond to events using respondToRequest or updateValue
+5. Respond to events using respond or notify
 6. stopAdvertising
 7. removeService / removeAllServices
 
 
+### Initilization ###
+Initialization works slightly different between Android and iOS. On iOS, you don't need to call intialize() if only acting as a peripheral, just initializePeripheral. On Android, you must always call initialize() before calling initializePeripheral().
+
+
+### Notifications ###
+Notifications work slightly differently between Android and iOS. On Android, you should wait for the ```notificationSent``` event before calling notify() again. On iOS, you need to check the notify() callback for the sent property. If the sent property is set to false, you should wait until receiving the ```peripheralManagerIsReadyToUpdateSubscribers``` event to resend the notification. In future versions, I hope to standardize the functionality between platforms.
+
+//TODO Better workflow for notificaitons
+
+### Descriptors ###
+iOS doesn't allow you to respond to read and write descriptor requests. Instead it only provides methods for when a client subscribes or unsubscribes. On Android, read and write descriptor requests are provided. If the write descriptor request is made on the Client Configuration Descriptor (used for subscriptions), a subscribe or unsubscribe event will be received instead of writeDescriptorRequested.
+
+
 ### initializePeripheral ###
+//TODO Fix issue with no params
 Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must readd services, start advertising, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. The `restoreKey` property is required when using the Bluetooth Peripheral background mode. This function should only be called once.
 
 Additionally this where new events are delivered for read, write, and subscription requests. See the success section for more details.
@@ -1442,11 +1458,15 @@ bluetoothle.initializePeripheral(success, error, params);
 ##### Success #####
 * status => enabled = Bluetooth is enabled
 * status => disabled = Bluetooth is disabled
-* status => readRequestReceived = Respond to a read request with responseToRequest()
-* status => writeRequestReceived = Respond to a write request with responseToRequest()
-* status => subscribedToCharacteristic = Subscription started request, use updateValue() to send new data
-* status => unsubscribedToCharacteristic = Subscription ended request, stop sending data
-* status => peripheralManagerIsReadyToUpdateSubscribers = Resume sending subscription updates
+* status => readRequested = Respond to a read request with respond(). Characteristic (Android/iOS) or Descriptor (Android)
+* status => writeRequested = Respond to a write request with respond(). Characteristic (Android/iOS) or Descriptor (Android)
+* status => subscribed = Subscription started request, use notify() to send new data
+* status => unsubscribed = Subscription ended request, stop sending data
+* status => notificationReady = Resume sending subscription updates (iOS)
+* status => notificationSent = Notification has been sent (Android)
+* status => connected = A device has connected
+* status => disconnected = A device has disconnected
+* status => mtuChanged = MTU has changed for device
 
 ###### Enabled/Disabled ######
 ```javascript
@@ -1455,10 +1475,10 @@ bluetoothle.initializePeripheral(success, error, params);
 }
 ```
 
-###### readRequestReceived ######
+###### readRequested ######
 ```javascript
 {
-  "status":"readRequestReceived",
+  "status":"readRequested",
   "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
   "service":"1234",
   "characteristic":"ABCD",
@@ -1467,10 +1487,10 @@ bluetoothle.initializePeripheral(success, error, params);
 }
 ```
 
-###### writeRequestReceived ######
+###### writeRequested ######
 ```javascript
 {
-  "status":"writeRequestReceived",
+  "status":"writeRequested",
   "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
   "service":"1234",
   "characteristic":"ABCD",
@@ -1504,6 +1524,31 @@ bluetoothle.initializePeripheral(success, error, params);
 ```javascript
 {
   "status":"peripheralManagerIsReadyToUpdateSubscribers"
+}
+```
+
+###### connected ######
+```javascript
+{
+  "status":"connected",
+  "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
+}
+```
+
+###### disconnected ######
+```javascript
+{
+  "status":"disconnected",
+  "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
+}
+```
+
+###### mtuChanged ######
+```javascript
+{
+  "status":"mtuChanged",
+  "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
+  "mtu":20,
 }
 ```
 
@@ -1656,11 +1701,11 @@ bluetoothle.isAdvertising(success, error);
 
 
 
-### respondToRequest ###
+### respond ###
 Respond to a read or write request
 
 ```javascript
-bluetoothle.respondToRequest(success, error, params);
+bluetoothle.respond(success, error, params);
 ```
 
 ##### Params #####
@@ -1683,16 +1728,16 @@ var params = {
 ##### Return #####
 ```javascript
 {
-  "status":"respondedToRequest"
+  "status":"responded"
 }
 ```
 
 
-### updateValue ###
+### notify ###
 Update a value for a subscription. Currently all subscribed devices will receive update. Device specific updates will be added in the future. If ```sent``` equals false in the return value, you must wait for the ```peripheralManagerIsReadyToUpdateSubscribers``` event before sending more updates.
 
 ```javascript
-bluetoothle.updateValue(success, error, params);
+bluetoothle.notify(success, error, params);
 ```
 
 ##### Params #####
@@ -1708,7 +1753,7 @@ var params = {
 ##### Return #####
 ```javascript
 {
-  "status":"updateValue",
+  "status":"notified",
   "sent":true
 }
 ```

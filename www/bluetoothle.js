@@ -114,11 +114,11 @@ var bluetoothle = {
   isAdvertising: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isAdvertising", []);
   },
-  respondToRequest: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "respondToRequest", [params]);
+  respond: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "respond", [params]);
   },
-  updateValue: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "updateValue", [params]);
+  notify: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "notify", [params]);
   },
   encodedStringToBytes: function(string) {
     var data = atob(string);
@@ -142,6 +142,13 @@ var bluetoothle = {
   },
   bytesToString: function(bytes) {
     return String.fromCharCode.apply(null, new Uint16Array(bytes));
+  },
+  bytesToHex: function(bytes) {
+    var string = [];
+    for (var i = 0; i < bytes.length; i++) {
+      string.push("0x" + ("0"+(bytes[i].toString(16))).substr(-2).toUpperCase());
+    }
+    return string.join(" ");
   },
   SCAN_MODE_OPPORTUNISTIC: -1,
   SCAN_MODE_LOW_POWER: 0,
