@@ -4,6 +4,9 @@
 - Background mode support controlled by other plugins.
 - Require Cordova 5+
 - Descriptor now includes permissions when discovering on Android...although descriptors never seem to have permissions set.
+- Fixed bug with descriptor values being typed wrong. Now value can have a type of data, number or string.
+- Fixed bug with write descriptor callback never being returned.
+- Fixed bug which allowed Client Configuration Descriptor to be written, which throws an iOS error.
 - Callbacks for discover, services, characteristics, descriptors, rssi, mtu, readDescriptor, writeDescriptor. Basically everything now.
 - Some code cleanup
 

@@ -123,6 +123,7 @@ NSString *const logNoCharacteristic = @"Characteristic not found";
 NSString *const logNoDescriptor = @"Descriptor not found";
 NSString *const logWriteValueNotFound = @"Write value not found";
 NSString *const logWriteDescriptorValueNotFound = @"Write descriptor value not found";
+NSString *const logWriteDescriptorNotAllowed = @"Unable to write client configuration descriptor";
 NSString *const logSubscribeAlready = @"Already subscribed";
 NSString *const logUnsubscribeAlready = @"Already unsubscribed";
 //Discovery
@@ -1580,8 +1581,22 @@ NSString *const operationWrite = @"write";
     return;
   }
 
+  if ([descriptor.UUID isEqual: [CBUUID UUIDWithString:CBUUIDClientCharacteristicConfigurationString]]) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+    [self addDevice:peripheral :returnObj];
+
+    [returnObj setValue:errorWriteDescriptor forKey:keyError];
+    [returnObj setValue:logWriteDescriptorNotAllowed forKey:keyMessage];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    return;
+  }
+
   //Get value to write
-  NSData* value = [self getValue:obj];
+  NSData* value = [self getValueForDescriptor:obj];
   //And ensure it's not null
   if (value == nil) {
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
@@ -2441,9 +2456,7 @@ NSString *const operationWrite = @"write";
   }
 
   //Get the descriptor value and add to return object
-  NSUInteger value = [descriptor.value integerValue];
-  NSData *data = [NSData dataWithBytes:&value length:sizeof(value)];
-  [self addValue:data toDictionary:returnObj];
+  [self addValueForDescriptor:descriptor toDictionary:returnObj];
 
   //Add the correct status
   [returnObj setValue:statusReadDescriptor forKey:keyStatus];
@@ -2509,7 +2522,7 @@ NSString *const operationWrite = @"write";
   CBCharacteristic* characteristic = descriptor.characteristic;
 
   //Get the callback and immediately delete it
-  NSString* callback = [self getDescriptorCallback:descriptor.UUID forCharacteristic:characteristic.UUID forConnection:connection forOperationType:operationRead];
+  NSString* callback = [self getDescriptorCallback:descriptor.UUID forCharacteristic:characteristic.UUID forConnection:connection forOperationType:operationWrite];
   [self removeDescriptorCallback:descriptor.UUID forCharacteristic:characteristic.UUID forConnection:connection forOperationType:operationWrite];
 
   //Return if callback is null
@@ -2533,7 +2546,7 @@ NSString *const operationWrite = @"write";
   }
 
   //Add descriptor value to return obj
-  [self addValue:descriptor.value toDictionary:returnObj];
+  [self addValueForDescriptor:descriptor toDictionary:returnObj];
 
   //Add status
   [returnObj setValue:statusWrittenDescriptor forKey:keyStatus];
@@ -3132,16 +3145,36 @@ NSString *const operationWrite = @"write";
   return data;
 }
 
--(void) addValue:(NSData *) bytes toDictionary:(NSMutableDictionary *) obj
-{
-    NSString *string = [bytes base64EncodedStringWithOptions:0];
+-(void) addValue:(NSData *) bytes toDictionary:(NSMutableDictionary *) obj {
+  NSString *string = [bytes base64EncodedStringWithOptions:0];
 
-    if (string == nil || string.length == 0)
-    {
-        return;
-    }
+  if (string == nil || string.length == 0) {
+    return;
+  }
 
-    [obj setValue:string forKey:keyValue];
+  [obj setValue:string forKey:keyValue];
+}
+
+-(void) addValueForDescriptor:(CBDescriptor *) descriptor toDictionary:(NSMutableDictionary *) obj {
+  if ([descriptor.value isKindOfClass:[NSString class]]) {
+    [obj setValue:descriptor.value forKey:keyValue];
+    [obj setValue:@"string" forKey:@"type"];
+  } else if ([descriptor.value isKindOfClass:[NSNumber class]]) {
+    [obj setValue:descriptor.value forKey:keyValue];
+    [obj setValue:@"number" forKey:@"type"];
+  } else {
+    [self addValue:descriptor.value toDictionary:obj];
+    [obj setValue:@"data" forKey:@"type"];
+  }
+}
+
+-(id) getValueForDescriptor:(NSDictionary *) obj {
+  NSString* type = [obj valueForKey:@"type"];
+  if (type == nil || [type isEqual:@"data"]) {
+    return [self getValue: obj];
+  } else {
+    return [obj valueForKey:@"value"];
+  }
 }
 
 -(NSMutableArray*) getUuids:(NSDictionary *) dictionary forType:(NSString*) type {
