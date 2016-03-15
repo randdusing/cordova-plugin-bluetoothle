@@ -6,6 +6,12 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 I'm available for part time contracting work. This would really help keep the project alive and up to date. You can contact me via: <randdusing@gmail.com>, [Facebook](https://www.facebook.com/randdusing), [LinkedIn](https://www.linkedin.com/in/randdusing) or [Twitter](https://twitter.com/randdusing) for more information.
 
 
+## 4.0.0 Beta - Server Support ##
+The 4.0.0-dev branch includes server support. Please give it a try and let me know if you run into any issues.
+
+``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#4.0.0-dev ```
+
+
 ## Requirements ##
 
 * Cordova 3.0.0 or higher
@@ -52,12 +58,6 @@ Cordova
 PhoneGap Build
 
 ```<gap:plugin name="cordova-plugin-bluetoothle" source="npm" />```
-
-
-## 4.0.0 Beta - Server Support ##
-The 4.0.0-dev branch includes server support. Note, this shouldn't be used in production! Current code isn't well tested and still needs improvements to code and documentation.
-
-``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#4.0.0-dev ```
 
 
 ## Installation Quirks (iOS) ##
