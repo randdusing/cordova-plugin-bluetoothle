@@ -6,6 +6,12 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 I'm available for part time contracting work. This would really help keep the project alive and up to date. You can contact me via: <randdusing@gmail.com>, [Facebook](https://www.facebook.com/randdusing), [LinkedIn](https://www.linkedin.com/in/randdusing) or [Twitter](https://twitter.com/randdusing) for more information.
 
 
+## 4.0.0 Beta - Server Support ##
+The 4.0.0-dev branch includes server support. Note, this shouldn't be used in production! Current code isn't well tested and still needs improvements to code and documentation.
+
+``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#4.0.0-dev ```
+
+
 ## Requirements ##
 
 * Cordova 5.0.0 or higher
@@ -18,9 +24,9 @@ I'm available for part time contracting work. This would really help keep the pr
 
 ## Limitations / Issues ##
 
-* Windows support is limited
-* Disconnecting and quickly reconnecting causes issues on Android. The device becomes connected again, but then quickly disconnects. Adding a timeout before reconnecting fixed the issue for me. I'm not sure if this is a problem with the plugin, Android's Bluetooth LE implementation or Android itself.
-* For subscribing, indication hasn't been tested.
+* Disconnect and quickly reconnecting can cause issues on Android. Add a small timeout.
+* Indication type subscription hasn't been well .
+* OS X is still experimental. I'm experiencing some problems, but may be related to Cordova itself.
 
 
 ## Upgrade 2.x to 3.x ##
@@ -35,13 +41,10 @@ I'm available for part time contracting work. This would really help keep the pr
 
 ## To Do ##
 
-* Support for Peripheral/Server role
-* Full support for Windows
-* Resolve all callbacks on disconnected event. Currently it's only partially supported.
-* Read and write queueing for Android
-* Long write queueing for Android
-* Code refactoring
-* OSX Support
+* Windows testing. I'd like to personally test on a Windows 10 device, but unfortunately don't have a device.
+* Operation queueing on Android (possibly). See Queuing section below.
+* Code refactoring. It's getting pretty messy.
+* Check peripheral/server role for OS X.
 
 
 ## Using AngularJS ##
@@ -62,12 +65,6 @@ PhoneGap Build
 ```<gap:plugin name="cordova-plugin-bluetoothle" source="npm" />```
 
 
-## 4.0.0 Beta - Server Support ##
-The 4.0.0-dev branch includes server support. Note, this shouldn't be used in production! Current code isn't well tested and still needs improvements to code and documentation.
-
-``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#4.0.0-dev ```
-
-
 ## Installation Quirks (Android) ##
 The latest version of the plugin requires you to set the Android target API to a minimum of 23 to support permission requirements for scanning. If you can't target 23, please use plugin version 2.4.0 or below.
 
@@ -82,6 +79,13 @@ Scanning works differently in the background. The scan will be much slower than 
 
 ## Discovery Quirks (iOS vs Android) ##
 Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The [Device plugin](https://github.com/apache/cordova-plugin-device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS. **iOS now supports Android style discovery, but use with caution. It's a bit buggy on iOS8, but seems to work fine on iOS9.**
+
+
+## Queuing (Android) ##
+Android commands must be queued. I recommend using promises like in the AngularJS wrapper to queue from the app level. There are a few issues when trying to queue from the plugin level, so I'm still determining how to implement it:
+1. Queuing needs to be done at a "global" level rather than per connection.
+2. Timeouts would be needed so that the queue would continue processing if onCharacteristicRead, onCharacteristicWrite, etc are never called.
+3. Queue would need to be "cleaned" if a device disconnects.
 
 
 ## UUIDs ##

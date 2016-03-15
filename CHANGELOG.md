@@ -1,9 +1,11 @@
 ## 4.0.0-dev - 2016-03-09
--Support for server/peripheral role on iOS and partially Android.
--Background mode support controlled by other plugins.
--Require Cordova 5+
--Descriptor now includes permissions when discovering on Android...although descriptors never seem to have permissions set.
--Code cleanup and refactoring
+- OS X support. Central/client role only. Server/peripheral role was killed on newer versions of OS X.
+- Support for server/peripheral role on iOS and partially Android.
+- Background mode support controlled by other plugins.
+- Require Cordova 5+
+- Descriptor now includes permissions when discovering on Android...although descriptors never seem to have permissions set.
+- Callbacks for discover, services, characteristics, descriptors, rssi, mtu, readDescriptor, writeDescriptor. Basically everything now.
+- Some code cleanup
 
 ## 3.1.0 - 2016-02-23
 - Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0

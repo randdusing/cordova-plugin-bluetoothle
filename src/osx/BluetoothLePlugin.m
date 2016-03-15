@@ -152,9 +152,9 @@ NSString *const operationWrite = @"write";
   NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
 
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
-  if (restoreKey) {
+  /*if (restoreKey) {
     [options setValue:restoreKey forKey:CBPeripheralManagerOptionRestoreIdentifierKey];
-  }
+  }*/
   if (request) {
     [options setValue:request forKey:CBPeripheralManagerOptionShowPowerAlertKey];
   }
@@ -692,9 +692,9 @@ NSString *const operationWrite = @"write";
   NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
 
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
-  if (restoreKey) {
+  /*if (restoreKey) {
     [options setValue:restoreKey forKey:CBCentralManagerOptionRestoreIdentifierKey];
-  }
+  }*/
   if (request) {
     [options setValue:request forKey:CBCentralManagerOptionShowPowerAlertKey];
   }

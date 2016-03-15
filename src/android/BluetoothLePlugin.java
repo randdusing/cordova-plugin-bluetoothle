@@ -300,6 +300,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final UUID clientConfigurationDescriptorUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
   public BluetoothLePlugin() {
+
     if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
       return;
     }
@@ -369,9 +370,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
         }
       });
       return true;
-    }
-    else if (disconnectActionName.equals(action))
-    {
+    } else if (disconnectActionName.equals(action)) {
       cordova.getThreadPool().execute(new Runnable() {
         public void run() {
           disconnectAction(args, callbackContext);
@@ -2729,27 +2728,51 @@ public class BluetoothLePlugin extends CordovaPlugin {
     ArrayList<CallbackContext> callbacks = new ArrayList<CallbackContext>();
 
     for (Object key : connection.keySet()) {
+
+      if (key instanceof String) {
+        if (key.equals(operationDiscover) || key.equals(operationRssi) || key.equals(operationMtu)) {
+          CallbackContext callback = (CallbackContext) connection.get(key);
+          if (callback == null) {
+            continue;
+          }
+
+          callbacks.add(callback);
+        }
+
+        continue;
+      }
+
       if (!(key instanceof UUID)) {
         continue;
       }
 
       HashMap<Object, Object> characteristic = (HashMap<Object,Object>) connection.get(key);
-      for (Object keyCallback : characteristic.keySet()) {
-        if (!(keyCallback instanceof String)) {
-          continue;
-        }
-
-        CallbackContext callback = (CallbackContext)characteristic.get(keyCallback);
-
-        if (callback == null) {
-          continue;
-        }
-
-        callbacks.add(callback);
-      }
+      GetMoreCallbacks(characteristic, callbacks);
     }
 
     return callbacks.toArray(new CallbackContext[callbacks.size()]);
+  }
+
+  private void GetMoreCallbacks(HashMap<Object, Object> lower, ArrayList<CallbackContext> callbacks) {
+    for (Object key : lower.keySet()) {
+      if (key instanceof UUID) {
+        HashMap<Object, Object> next = (HashMap<Object,Object>) lower.get(key);
+        GetMoreCallbacks(next, callbacks);
+        continue;
+      }
+
+      if (!(key instanceof String)) {
+        continue;
+      }
+
+      CallbackContext callback = (CallbackContext)lower.get(key);
+
+      if (callback == null) {
+        continue;
+      }
+
+      callbacks.add(callback);
+    }
   }
 
   private void RemoveCallback(UUID characteristicUuid, HashMap<Object, Object> connection, String operationType) {
