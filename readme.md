@@ -7,7 +7,7 @@ I'm available for part time contracting work. This would really help keep the pr
 
 
 ## 4.0.0 Beta - Server Support ##
-The 4.0.0-dev branch includes server support. Note, this shouldn't be used in production! Current code isn't well tested and still needs improvements to code and documentation.
+The 4.0.0-dev branch includes server support. Please give it a try and let me know if you run into any issues.
 
 ``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#4.0.0-dev ```
 
@@ -1131,7 +1131,8 @@ bluetoothle.writeDescriptor(writeDescriptorSuccess, writeDescriptorError, params
 * service = The service's ID
 * characteristic = The characteristic's ID
 * descriptor = The descriptor's ID
-* value - Base64 encoded string
+* value - Base64 encoded string, number or string.
+* type - Specifies type (data, number or string). Default is base64.
 
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 
