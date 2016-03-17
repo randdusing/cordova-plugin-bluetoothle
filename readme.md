@@ -1053,9 +1053,10 @@ bluetoothle.write(writeSuccess, writeError, params);
 * service = The service's UUID
 * characteristic = The characteristic's UUID
 * value = Base64 encoded string
+* type = Set to "noResponse" to enable write without response, all other values will write normally.
 
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
-To write without response, set type to "noResponse". Any other value will default to write with response. Note, no callback will occur on write without response.
+To write without response, set type to "noResponse". Any other value will default to write with response. Note, no callback will occur on write without response on iOS.
 ```javascript
 var string = "Hello World";
 var bytes = bluetoothle.stringToBytes(string);
