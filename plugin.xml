@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" id="cordova-plugin-bluetoothle" version="3.2.0">
   <engines>
-    <engine name="cordova" version=">=3.0.0" />
+    <engine name="cordova-plugman" version=">=5.0.0" />
     <engine name="cordova-android" version=">=5.0.0" />
   </engines>
   <name>Bluetooth LE</name>
@@ -63,69 +63,75 @@
         <param name="windows-package" value="BluetoothLePlugin" />
       </feature>
     </config-file>
-    <config-file target="package.appxmanifest" parent="/Package/Capabilities">
+    <config-file target="package.appxmanifest" parent="/Package/Capabilities" versions="<10.0.0">
       <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
         <m2:Device Id="any">
-          <!-- Generic Access -->
-          <m2:Function Type="serviceId:1800"/>
-          <!-- Generic Attribute -->
-          <m2:Function Type="serviceId:1801"/>
-          <!-- Immediate Alert -->
-          <m2:Function Type="serviceId:1802"/>
-          <!-- Link Loss -->
-          <m2:Function Type="serviceId:1803"/>
-          <!-- Tx Power -->
-          <m2:Function Type="serviceId:1804"/>
-          <!-- Reference Time Update Service -->
-          <m2:Function Type="serviceId:1806"/>
-          <!-- Next DST Change Service -->
-          <m2:Function Type="serviceId:1807"/>
-          <!-- Glucose -->
-          <m2:Function Type="serviceId:1808"/>
-          <!-- Health Thermometer-->
-          <m2:Function Type="serviceId:1809"/>
-          <!-- Device Information -->
-          <m2:Function Type="serviceId:180A"/>
-          <!-- Heart Rate -->
-          <m2:Function Type="serviceId:180D"/>
-          <!-- Phone Alert Status Service -->
-          <m2:Function Type="serviceId:180E"/>
-          <!-- Battery Service -->
-          <m2:Function Type="serviceId:180F"/>
-          <!-- Blood Pressure -->
-          <m2:Function Type="serviceId:1810"/>
-          <!-- Alert Notification Service -->
-          <m2:Function Type="serviceId:1811"/>
-          <!-- Human Interface Device -->
-          <m2:Function Type="serviceId:1812"/>
-          <!-- Scan Parameters -->
-          <m2:Function Type="serviceId:1813"/>
-          <!-- Running Speed and Cadence -->
-          <m2:Function Type="serviceId:1814"/>
-          <!-- Cycling Speed and Cadence -->
-          <m2:Function Type="serviceId:1816"/>
-          <!-- Cycling Power -->
-          <m2:Function Type="serviceId:1818"/>
-          <!-- Location and Navigation -->
-          <m2:Function Type="serviceId:1819"/>
-          <!-- Environmental Sensing -->
-          <m2:Function Type="serviceId:181A"/>
-          <!-- Body Composition -->
-          <m2:Function Type="serviceId:181B"/>
-          <!-- User Data -->
-          <m2:Function Type="serviceId:181C"/>
-          <!-- Weight Scale -->
-          <m2:Function Type="serviceId:181D"/>
-          <!-- Bond Management-->
-          <m2:Function Type="serviceId:181E"/>
-          <!-- Continuous Glucose Monitoring -->
-          <m2:Function Type="serviceId:181F"/>
-          <!-- Internet Protocol Support-->
-          <m2:Function Type="serviceId:1820"/>
-          <!-- Medisana BS 430 Connect (Body Analysis Scale) -->
-          <m2:Function Type="serviceId:78b2"/>
+          <m2:Function Type="serviceId:1800"/> <!-- Generic Access -->
+          <m2:Function Type="serviceId:1801"/> <!-- Generic Attribute -->
+          <m2:Function Type="serviceId:1802"/> <!-- Immediate Alert -->
+          <m2:Function Type="serviceId:1803"/> <!-- Link Loss -->
+          <m2:Function Type="serviceId:1804"/> <!-- Tx Power -->
+          <m2:Function Type="serviceId:1806"/> <!-- Reference Time Update Service -->
+          <m2:Function Type="serviceId:1807"/> <!-- Next DST Change Service -->
+          <m2:Function Type="serviceId:1808"/> <!-- Glucose -->
+          <m2:Function Type="serviceId:1809"/> <!-- Health Thermometer-->
+          <m2:Function Type="serviceId:180A"/> <!-- Device Information -->
+          <m2:Function Type="serviceId:180D"/> <!-- Heart Rate -->
+          <m2:Function Type="serviceId:180E"/> <!-- Phone Alert Status Service -->
+          <m2:Function Type="serviceId:180F"/> <!-- Battery Service -->
+          <m2:Function Type="serviceId:1810"/> <!-- Blood Pressure -->
+          <m2:Function Type="serviceId:1811"/> <!-- Alert Notification Service -->
+          <m2:Function Type="serviceId:1812"/> <!-- Human Interface Device -->
+          <m2:Function Type="serviceId:1813"/> <!-- Scan Parameters -->
+          <m2:Function Type="serviceId:1814"/> <!-- Running Speed and Cadence -->
+          <m2:Function Type="serviceId:1816"/> <!-- Cycling Speed and Cadence -->
+          <m2:Function Type="serviceId:1818"/> <!-- Cycling Power -->
+          <m2:Function Type="serviceId:1819"/> <!-- Location and Navigation -->
+          <m2:Function Type="serviceId:181A"/> <!-- Environmental Sensing -->
+          <m2:Function Type="serviceId:181B"/> <!-- Body Composition -->
+          <m2:Function Type="serviceId:181C"/> <!-- User Data -->
+          <m2:Function Type="serviceId:181D"/> <!-- Weight Scale -->
+          <m2:Function Type="serviceId:181E"/> <!-- Bond Management-->
+          <m2:Function Type="serviceId:181F"/> <!-- Continuous Glucose Monitoring -->
+          <m2:Function Type="serviceId:1820"/> <!-- Internet Protocol Support-->
+          <m2:Function Type="serviceId:78b2"/> <!-- Medisana BS 430 Connect (Body Analysis Scale) -->
         </m2:Device>
       </m2:DeviceCapability>
+    </config-file>
+    <config-file target="package.appxmanifest" parent="/Package/Capabilities" versions=">=10.0.0">
+      <DeviceCapability Name="bluetooth.genericAttributeProfile">
+        <Device Id="any">
+          <Function Type="serviceId:1800"/> <!-- Generic Access -->
+          <Function Type="serviceId:1801"/> <!-- Generic Attribute -->
+          <Function Type="serviceId:1802"/> <!-- Immediate Alert -->
+          <Function Type="serviceId:1803"/> <!-- Link Loss -->
+          <Function Type="serviceId:1804"/> <!-- Tx Power -->
+          <Function Type="serviceId:1806"/> <!-- Reference Time Update Service -->
+          <Function Type="serviceId:1807"/> <!-- Next DST Change Service -->
+          <Function Type="serviceId:1808"/> <!-- Glucose -->
+          <Function Type="serviceId:1809"/> <!-- Health Thermometer-->
+          <Function Type="serviceId:180A"/> <!-- Device Information -->
+          <Function Type="serviceId:180D"/> <!-- Heart Rate -->
+          <Function Type="serviceId:180E"/> <!-- Phone Alert Status Service -->
+          <Function Type="serviceId:180F"/> <!-- Battery Service -->
+          <Function Type="serviceId:1810"/> <!-- Blood Pressure -->
+          <Function Type="serviceId:1811"/> <!-- Alert Notification Service -->
+          <Function Type="serviceId:1812"/> <!-- Human Interface Device -->
+          <Function Type="serviceId:1813"/> <!-- Scan Parameters -->
+          <Function Type="serviceId:1814"/> <!-- Running Speed and Cadence -->
+          <Function Type="serviceId:1816"/> <!-- Cycling Speed and Cadence -->
+          <Function Type="serviceId:1818"/> <!-- Cycling Power -->
+          <Function Type="serviceId:1819"/> <!-- Location and Navigation -->
+          <Function Type="serviceId:181A"/> <!-- Environmental Sensing -->
+          <Function Type="serviceId:181B"/> <!-- Body Composition -->
+          <Function Type="serviceId:181C"/> <!-- User Data -->
+          <Function Type="serviceId:181D"/> <!-- Weight Scale -->
+          <Function Type="serviceId:181E"/> <!-- Bond Management-->
+          <Function Type="serviceId:181F"/> <!-- Continuous Glucose Monitoring -->
+          <Function Type="serviceId:1820"/> <!-- Internet Protocol Support-->
+          <Function Type="serviceId:78b2"/> <!-- Medisana BS 430 Connect (Body Analysis Scale) -->
+        </Device>
+      </DeviceCapability>
     </config-file>
     <js-module src="src/windows/BluetoothLEPlugin.js" name="BluetoothLEPlugin">
       <merges target="" />
