@@ -1,4 +1,5 @@
-# Change Log
+## 3.2.0 - 2016-03-21
+- Added writeQ function for faster writes.
 
 ## 3.1.0 - 2016-02-23
 - Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0.

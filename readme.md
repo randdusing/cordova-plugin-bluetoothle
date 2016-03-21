@@ -130,6 +130,9 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.readDescriptor] (#readdescriptor)
 * [bluetoothle.writeDescriptor] (#writedescriptor)
 * [bluetoothle.rssi] (#rssi)
+* [bluetoothle.mtu] (#mtu)
+* [bluetoothle.rssi] (#rssi)
+* [bluetoothle.requestConnectionPriority] (#requestconnectionpriority)
 * [bluetoothle.isInitialized] (#isinitialized)
 * [bluetoothle.isEnabled] (#isenabled)
 * [bluetoothle.isScanning] (#isscanning)
@@ -1069,6 +1072,26 @@ var string = bluetoothle.bytesToString(bytes); //This should equal Hello World!
 
 
 
+### writeQ ###
+Write Quick / Queue, use this method to quickly execute write without response commands when writing more than 20 bytes at a time. The data will automatically be split up into 20 bytes packets. On iOS, these packets are written immediately since iOS uses queues. You probably won't see much of a performance increase using writeQ. On Android, a queue isn't used internally. Instead another call shouldn't be made until onCharacteristicWrite is called. This could be done at the Javascript layer, but the Javascript to plugin "bridge" must be crossed twice, which leads to some significant slow downs when milliseconds make a difference. For even better write throughput, use requestConnectionPriority('high') as well.
+
+Warnings
+* This is experimental. Test heavily before using in any production code.
+* iOS won't see much performance gain, but Android should.
+* Only supports one call at a time. Don't execute back to back, use on multiple devices, or multiple characteristics.
+
+```javascript
+bluetoothle.writeQ(writeSuccess, writeError, params);
+```
+
+##### Params #####
+See write() above.
+
+##### Success #####
+See write() above.
+
+
+
 ### readDescriptor ###
 Read a particular characterist's descriptor
 
@@ -1205,6 +1228,37 @@ bluetoothle.mtu(mtuSuccess, mtuError, params);
   "mtu": 50,
   "name": "Polar H7 3B321015",
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+}
+```
+
+
+
+### requestConnectionPriority ###
+Request a change in the connection priority to improve throughput when transfer large amounts of data via BLE. Android support only. iOS will return error.
+
+```javascript
+bluetoothle.requestConnectionPriority(success, error, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+* connectionPriority = low / balanced / high
+
+```javascript
+{
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "connectionPriority" : "balanced"
+}
+```
+
+##### Success #####
+* status => connectionPriorityRequested = true
+
+```javascript
+{
+  "name": "Polar H7 3B321015",
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "status" : "connectionPriorityRequested"
 }
 ```
 
@@ -1373,36 +1427,6 @@ bluetoothle.isLocationEnabled(isLocationEnabledSuccess);
 }
 ```
 
-
-
-### requestConnectionPriority ###
-Request a change in the connection priority to improve throughput when transfer large amounts of data via BLE. Android support only. iOS will return error.
-
-```javascript
-bluetoothle.requestConnectionPriority(success, error, params);
-```
-
-#### Params ####
-* address = The address/identifier provided by the scan's return object
-* connectionPriority = low / balanced / high
-
-```javascript
-{
-  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
-  "connectionPriority" : "balanced"
-}
-```
-
-##### Success #####
-* status => connectionPriorityRequested = true
-
-```javascript
-{
-  "name": "Polar H7 3B321015",
-  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
-  "status" : "connectionPriorityRequested"
-}
-```
 
 
 ### encodedStringToBytes ###

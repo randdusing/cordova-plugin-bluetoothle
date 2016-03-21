@@ -1051,6 +1051,87 @@ NSString *const operationWrite = @"write";
     [peripheral writeValue:value forCharacteristic:characteristic type:writeType];
 }
 
+- (void)writeQ:(CDVInvokedUrlCommand *)command {
+  //Ensure Bluetooth is enabled
+  if ([self isNotInitialized:command]) {
+    return;
+  }
+
+  //Get the arguments
+  NSDictionary* obj = [self getArgsObject:command.arguments];
+  if ([self isNotArgsObject:obj :command]) {
+    return;
+  }
+
+  //Get the connection address
+  NSUUID* address = [self getAddress:obj];
+  if ([self isNotAddress:address :command]) {
+    return;
+  }
+
+  //If never connected or attempted connected, reconnect can't be used
+  NSMutableDictionary* connection = [self wasNeverConnected:address :command];
+  if (connection == nil) {
+    return;
+  }
+
+  //Get the peripheral
+  CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
+
+  //Ensure connection is connected
+  if ([self isNotConnected:peripheral :command]) {
+    return;
+  }
+
+  //Get service
+  CBService* service = [self getService:obj forPeripheral:peripheral];
+
+  if ([self isNotService:service forDevice:peripheral :command]) {
+    return;
+  }
+
+  //Get characteristic
+  CBCharacteristic* characteristic = [self getCharacteristic:obj forService:service];
+  if ([self isNotCharacteristic:characteristic forDevice:peripheral :command]) {
+    return;
+  }
+
+  //Get the value to write
+  NSData* value = [self getValue:obj];
+  //And ensure it's not empty
+  if (value == nil) {
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+    [self addDevice:peripheral :returnObj];
+
+    [returnObj setValue:errorWrite forKey:keyError];
+    [returnObj setValue:logWriteValueNotFound forKey:keyMessage];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    return;
+  }
+
+  //Set the callback
+  [self addCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite forCallback:command.callbackId];
+
+  //Get the write type (response or no response)
+  int writeType = [self getWriteType:obj];
+
+  NSUInteger length = [value length];
+  NSUInteger chunkSize = 20;
+  NSUInteger offset = 0;
+  do {
+    NSUInteger thisChunkSize = length - offset > chunkSize ? chunkSize : length - offset;
+    NSData* chunk = [NSData dataWithBytesNoCopy:(char *)[value bytes] + offset length:thisChunkSize freeWhenDone:NO];
+
+    offset += thisChunkSize;
+    [peripheral writeValue:chunk forCharacteristic:characteristic type:writeType];
+  } while (offset < length);
+}
+
+
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command
 {
     //Ensure Bluetooth is enabled
