@@ -114,7 +114,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.disable] (#disable) (Android)
 * [bluetoothle.startScan] (#startscan)
 * [bluetoothle.stopScan] (#stopscan)
-* [bluetoothle.retrieveConnected] (#retrieveconnected) (iOS)
+* [bluetoothle.retrieveConnected] (#retrieveconnected)
 * [bluetoothle.connect] (#connect)
 * [bluetoothle.reconnect] (#reconnect)
 * [bluetoothle.disconnect] (#disconnect)
@@ -130,17 +130,17 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.readDescriptor] (#readdescriptor)
 * [bluetoothle.writeDescriptor] (#writedescriptor)
 * [bluetoothle.rssi] (#rssi)
-* [bluetoothle.mtu] (#mtu)
-* [bluetoothle.rssi] (#rssi)
-* [bluetoothle.requestConnectionPriority] (#requestconnectionpriority)
+* [bluetoothle.mtu] (#mtu) (Android 5+)
+* [bluetoothle.requestConnectionPriority] (#requestconnectionpriority) (Android 5+)
 * [bluetoothle.isInitialized] (#isinitialized)
 * [bluetoothle.isEnabled] (#isenabled)
 * [bluetoothle.isScanning] (#isscanning)
 * [bluetoothle.isConnected] (#isconnected)
 * [bluetoothle.isDiscovered] (#isdiscovered)
-* [bluetoothle.hasPermission] (#haspermission) (Android)
-* [bluetoothle.requestPermission] (#requestpermission) (Android)
-* [bluetoothle.isLocationEnabled] (#islocationenabled) (Android)
+* [bluetoothle.hasPermission] (#haspermission) (Android 6+)
+* [bluetoothle.requestPermission] (#requestpermission) (Android 6+)
+* [bluetoothle.isLocationEnabled] (#islocationenabled) (Android 6+)
+* [bluetoothle.requestLocation] (#requestlocation) (Android 6+)
 * [bluetoothle.encodedStringToBytes] (#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString] (#bytestoencodedstring)
 * [bluetoothle.stringToBytes] (#stringtobytes)
@@ -276,7 +276,7 @@ The successCallback isn't actually used. Listen to initialize callbacks for chan
 
 
 ### startScan ###
-Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions to find unpaired devices. Permissions can be requested by using the hasPermission and requestPermission functions. Android API >= 23 also requires location services to be enabled. Use isLocationEnabled to determine whether location services are enabled. If not, you may want to prompt the user to enabled them.
+Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions to find unpaired devices. Permissions can be requested by using the hasPermission and requestPermission functions. Android API >= 23 also requires location services to be enabled. Use ```isLocationEnabled``` to determine whether location services are enabled. If not enabled, use ```requestLocation``` to prompt the location services settings page.
 
 ```javascript
 bluetoothle.startScan(startScanSuccess, startScanError, params);
@@ -1415,7 +1415,7 @@ bluetoothle.requestPermission(requestPermissionSuccess, requestPermissionError);
 Determine if location services are enabled or not. Location Services are required to find devices in Android API 23.
 
 ```javascript
-bluetoothle.isLocationEnabled(isLocationEnabledSuccess);
+bluetoothle.isLocationEnabled(isLocationEnabledSuccess, isLocationEnabledError);
 ```
 
 ##### Success #####
@@ -1424,6 +1424,23 @@ bluetoothle.isLocationEnabled(isLocationEnabledSuccess);
 ```javascript
 {
   "isLocationEnabled": true
+}
+```
+
+
+### requestLocation ###
+Prompt location services settings pages. ```requestLocation``` property returns whether location services are enabled or disabled. Location Services are required to find devices in Android API 23.
+
+```javascript
+bluetoothle.requestLocation(requestLocationSuccess, requestLocationError);
+```
+
+##### Success #####
+* status => requestLocation = true/false
+
+```javascript
+{
+  "requestLocation": true
 }
 ```
 
@@ -1952,7 +1969,7 @@ function discoverSuccess(result) {
 
 If the call to the [services](#services) function succeeds, we'll get an array of services.
 
-we'll call the [Characteristics](#characteristics) function to get all of the characteristics of the service.  
+we'll call the [Characteristics](#characteristics) function to get all of the characteristics of the service.
 
 ```javascript
 

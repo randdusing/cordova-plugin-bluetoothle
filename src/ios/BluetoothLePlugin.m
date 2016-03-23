@@ -1498,6 +1498,14 @@ NSString *const operationWrite = @"write";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void)requestLocation:(CDVInvokedUrlCommand *)command
+{
+    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: @"requestLocation", keyError, logOperationUnsupported, keyMessage, nil];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 //Central Manager Delegates
 - (void) centralManagerDidUpdateState:(CBCentralManager *)central
 {

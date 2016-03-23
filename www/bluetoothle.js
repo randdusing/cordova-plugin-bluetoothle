@@ -96,6 +96,9 @@ var bluetoothle = {
   isLocationEnabled: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isLocationEnabled", []);
   },
+  requestLocation: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestLocation", []);
+  },
   encodedStringToBytes: function(string) {
     var data = atob(string);
     var bytes = new Uint8Array(data.length);

@@ -1,3 +1,7 @@
+## 3.3.0 - 2016-03-23
+- Added requestLocation function to help enable location on Android 6.0. Location services must be enabled to scan for unpaired devices. [\#238](https://github.com/randdusing/BluetoothLE/issues/238)
+- Updated readme with walkthrough example - Thanks [normesta](https://github.com/normesta)
+
 ## 3.2.0 - 2016-03-21
 - Added writeQ function for faster writes.
 - Updated config.xml to support Windows 10 [\#242](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/242) - Thanks [TimBarham](https://github.com/TimBarham)

@@ -53,6 +53,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   //Initialization related variables
   private final int REQUEST_BT_ENABLE = 59627; /*Random integer*/
   private final int REQUEST_ACCESS_COARSE_LOCATION = 59628;
+  private final int REQUEST_LOCATION_SOURCE_SETTINGS = 59629;
   private BluetoothAdapter bluetoothAdapter;
   private boolean isReceiverRegistered = false;
 
@@ -61,6 +62,7 @@ public class BluetoothLePlugin extends CordovaPlugin
   private CallbackContext scanCallbackContext;
   private Object scanLock = new Object();
   private CallbackContext permissionsCallback;
+  private CallbackContext locationCallback;
 
   //Store connections and all their callbacks
   private HashMap<Object, HashMap<Object,Object>> connections;
@@ -582,6 +584,15 @@ public class BluetoothLePlugin extends CordovaPlugin
       });
       return true;
     }
+    else if ("requestLocation".equals(action))
+    {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          requestLocationAction(callbackContext);
+        }
+      });
+      return true;
+    }
     return false;
   }
 
@@ -599,7 +610,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     permissionsCallback.success(returnObj);
   }
 
-  public void hasPermissionAction(CallbackContext callbackContext) {
+  private void hasPermissionAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
     addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
@@ -607,7 +618,7 @@ public class BluetoothLePlugin extends CordovaPlugin
     callbackContext.success(returnObj);
   }
 
-  public void requestPermissionAction(CallbackContext callbackContext) {
+  private void requestPermissionAction(CallbackContext callbackContext) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
       JSONObject returnObj = new JSONObject();
       addProperty(returnObj, keyError, "requestPermission");
@@ -620,9 +631,15 @@ public class BluetoothLePlugin extends CordovaPlugin
     cordova.requestPermission(this, REQUEST_ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
   }
 
-  public void isLocationEnabledAction(CallbackContext callbackContext) {
+  private void isLocationEnabledAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
+    addProperty(returnObj, "isLocationEnabled", isLocationEnabled());
+
+    callbackContext.success(returnObj);
+  }
+
+  private boolean isLocationEnabled() {
     boolean result = true;
 
     //Only applies to Android 6.0, which requires the users to have location services enabled to scan for devices
@@ -634,9 +651,14 @@ public class BluetoothLePlugin extends CordovaPlugin
       }
     }
 
-    addProperty(returnObj, "isLocationEnabled", result);
+    return result;
+  }
 
-    callbackContext.success(returnObj);
+  private void requestLocationAction(CallbackContext callbackContext) {
+    locationCallback = callbackContext;
+
+    Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+    cordova.startActivityForResult(this, intent, REQUEST_LOCATION_SOURCE_SETTINGS);
   }
 
   private void initializeAction(JSONArray args, CallbackContext callbackContext)
@@ -2372,6 +2394,16 @@ public class BluetoothLePlugin extends CordovaPlugin
         PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, returnObj);
         pluginResult.setKeepCallback(true);
         initCallbackContext.sendPluginResult(pluginResult);
+      }
+    } else if (requestCode == REQUEST_LOCATION_SOURCE_SETTINGS) {
+       if (locationCallback != null) {
+        JSONObject returnObj = new JSONObject();
+
+        addProperty(returnObj, "requestLocation", isLocationEnabled());
+
+        locationCallback.success(returnObj);
+
+        locationCallback = null;
       }
     }
   }
