@@ -9,7 +9,7 @@ I'm available for part time contracting work. This would really help keep the pr
 ## 4.0.0 Beta - Server Support ##
 The 4.0.0-dev branch includes server support. Please give it a try and let me know if you run into any issues.
 
-``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#4.0.0-dev ```
+``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#v4.0.0-beta.1 ```
 
 
 ## Requirements ##
