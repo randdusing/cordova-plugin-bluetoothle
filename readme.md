@@ -14,7 +14,7 @@ The 4.0.0-dev branch includes server support. Please give it a try and let me kn
 
 ## Requirements ##
 
-* Cordova 3.0.0 or higher
+* Cordova 5.0.0 or higher
 * Android 4.3 or higher, Android Cordova library 5.0.0 or higher, target Android API 23 or higher
 * iOS 7 or higher
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
