@@ -7,12 +7,22 @@
 - Fixed bug with descriptor values being typed wrong. Now value can have a type of data, number or string.
 - Fixed bug with write descriptor callback never being returned.
 - Fixed bug which allowed Client Configuration Descriptor to be written, which throws an iOS error.
+- Normalized write without response behavior. iOS now returns a write success immediately after executing the write.
 - Callbacks for discover, services, characteristics, descriptors, rssi, mtu, readDescriptor, writeDescriptor. Basically everything now.
 - Some code cleanup
 
+## 3.3.0 - 2016-03-23
+- Added requestLocation function to help enable location on Android 6.0. Location services must be enabled to scan for unpaired devices. [\#238](https://github.com/randdusing/BluetoothLE/issues/238)
+- Updated readme with walkthrough example - Thanks [normesta](https://github.com/normesta)
+
+## 3.2.0 - 2016-03-21
+- Added writeQ function for faster writes.
+- Updated config.xml to support Windows 10 [\#242](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/242) - Thanks [TimBarham](https://github.com/TimBarham)
+
 ## 3.1.0 - 2016-02-23
-- Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0
+- Fixed issue with requestPermission() causing crash when executed on Android versions prior to 6.0.
 - Added ability to check whether location services are enabled or not. Android 6.0 requires location services to be enabled to find unpaired devices.
+- Windows API now compliant with v3.
 
 ## 3.0.1 - 2016-01-26
 - Fixed issue with API21+ code running on earlier API versions and causing the plugin to crash.

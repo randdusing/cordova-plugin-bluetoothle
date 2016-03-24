@@ -35,6 +35,7 @@
 - (void)subscribe:(CDVInvokedUrlCommand *)command;
 - (void)unsubscribe:(CDVInvokedUrlCommand *)command;
 - (void)write:(CDVInvokedUrlCommand *)command;
+- (void)writeQ:(CDVInvokedUrlCommand *)command;
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)rssi:(CDVInvokedUrlCommand *)command;
@@ -48,6 +49,7 @@
 - (void)hasPermission:(CDVInvokedUrlCommand *)command;
 - (void)requestPermission:(CDVInvokedUrlCommand *)command;
 - (void)isLocationEnabled:(CDVInvokedUrlCommand *)command;
+- (void)requestLocation:(CDVInvokedUrlCommand *)command;
 
 - (void)initializePeripheral:(CDVInvokedUrlCommand *)command;
 - (void)addService:(CDVInvokedUrlCommand *)command;

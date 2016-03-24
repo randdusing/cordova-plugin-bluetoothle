@@ -54,6 +54,9 @@ var bluetoothle = {
   write: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "write", [params]);
   },
+  writeQ: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "writeQ", [params]);
+  },
   readDescriptor: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "readDescriptor", [params]);
   },
@@ -65,6 +68,9 @@ var bluetoothle = {
   },
   mtu: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "mtu", [params]);
+  },
+  requestConnectionPriority: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]);
   },
   isInitialized: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isInitialized", []);
@@ -81,9 +87,6 @@ var bluetoothle = {
   isDiscovered: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isDiscovered", [params]);
   },
-  requestConnectionPriority: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]);
-  },
   hasPermission: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermission", []);
   },
@@ -92,6 +95,9 @@ var bluetoothle = {
   },
   isLocationEnabled: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isLocationEnabled", []);
+  },
+  requestLocation: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestLocation", []);
   },
   initializePeripheral: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "initializePeripheral", [params]);
