@@ -6,12 +6,6 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 I'm available for hire on Bluetooth Low Energy, Ionic and Cordova projects. This would really help keep the project alive and up to date. You can contact me via: <randdusing@gmail.com>, [Facebook](https://www.facebook.com/randdusing), [LinkedIn](https://www.linkedin.com/in/randdusing) or [Twitter](https://twitter.com/randdusing) for more information.
 
 
-## 4.0.0 Beta - Server Support ##
-The 4.0.0-dev branch includes server support. Please give it a try and let me know if you run into any issues.
-
-``` cordova plugin add https://github.com/randdusing/cordova-plugin-bluetoothle.git#v4.0.0-beta.1 ```
-
-
 ## Requirements ##
 
 * Cordova 5.0.0 or higher
