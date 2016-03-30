@@ -45,6 +45,7 @@ The 4.0.0-dev branch includes server support. Please give it a try and let me kn
 * Operation queueing on Android (possibly). See Queuing section below.
 * Code refactoring. It's getting pretty messy.
 * Check peripheral/server role for OS X.
+* Improved notifications on peripheral/server role between Android and iOS
 
 
 ## Using AngularJS ##
@@ -74,7 +75,11 @@ Background modes have been changed, so follow the steps below:
 1. Background mode(s) are no longer added to your project's plist file by default. They can be added manually by editing the plist file, or you can use the following plugins: [cordova-plugin-background-mode-bluetooth-central](https://github.com/randdusing/cordova-plugin-background-mode-bluetooth-central) and/or [cordova-plugin-background-mode-bluetooth-peripheral](https://github.com/randdusing/cordova-plugin-background-mode-bluetooth-peripheral).
 2. Restore identifiers must be specified when calling initialize and/or initializePeripheral using the restoreKey parameter. See initialize and initializePeripheral for details.
 
-Scanning works differently in the background. The scan will be much slower than foreground scanning and requires service UUID filtering. The app may fall asleep, but will wake up when a new device is detected.
+Scanning works differently in the background. There seem to be three different states:
+
+1. Foreground - Service UUID doesn't need to be specified and allowDuplicates isn't ignored.
+2. Background (Screen On) - Service UUID must be specified. allowDuplicates isn't ignored. Scanning is very slow!
+3. Background (Screen Off) - Service UUID must be specified. allowDuplicates is ignored, so a device will only be returned once per scan. One possible work around is to start and stop the scan while in background. Unfortunately, there's a slim chance that the app may fall asleep again in between starting and stopping the scan.
 
 
 ## Discovery Quirks (iOS vs Android) ##
@@ -1475,14 +1480,12 @@ Initialization works slightly different between Android and iOS. On iOS, you don
 ### Notifications ###
 Notifications work slightly differently between Android and iOS. On Android, you should wait for the ```notificationSent``` event before calling notify() again. On iOS, you need to check the notify() callback for the sent property. If the sent property is set to false, you should wait until receiving the ```peripheralManagerIsReadyToUpdateSubscribers``` event to resend the notification. In future versions, I hope to standardize the functionality between platforms.
 
-//TODO Better workflow for notificaitons
 
 ### Descriptors ###
 iOS doesn't allow you to respond to read and write descriptor requests. Instead it only provides methods for when a client subscribes or unsubscribes. On Android, read and write descriptor requests are provided. If the write descriptor request is made on the Client Configuration Descriptor (used for subscriptions), a subscribe or unsubscribe event will be received instead of writeDescriptorRequested.
 
 
 ### initializePeripheral ###
-//TODO Fix issue with no params
 Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must readd services, start advertising, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. The `restoreKey` property is required when using the Bluetooth Peripheral background mode. This function should only be called once.
 
 Additionally this where new events are delivered for read, write, and subscription requests. See the success section for more details.

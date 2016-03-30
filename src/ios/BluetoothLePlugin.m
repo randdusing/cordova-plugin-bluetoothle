@@ -147,17 +147,18 @@ NSString *const operationWrite = @"write";
   requestsHash = [[NSMutableDictionary alloc] init];
   servicesHash = [[NSMutableDictionary alloc] init];
 
-  NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
-
-  NSNumber* request = [obj valueForKey:@"request"];
-  NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
-
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
-  if (restoreKey) {
-    [options setValue:restoreKey forKey:CBPeripheralManagerOptionRestoreIdentifierKey];
-  }
-  if (request) {
-    [options setValue:request forKey:CBPeripheralManagerOptionShowPowerAlertKey];
+
+  NSDictionary* obj = [self getArgsObject:command.arguments];
+  if (obj != nil) {
+    NSNumber* request = [obj valueForKey:@"request"];
+    NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
+    if (restoreKey) {
+      [options setValue:restoreKey forKey:CBPeripheralManagerOptionRestoreIdentifierKey];
+    }
+    if (request) {
+      [options setValue:request forKey:CBPeripheralManagerOptionShowPowerAlertKey];
+    }
   }
 
   peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil options:options];
@@ -544,8 +545,13 @@ NSString *const operationWrite = @"write";
   }
 
   if (error) {
-    //TODO add error
-    NSLog(@"Error starting advertising: %@", [error localizedDescription]);
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    [returnObj setValue:@"startAdvertising" forKey:@"error"];
+    [returnObj setValue:[error localizedDescription] forKey:@"message"];
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:advertisingCallback];
     return;
   }
 

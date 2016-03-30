@@ -1,4 +1,8 @@
-## 4.0.0-dev - 2016-03-09
+## 4.0.0 - 2016-03-30
+- Update OS X
+- Fix initializePeripheral issue when not passing parameters on iOS.
+
+## 4.0.0-dev - 2016-03-23
 - OS X support. Central/client role only. Server/peripheral role was killed on newer versions of OS X.
 - Support for server/peripheral role on iOS and partially Android.
 - Background mode support controlled by other plugins.
