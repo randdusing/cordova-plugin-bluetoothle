@@ -152,10 +152,10 @@ NSString *const operationWrite = @"write";
   NSDictionary* obj = [self getArgsObject:command.arguments];
   if (obj != nil) {
     NSNumber* request = [obj valueForKey:@"request"];
-    NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
-    if (restoreKey) {
+    //NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
+    /*if (restoreKey) {
       [options setValue:restoreKey forKey:CBPeripheralManagerOptionRestoreIdentifierKey];
-    }
+    }*/
     if (request) {
       [options setValue:request forKey:CBPeripheralManagerOptionShowPowerAlertKey];
     }
@@ -696,12 +696,12 @@ NSString *const operationWrite = @"write";
   //Check if status should be returned
   statusReceiver = [self getStatusReceiver:obj];
 
-  NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
+  //NSNumber* restoreKey = [obj valueForKey:@"restoreKey"];
 
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
-  if (restoreKey) {
+  /*if (restoreKey) {
     [options setValue:restoreKey forKey:CBCentralManagerOptionRestoreIdentifierKey];
-  }
+  }*/
   if (request) {
     [options setValue:request forKey:CBCentralManagerOptionShowPowerAlertKey];
   }

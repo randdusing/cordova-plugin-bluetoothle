@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" id="cordova-plugin-bluetoothle" version="3.3.0">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" id="cordova-plugin-bluetoothle" version="4.0.0">
   <engines>
     <engine name="cordova-plugman" version=">=5.0.0" />
     <engine name="cordova-android" version=">=5.0.0" />
@@ -31,13 +31,18 @@
         <param name="ios-package" value="BluetoothLePlugin" />
       </feature>
     </config-file>
-    <config-file target="*-Info.plist" parent="UIBackgroundModes">
-      <array>
-        <string>bluetooth-central</string>
-      </array>
-    </config-file>
     <header-file src="src/ios/BluetoothLePlugin.h" />
     <source-file src="src/ios/BluetoothLePlugin.m" />
+    <framework src="CoreBluetooth.framework" />
+  </platform>
+  <platform name="osx">
+    <config-file target="config.xml" parent="/*">
+      <feature name="BluetoothLePlugin">
+        <param name="ios-package" value="BluetoothLePlugin" />
+      </feature>
+    </config-file>
+    <header-file src="src/osx/BluetoothLePlugin.h" />
+    <source-file src="src/osx/BluetoothLePlugin.m" />
     <framework src="CoreBluetooth.framework" />
   </platform>
   <!--<platform name="wp8">

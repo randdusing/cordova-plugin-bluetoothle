@@ -69,6 +69,9 @@ var bluetoothle = {
   mtu: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "mtu", [params]);
   },
+  requestConnectionPriority: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]);
+  },
   isInitialized: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isInitialized", []);
   },
@@ -84,9 +87,6 @@ var bluetoothle = {
   isDiscovered: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isDiscovered", [params]);
   },
-  requestConnectionPriority: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestConnectionPriority", [params]);
-  },
   hasPermission: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermission", []);
   },
@@ -98,6 +98,33 @@ var bluetoothle = {
   },
   requestLocation: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "requestLocation", []);
+  },
+  initializePeripheral: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "initializePeripheral", [params]);
+  },
+  addService: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "addService", [params]);
+  },
+  removeService: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "removeService", [params]);
+  },
+  removeAllServices: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "removeAllServices", [params]);
+  },
+  startAdvertising: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "startAdvertising", [params]);
+  },
+  stopAdvertising: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "stopAdvertising", [params]);
+  },
+  isAdvertising: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isAdvertising", []);
+  },
+  respond: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "respond", [params]);
+  },
+  notify: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "notify", [params]);
   },
   encodedStringToBytes: function(string) {
     var data = atob(string);
@@ -121,6 +148,13 @@ var bluetoothle = {
   },
   bytesToString: function(bytes) {
     return String.fromCharCode.apply(null, new Uint16Array(bytes));
+  },
+  bytesToHex: function(bytes) {
+    var string = [];
+    for (var i = 0; i < bytes.length; i++) {
+      string.push("0x" + ("0"+(bytes[i].toString(16))).substr(-2).toUpperCase());
+    }
+    return string.join(" ");
   },
   SCAN_MODE_OPPORTUNISTIC: -1,
   SCAN_MODE_LOW_POWER: 0,
