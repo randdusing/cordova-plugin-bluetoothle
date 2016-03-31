@@ -132,6 +132,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isInitialized] (#isinitialized)
 * [bluetoothle.isEnabled] (#isenabled)
 * [bluetoothle.isScanning] (#isscanning)
+* [bluetoothle.wasConnected] (#wasconnected)
 * [bluetoothle.isConnected] (#isconnected)
 * [bluetoothle.isDiscovered] (#isdiscovered)
 * [bluetoothle.hasPermission] (#haspermission) (Android 6+)
@@ -1320,6 +1321,35 @@ bluetoothle.isScanning(isScanning);
 ```javascript
 {
   "isScanning": false
+}
+```
+
+
+
+### wasConnected ###
+Determine whether the device was connected, or error if not initialized.
+
+```javascript
+bluetoothle.wasConnected(wasConnectedSuccess, wasConnectedError, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+}
+```
+
+##### Success #####
+* status => wasConnected = true/false
+
+```javascript
+{
+  "name": "Polar H7 3B321015",
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "wasConnected": false
 }
 ```
 

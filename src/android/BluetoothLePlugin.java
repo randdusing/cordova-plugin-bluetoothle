@@ -492,6 +492,13 @@ public class BluetoothLePlugin extends CordovaPlugin {
         }
       });
       return true;
+    } else if ("wasConnected".equals(action)) {
+      cordova.getThreadPool().execute(new Runnable() {
+        public void run() {
+          wasConnectedAction(args,callbackContext);
+        }
+      });
+      return true;
     } else if (isConnectedActionName.equals(action)) {
       cordova.getThreadPool().execute(new Runnable() {
         public void run() {
@@ -2423,6 +2430,47 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     JSONObject returnObj = new JSONObject();
     addProperty(returnObj, keyIsScanning, result);
+
+    callbackContext.success(returnObj);
+  }
+
+  private void wasConnectedAction(JSONArray args, CallbackContext callbackContext) {
+    if (isNotInitialized(callbackContext, true)) {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      return;
+    }
+
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      return;
+    }
+
+    HashMap<Object, Object> connection = connections.get(address);
+    if (connection == null) {
+      JSONObject returnObj = new JSONObject();
+
+      addProperty(returnObj, "wasConnected", false);
+
+      addProperty(returnObj, keyAddress, address);
+
+      callbackContext.success(returnObj);
+
+      return;
+    }
+
+    BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
+
+    BluetoothDevice device = bluetoothGatt.getDevice();
+
+    JSONObject returnObj = new JSONObject();
+
+    addProperty(returnObj, "wasConnected", true);
+
+    addDevice(returnObj, device);
 
     callbackContext.success(returnObj);
   }
