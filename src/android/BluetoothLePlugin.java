@@ -1286,7 +1286,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     connection.put(keyState, BluetoothProfile.STATE_CONNECTING);
-    connection.put(keyDiscoveredState, STATE_UNDISCOVERED);
+    //connection.put(keyDiscoveredState, STATE_UNDISCOVERED); //Devices stays discovered even if disconnected (but not closed)
     connection.put(operationConnect, callbackContext);
   }
 
@@ -3505,10 +3505,16 @@ public class BluetoothLePlugin extends CordovaPlugin {
         returnObj.remove(keyError);
         returnObj.remove(keyMessage);
 
+        //Save the old discovered state
+        Object discoveredState = connection.get(keyDiscoveredState);
+
         //Clear out all the callbacks
         connection = new HashMap<Object, Object>();
         connection.put(keyPeripheral, gatt);
         connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
+
+        //Save state in new connection
+        connection.put(keyDiscoveredState, discoveredState);
 
         connections.put(device.getAddress(), connection);
 

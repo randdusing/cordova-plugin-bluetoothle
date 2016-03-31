@@ -1379,7 +1379,7 @@ bluetoothle.isConnected(isConnectedSuccess, isConnectedError, params);
 
 
 ### isDiscovered ###
-Determine whether the device's characteristics and descriptors have been discovered, or error if not initialized or never connected to device.
+Determine whether the device's characteristics and descriptors have been discovered, or error if not initialized or not connected to device. Note, on Android, you can connect, discover and then disconnect. isDiscovered will return an error due to the device not being connected. But if you call reconnect and call isDiscovered again, it will return isDiscovered => true since the device stays discovered until calling close().
 
 ```javascript
 bluetoothle.isDiscovered(isDiscoveredSuccess, isDiscoveredError, params);
