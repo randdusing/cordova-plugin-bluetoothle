@@ -148,7 +148,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyIsScanning = "isScanning";
   private final String keyIsConnected = "isConnected";
   private final String keyIsDiscovered = "isDiscovered";
-  private final String keyIsNotification = "isNotification";
   private final String keyPeripheral = "peripheral";
   private final String keyState = "state";
   private final String keyDiscoveredState = "discoveredState";
@@ -1794,11 +1793,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     boolean result = false;
 
-    //Set the descriptor for notification
-    if (obj.optBoolean(keyIsNotification, true)) {
+    //Use properties to determine whether notification or indication should be used
+    if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == BluetoothGattCharacteristic.PROPERTY_NOTIFY) {
       result = descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
     } else {
-      //Or for indication
       result = descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
     }
 
