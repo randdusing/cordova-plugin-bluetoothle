@@ -36,7 +36,6 @@ I'm available for hire on Bluetooth Low Energy, Ionic and Cordova projects. This
 ## To Do ##
 
 * Expand Windows support
-* Operation queueing on Android (possibly). See Queuing section below.
 * Improved notifications on peripheral/server role between Android and iOS
 * Code refactoring. It's getting pretty messy.
 
@@ -45,7 +44,7 @@ I'm available for hire on Bluetooth Low Energy, Ionic and Cordova projects. This
 
 Check out ng-cordova-bluetoothle [here!](https://github.com/randdusing/ng-cordova-bluetoothle)
 
-If timeouts or queueing is needed, please check out the Angular wrapper and its example. I don't plan to implement queuing within the plugin itself anymore.
+If timeouts are needed, please check out the Angular wrapper and its example.
 
 
 ## Installation ##
@@ -80,10 +79,7 @@ Discovery works differently between Android and iOS. In Android, a single functi
 
 
 ## Queuing (Android) ##
-Android commands must be queued. I recommend using promises like in the AngularJS wrapper to queue from the app level. There are a few issues when trying to queue from the plugin level, so I'm still determining how to implement it:
-1. Queuing needs to be done at a "global" level rather than per connection.
-2. Timeouts would be needed so that the queue would continue processing if onCharacteristicRead, onCharacteristicWrite, etc are never called.
-3. Queue would need to be "cleaned" if a device disconnects.
+Read and write queueing has been added to the master branch and will be part of the 4.1.0 release. If you'd like to try it out, install the plugin directly from GitHub using: ```cordova plugin https://github.com/randdusing/cordova-plugin-bluetoothle```
 
 
 ## UUIDs ##

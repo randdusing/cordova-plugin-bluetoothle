@@ -1,3 +1,9 @@
+## master - 2016-03-30
+- wasConnected helper function
+- Improved subscribe with Android. No longer need to specify whether notification or indication
+- Read/write queueing for Android
+- Everything now runs on the single WebCore thread with Android. It should prevent issues with race conditions. I still need to verify there are no changes in performance.
+
 ## 4.0.0 - 2016-03-30
 - Update OS X
 - Fix initializePeripheral issue when not passing parameters on iOS.
