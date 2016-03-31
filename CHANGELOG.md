@@ -1,3 +1,7 @@
+## master - 2016-03-30
+- wasConnected helper function
+- Improved subscribe with Android. No longer need to specify whether notification or indication
+
 ## 4.0.0 - 2016-03-30
 - Update OS X
 - Fix initializePeripheral issue when not passing parameters on iOS.
