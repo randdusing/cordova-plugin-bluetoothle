@@ -958,7 +958,7 @@ bluetoothle.read(readSuccess, readError, params);
 
 
 ### subscribe ###
-Subscribe to a particular service's characteristic. Once a subscription is no longer needed, execute unsubscribe in a similar fashion. The Client Configuration descriptor will automatically be written to enable notification/indication.
+Subscribe to a particular service's characteristic. Once a subscription is no longer needed, execute unsubscribe in a similar fashion. The Client Configuration descriptor will automatically be written to enable notification/indication based on the characteristic's properties.
 
 ```javascript
 bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
@@ -968,14 +968,12 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
 * characteristic = The characteristic's UUID
-* isNotification is only required on Android. True (or null) means notification will be enabled. False means indication will be enabled.
 
 ```javascript
 {
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
   "service": "180d",
   "characteristic": "2a37",
-  "isNotification" : true
 }
 ```
 
