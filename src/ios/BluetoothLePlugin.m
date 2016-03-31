@@ -217,11 +217,11 @@ NSString *const operationWrite = @"write";
     CBAttributePermissions permissions = 0;
 
     if (permissionsIn) {
-      if ([permissionsIn valueForKey:@"readable"]) {
+      if ([permissionsIn valueForKey:@"read"]) {
         permissions |= CBAttributePermissionsReadable;
       }
 
-      if ([permissionsIn valueForKey:@"writeable"]) {
+      if ([permissionsIn valueForKey:@"write"]) {
         permissions |= CBAttributePermissionsWriteable;
       }
 
@@ -3271,6 +3271,8 @@ NSString *const operationWrite = @"write";
 }
 
 -(void) addValue:(NSData *) bytes toDictionary:(NSMutableDictionary *) obj {
+  //TODO what if the value is null
+
   NSString *string = [bytes base64EncodedStringWithOptions:0];
 
   if (string == nil || string.length == 0) {

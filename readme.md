@@ -1616,8 +1616,8 @@ var params = {
     {
       uuid: "ABCD",
       permissions: {
-        readable: true,
-        writeable: true,
+        read: true,
+        write: true,
         //readEncryptionRequired: true,
         //writeEncryptionRequired: true,
       },
@@ -1689,7 +1689,7 @@ bluetoothle.removeAllServices(success, error);
 
 
 ### startAdvertising ###
-Start advertising as a BLE device
+Start advertising as a BLE device. Note: This needs to be improved so services can be used for both Android and iOS.
 
 ```javascript
 bluetoothle.startAdvertising(success, error, params);
@@ -1698,7 +1698,8 @@ bluetoothle.startAdvertising(success, error, params);
 ##### Params #####
 ```javascript
 var params = {
-  "services":["1234"],
+  "services":["1234"], //iOS
+  "service":"1234", //Android
   "name":"Hello World",
 };
 ```

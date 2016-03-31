@@ -629,7 +629,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     initPeripheralCallback = callbackContext;
 
     //Re-opening Gatt server seems to cause some issues
-    if (gattServer != null) {
+    if (gattServer == null) {
       Activity activity = cordova.getActivity();
       BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
       gattServer = bluetoothManager.openGattServer(activity.getApplicationContext(), bluetoothGattServerCallback);
