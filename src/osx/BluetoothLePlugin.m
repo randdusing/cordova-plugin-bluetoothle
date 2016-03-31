@@ -1820,6 +1820,55 @@ NSString *const operationWrite = @"write";
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void)wasConnected:(CDVInvokedUrlCommand *)command {
+  //Ensure Bluetooth is enabled
+  if ([self isNotInitialized:command]) {
+    return;
+  }
+
+  //Get the arguments
+  NSDictionary* obj = [self getArgsObject:command.arguments];
+  if ([self isNotArgsObject:obj :command]) {
+    return;
+  }
+
+  //Get the connection address
+  NSUUID* address = [self getAddress:obj];
+  if ([self isNotAddress:address :command]) {
+    return;
+  }
+
+  NSMutableDictionary* connection = [connections objectForKey:address];
+  if (connection == nil) {
+    //Return wasConnected => false
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+    [returnObj setValue:address.UUIDString forKey:keyAddress];
+
+    [returnObj setValue:[NSNumber numberWithBool:false] forKey:@"wasConnected"];
+
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+    [pluginResult setKeepCallbackAsBool:false];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
+    return;
+  }
+
+  //Get the peripheral
+  CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
+
+  //Return wasConnected => true
+  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+  [self addDevice:peripheral :returnObj];
+
+  [returnObj setValue:[NSNumber numberWithBool:true] forKey:@"wasConnected"];
+
+  CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 - (void)isConnected:(CDVInvokedUrlCommand *)command {
   //Ensure Bluetooth is enabled
   if ([self isNotInitialized:command]) {
