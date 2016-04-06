@@ -329,9 +329,13 @@ public class BluetoothLePlugin extends CordovaPlugin {
       queue.add(operation);
       queueStart();
     } else if ("subscribe".equals(action)) {
-      subscribeAction(args, callbackContext);
+      Operation operation = new Operation("subscribe", args, callbackContext);
+      queue.add(operation);
+      queueStart();
     } else if ("unsubscribe".equals(action)) {
-      unsubscribeAction(args, callbackContext);
+      Operation operation = new Operation("unsubscribe", args, callbackContext);
+      queue.add(operation);
+      queueStart();
     } else if ("write".equals(action)) {
       Operation operation = new Operation("write", args, callbackContext);
       queue.add(operation);
@@ -339,9 +343,13 @@ public class BluetoothLePlugin extends CordovaPlugin {
     } else if ("writeQ".equals(action)) {
       writeQAction(args, callbackContext);
     } else if ("readDescriptor".equals(action)) {
-      readDescriptorAction(args, callbackContext);
+      Operation operation = new Operation("readDescriptor", args, callbackContext);
+      queue.add(operation);
+      queueStart();
     } else if ("writeDescriptor".equals(action)) {
-      writeDescriptorAction(args, callbackContext);
+      Operation operation = new Operation("writeDescriptor", args, callbackContext);
+      queue.add(operation);
+      queueStart();
     } else if ("rssi".equals(action)) {
       rssiAction(args, callbackContext);
     } else if ("isInitialized".equals(action)) {
@@ -1502,49 +1510,49 @@ public class BluetoothLePlugin extends CordovaPlugin {
     return true;
   }
 
-  private void subscribeAction(JSONArray args, CallbackContext callbackContext) {
+  private boolean subscribeAction(JSONArray args, CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
-      return;
+      return false;
     }
 
     JSONObject obj = getArgsObject(args);
     if (isNotArgsObject(obj, callbackContext)) {
-      return;
+      return false;
     }
 
     String address = getAddress(obj);
     if (isNotAddress(address, callbackContext)) {
-      return;
+      return false;
     }
 
     HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
     if (connection == null) {
-      return;
+      return false;
     }
 
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
     BluetoothDevice device = bluetoothGatt.getDevice();
 
     if (isNotConnected(connection, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattService service = getService(bluetoothGatt, obj);
 
     if (isNotService(service, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattCharacteristic characteristic = getCharacteristic(obj, service);
 
     if (isNotCharacteristic(characteristic, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(clientConfigurationDescriptorUuid);
 
     if (isNotDescriptor(descriptor, device, callbackContext)) {
-      return;
+      return false;
     }
 
     UUID characteristicUuid = characteristic.getUuid();
@@ -1560,7 +1568,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyError, errorSubscription);
       addProperty(returnObj, keyMessage, logSubscribeAlready);
       callbackContext.error(returnObj);
-      return;
+      return false;
     }
 
     boolean result = false;
@@ -1576,7 +1584,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorValueNotSet);
       callbackContext.error(returnObj);
-      return;
+      return false;
     }
 
     AddCallback(characteristicUuid, connection, operationSubscribe, callbackContext);
@@ -1589,53 +1597,55 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyMessage, logWriteDescriptorFail);
       callbackContext.error(returnObj);
       RemoveCallback(characteristicUuid, connection, operationSubscribe);
+      return false;
     }
+
+    return true;
   }
 
-  private void unsubscribeAction(JSONArray args, CallbackContext callbackContext) {
+  private boolean unsubscribeAction(JSONArray args, CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
-      return;
+      return false;
     }
 
     JSONObject obj = getArgsObject(args);
     if (isNotArgsObject(obj, callbackContext)) {
-      return;
+      return false;
     }
 
     String address = getAddress(obj);
     if (isNotAddress(address, callbackContext)) {
-      return;
+      return false;
     }
 
     HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
     if (connection == null) {
-      return;
+      return false;
     }
 
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
     BluetoothDevice device = bluetoothGatt.getDevice();
 
     if (isNotConnected(connection, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattService service = getService(bluetoothGatt, obj);
 
-    if (isNotService(service, device, callbackContext))
-    {
-      return;
+    if (isNotService(service, device, callbackContext)) {
+      return false;
     }
 
     BluetoothGattCharacteristic characteristic = getCharacteristic(obj, service);
 
     if (isNotCharacteristic(characteristic, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(clientConfigurationDescriptorUuid);
 
     if (isNotDescriptor(descriptor, device, callbackContext)) {
-      return;
+      return false;
     }
 
     UUID characteristicUuid = characteristic.getUuid();
@@ -1651,7 +1661,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyError, errorSubscription);
       addProperty(returnObj, keyMessage, logUnsubscribeAlready);
       callbackContext.error(returnObj);
-      return;
+      return false;
     }
     RemoveCallback(characteristicUuid, connection, operationSubscribe);
 
@@ -1662,7 +1672,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorValueNotSet);
       callbackContext.error(returnObj);
-      return;
+      return false;
     }
 
     AddCallback(characteristicUuid, connection, operationUnsubscribe, callbackContext);
@@ -1675,7 +1685,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyMessage, logWriteDescriptorFail);
       callbackContext.error(returnObj);
       RemoveCallback(characteristicUuid, connection, operationUnsubscribe);
+      return false;
     }
+
+    return true;
   }
 
   private boolean writeAction(JSONArray args, CallbackContext callbackContext) {
@@ -1904,49 +1917,49 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
   }
 
-  private void readDescriptorAction(JSONArray args, CallbackContext callbackContext) {
+  private boolean readDescriptorAction(JSONArray args, CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
-      return;
+      return false;
     }
 
     JSONObject obj = getArgsObject(args);
     if (isNotArgsObject(obj, callbackContext)) {
-      return;
+      return false;
     }
 
     String address = getAddress(obj);
     if (isNotAddress(address, callbackContext)) {
-      return;
+      return false;
     }
 
     HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
     if (connection == null) {
-      return;
+      return false;
     }
 
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
     BluetoothDevice device = bluetoothGatt.getDevice();
 
     if (isNotConnected(connection, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattService service = getService(bluetoothGatt, obj);
 
     if (isNotService(service, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattCharacteristic characteristic = getCharacteristic(obj, service);
 
     if (isNotCharacteristic(characteristic, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattDescriptor descriptor = getDescriptor(obj, characteristic);
 
     if (isNotDescriptor(descriptor, device, callbackContext)) {
-      return;
+      return false;
     }
 
     UUID descriptorUuid = descriptor.getUuid();
@@ -1969,53 +1982,57 @@ public class BluetoothLePlugin extends CordovaPlugin {
       callbackContext.error(returnObj);
 
       RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
+
+      return false;
     }
+
+    return true;
   }
 
-  private void writeDescriptorAction(JSONArray args, CallbackContext callbackContext) {
+  private boolean writeDescriptorAction(JSONArray args, CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
-      return;
+      return false;
     }
 
     JSONObject obj = getArgsObject(args);
     if (isNotArgsObject(obj, callbackContext)) {
-      return;
+      return false;
     }
 
     String address = getAddress(obj);
     if (isNotAddress(address, callbackContext))
     {
-      return;
+      return false;
     }
 
     HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
     if (connection == null) {
-      return;
+      return false;
     }
 
     BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
     BluetoothDevice device = bluetoothGatt.getDevice();
 
     if (isNotConnected(connection, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattService service = getService(bluetoothGatt, obj);
 
     if (isNotService(service, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattCharacteristic characteristic = getCharacteristic(obj, service);
 
     if (isNotCharacteristic(characteristic, device, callbackContext)) {
-      return;
+      return false;
     }
 
     BluetoothGattDescriptor descriptor = getDescriptor(obj, characteristic);
 
     if (isNotDescriptor(descriptor, device, callbackContext)) {
-      return;
+      return false;
     }
 
     UUID descriptorUuid = descriptor.getUuid();
@@ -2032,7 +2049,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorNotAllowed);
       callbackContext.error(returnObj);
-      return;
+      return false;
     }
 
     //TODO get property type
@@ -2043,7 +2060,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorValueNotFound);
       callbackContext.error(returnObj);
-      return;
+      return false;
     }
 
     boolean result = descriptor.setValue(value);
@@ -2052,7 +2069,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorValueNotSet);
       callbackContext.error(returnObj);
-      return;
+      return false;
     }
 
     AddDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationWrite, callbackContext);
@@ -2065,7 +2082,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyMessage, logWriteDescriptorFail);
       callbackContext.error(returnObj);
       RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationWrite);
+      return false;
     }
+
+    return true;
   }
 
   private void rssiAction(JSONArray args, CallbackContext callbackContext) {
@@ -2704,8 +2724,16 @@ public class BluetoothLePlugin extends CordovaPlugin {
     boolean result = true;
     if (operation.type.equals("read")) {
       result = readAction(operation.args, operation.callbackContext);
-    } else {
+    } else if (operation.type.equals("write")) {
       result = writeAction(operation.args, operation.callbackContext);
+    } else if (operation.type.equals("readDescriptor")) {
+      result = readDescriptorAction(operation.args, operation.callbackContext);
+    } else if (operation.type.equals("writeDescriptor")) {
+      result = writeDescriptorAction(operation.args, operation.callbackContext);
+    } else if (operation.type.equals("subscribe")) {
+      result = subscribeAction(operation.args, operation.callbackContext);
+    } else {
+      result = unsubscribeAction(operation.args, operation.callbackContext);
     }
     if (!result) {
       queueRemove();
@@ -3606,6 +3634,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
         addProperty(returnObj, keyMessage, logReadFailReturn);
         callbackContext.error(returnObj);
       }
+
       queueRemove();
     }
 
@@ -3681,6 +3710,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
           addProperty(returnObj, keyMessage, logWriteFailReturn);
           callbackContext.error(returnObj);
         }
+
         return;
       }
 
@@ -3720,6 +3750,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       HashMap<Object, Object> connection = connections.get(address);
       if (connection == null) {
+        queueRemove();
         return;
       }
 
@@ -3732,6 +3763,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       //If callback is null, just return
       if (callbackContext == null) {
+        queueRemove();
         return;
       }
 
@@ -3752,6 +3784,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
         addProperty(returnObj, keyMessage, logReadDescriptorFailReturn);
         callbackContext.error(returnObj);
       }
+
+      queueRemove();
     }
 
     @Override
@@ -3762,6 +3796,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       HashMap<Object, Object> connection = connections.get(address);
       if (connection == null) {
+        queueRemove();
         return;
       }
 
@@ -3785,6 +3820,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
           //If no callback, just return
           if (callbackContext == null) {
+            queueRemove();
             return;
           }
 
@@ -3792,6 +3828,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
             addProperty(returnObj, keyError, errorSubscription);
             addProperty(returnObj, keyMessage, logUnsubscribeFail);
             callbackContext.error(returnObj);
+            queueRemove();
             return;
           }
 
@@ -3799,6 +3836,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
             addProperty(returnObj, keyError, errorSubscription);
             addProperty(returnObj, keyMessage, logUnsubscribeFail);
             callbackContext.error(returnObj);
+            queueRemove();
             return;
           }
 
@@ -3814,6 +3852,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
           //If no callback, just return
           if (callbackContext == null) {
+            queueRemove();
             return;
           }
 
@@ -3821,6 +3860,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
             addProperty(returnObj, keyError, errorSubscription);
             addProperty(returnObj, keyMessage, logSubscribeFail);
             callbackContext.error(returnObj);
+            queueRemove();
             return;
           }
 
@@ -3831,14 +3871,16 @@ public class BluetoothLePlugin extends CordovaPlugin {
           callbackContext.sendPluginResult(pluginResult);
         }
 
+        queueRemove();
         return;
       }
 
-      CallbackContext callbackContext = GetDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
-      RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationRead);
+      CallbackContext callbackContext = GetDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationWrite);
+      RemoveDescriptorCallback(descriptorUuid, characteristicUuid, connection, operationWrite);
 
       //If callback is null, just return
       if (callbackContext == null) {
+        queueRemove();
         return;
       }
 
@@ -3853,6 +3895,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
         addProperty(returnObj, keyMessage, logWriteDescriptorFailReturn);
         callbackContext.error(returnObj);
       }
+
+      queueRemove();
     }
 
     @Override
