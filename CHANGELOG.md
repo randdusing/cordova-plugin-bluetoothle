@@ -1,8 +1,9 @@
-## master - 2016-03-30
+## master - 2016-04-06
 - wasConnected helper function
 - Improved subscribe with Android. No longer need to specify whether notification or indication
-- Read/write queueing for Android
-- Everything now runs on the single WebCore thread with Android. It should prevent issues with race conditions. I still need to verify there are no changes in performance.
+- Read, write, subscribe, unsubscribe, readDescriptor, writeDescriptor queueing for Android
+- Everything now runs on the single WebCore thread with Android. It should prevent issues with race conditions
+- Fix issue with writeDescriptor on Android
 
 ## 4.0.0 - 2016-03-30
 - Update OS X

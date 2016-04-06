@@ -77,7 +77,7 @@ Discovery works differently between Android and iOS. In Android, a single functi
 
 
 ## Queuing (Android) ##
-Read and write queueing has been added to the master branch and will be part of the 4.1.0 release. If you'd like to try it out, install the plugin directly from GitHub using: ```cordova plugin https://github.com/randdusing/cordova-plugin-bluetoothle```
+Read, write, subscribe, unsubscribe, readDescriptor and writeDescriptor queueing has been added to the master branch and will be part of the 4.1.0 release. If you'd like to try it out, install the plugin directly from GitHub using: ```cordova plugin https://github.com/randdusing/cordova-plugin-bluetoothle```
 
 
 ## UUIDs ##
