@@ -63,9 +63,7 @@ The latest version of the plugin requires you to set the Android target API to a
 
 
 ## Background Modes (iOS) ##
-Background modes have been changed, so follow the steps below:
-1. Background mode(s) are no longer added to your project's plist file by default. They can be added manually by editing the plist file, or you can use the following plugins: [cordova-plugin-background-mode-bluetooth-central](https://github.com/randdusing/cordova-plugin-background-mode-bluetooth-central) and/or [cordova-plugin-background-mode-bluetooth-peripheral](https://github.com/randdusing/cordova-plugin-background-mode-bluetooth-peripheral).
-2. Restore identifiers must be specified when calling initialize and/or initializePeripheral using the restoreKey parameter. See initialize and initializePeripheral for details.
+Background mode(s) are no longer added to your project's plist file by default. They can be added manually by editing the plist file, or you can use the following plugins: [cordova-plugin-background-mode-bluetooth-central](https://github.com/randdusing/cordova-plugin-background-mode-bluetooth-central) and/or [cordova-plugin-background-mode-bluetooth-peripheral](https://github.com/randdusing/cordova-plugin-background-mode-bluetooth-peripheral).
 
 Scanning works differently in the background. There seem to be three different states:
 
@@ -216,7 +214,7 @@ Characteristics can have the following different properties: broadcast, read, wr
 
 
 ### initialize ###
-Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must connect to the device, start a read/write operation, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. This function should only be called once.
+Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must connect to the device, start a read/write operation, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. The `restoreKey` property requires using the Bluetooth Central background mode. This function should only be called once.
 
 ```javascript
 bluetoothle.initialize(initializeSuccess, initializeError, params);
@@ -225,7 +223,7 @@ bluetoothle.initialize(initializeSuccess, initializeError, params);
 ##### Params #####
 * request = true / false (default) - Should user be prompted to enable Bluetooth
 * statusReceiver = true (default) / false - Should change in Bluetooth status notifications be sent.
-* restoreKey = A unique string to identify your app. Required if Bluetooth central background mode is enabled.
+* restoreKey = A unique string to identify your app. Bluetooth Central background mode is required to use this, but background mode doesn't seem to require specifying the restoreKey.
 
 ```javascript
 {
@@ -1503,7 +1501,7 @@ iOS doesn't allow you to respond to read and write descriptor requests. Instead 
 
 
 ### initializePeripheral ###
-Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must readd services, start advertising, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. The `restoreKey` property is required when using the Bluetooth Peripheral background mode. This function should only be called once.
+Initialize Bluetooth on the device. Must be called before anything else. Callback will continuously be used whenever Bluetooth is enabled or disabled. Note: Although Bluetooth initialization could initially be successful, there's no guarantee whether it will stay enabled. Each call checks whether Bluetooth is disabled. If it becomes disabled, the user must readd services, start advertising, etc again. If Bluetooth is disabled, you can request the user to enable it by setting the request property to true. The `request` property in the `params` argument is optional and defaults to false. The `restoreKey` property requires using the Bluetooth Peripheral background mode. This function should only be called once.
 
 Additionally this where new events are delivered for read, write, and subscription requests. See the success section for more details.
 
@@ -1513,7 +1511,7 @@ bluetoothle.initializePeripheral(success, error, params);
 
 ##### Params #####
 * request = true / false (default) - Should user be prompted to enable Bluetooth
-* restoreKey = A unique string to identify your app. Required if Bluetooth peripheral background mode is enabled.
+* restoreKey = A unique string to identify your app.  Bluetooth Peripheral background mode is required to use this, but background mode doesn't seem to require specifying the restoreKey.
 
 ```javascript
 {
