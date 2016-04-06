@@ -1,7 +1,7 @@
 ## master - 2016-04-06
 - wasConnected helper function
 - Improved subscribe with Android. No longer need to specify whether notification or indication
-- Read, write, subscribe, unsubscribe, readDescriptor, writeDescriptor queueing for Android
+- Read, write, subscribe, unsubscribe, readDescriptor, writeDescriptor queueing for Android [\#263](https://github.com/randdusing/BluetoothLE/issues/263), [\#153](https://github.com/randdusing/BluetoothLE/issues/153)
 - Everything now runs on the single WebCore thread with Android. It should prevent issues with race conditions
 - Fix issue with writeDescriptor on Android
 
