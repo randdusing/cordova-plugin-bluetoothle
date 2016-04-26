@@ -69,7 +69,7 @@
         <param name="windows-package" value="BluetoothLePlugin" />
       </feature>
     </config-file>
-    <config-file target="package.appxmanifest" parent="/Package/Capabilities" versions="<10.0.0">
+    <config-file target="package.appxmanifest" parent="/Package/Capabilities" versions="&lt;10.0.0">
       <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
         <m2:Device Id="any">
           <m2:Function Type="serviceId:1800"/> <!-- Generic Access -->
