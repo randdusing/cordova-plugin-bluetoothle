@@ -104,7 +104,7 @@
         </m2:Device>
       </m2:DeviceCapability>
     </config-file>
-    <config-file target="package.appxmanifest" parent="/Package/Capabilities" versions=">=10.0.0">
+    <config-file target="package.appxmanifest" parent="/Package/Capabilities" versions="&gt;=10.0.0">
       <DeviceCapability Name="bluetooth.genericAttributeProfile">
         <Device Id="any">
           <Function Type="serviceId:1800"/> <!-- Generic Access -->
