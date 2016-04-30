@@ -27,6 +27,9 @@ var bluetoothle = {
   disconnect: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "disconnect", [params]);
   },
+  bond: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "bond", [params]);
+  },
   close: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "close", [params]);
   },

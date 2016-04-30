@@ -305,6 +305,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
       reconnectAction(args, callbackContext);
     } else if ("disconnect".equals(action)) {
       disconnectAction(args, callbackContext);
+    } else if ("bond".equals(action)){
+      bondAction(args, callbackContext);
+    }
     } else if ("services".equals(action)) {
       JSONObject returnObj = new JSONObject();
       addProperty(returnObj, keyError, errorServices);
@@ -1348,6 +1351,31 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     bluetoothGatt.disconnect();
+  }
+
+  private void bondAction(JSONArray args, CallbackContext callbackContext) {
+    if (isNotInitialized(callbackContext, true)) {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      return;
+    }
+
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      return;
+    }
+
+    HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
+    if (connection == null) {
+      return;
+    }
+
+    BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
+    BluetoothDevice device = bluetoothGatt.getDevice();
+    device.createBond();
   }
 
   private void closeAction(JSONArray args, CallbackContext callbackContext) {
