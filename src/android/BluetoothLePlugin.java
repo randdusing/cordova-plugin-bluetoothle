@@ -307,7 +307,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
       disconnectAction(args, callbackContext);
     } else if ("bond".equals(action)){
       bondAction(args, callbackContext);
-    }
     } else if ("services".equals(action)) {
       JSONObject returnObj = new JSONObject();
       addProperty(returnObj, keyError, errorServices);
