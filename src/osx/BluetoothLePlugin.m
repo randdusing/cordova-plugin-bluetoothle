@@ -3367,6 +3367,10 @@ NSString *const operationWrite = @"write";
   }
 
   for (NSString* checkUuid in checkUuids) {
+    if (![checkUuid isKindOfClass:[NSString class]]) {
+      continue;
+    }
+
     CBUUID* uuid = [CBUUID UUIDWithString:checkUuid];
 
     if (uuid != nil) {
