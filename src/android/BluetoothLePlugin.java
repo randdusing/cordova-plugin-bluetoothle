@@ -1030,7 +1030,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     //Else listen to initialize callback for disabling
   }
 
-  private void startScanAction(JSONArray args, CallbackContext callbackContext) {
+  private synchronized void startScanAction(JSONArray args, CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
       return;
     }
@@ -1117,7 +1117,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
   }
 
-  private void stopScanAction(CallbackContext callbackContext) {
+  private synchronized void stopScanAction(CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
       return;
     }
@@ -2512,21 +2512,24 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private LeScanCallback scanCallbackKitKat = new LeScanCallback() {
     @Override
     public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-      if (scanCallbackContext == null) {
-        return;
+      synchronized(BluetoothLePlugin.this){
+
+        if (scanCallbackContext == null) {
+          return;
+        }
+
+        JSONObject returnObj = new JSONObject();
+
+        addDevice(returnObj, device);
+
+        addProperty(returnObj, keyRssi, rssi);
+        addPropertyBytes(returnObj, keyAdvertisement, scanRecord);
+        addProperty(returnObj, keyStatus, statusScanResult);
+
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+        pluginResult.setKeepCallback(true);
+        scanCallbackContext.sendPluginResult(pluginResult);
       }
-
-      JSONObject returnObj = new JSONObject();
-
-      addDevice(returnObj, device);
-
-      addProperty(returnObj, keyRssi, rssi);
-      addPropertyBytes(returnObj, keyAdvertisement, scanRecord);
-      addProperty(returnObj, keyStatus, statusScanResult);
-
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      scanCallbackContext.sendPluginResult(pluginResult);
     }
   };
 
@@ -2544,43 +2547,47 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       @Override
       public void onScanFailed(int errorCode) {
-        if (scanCallbackContext == null)
-          return;
+        synchronized(BluetoothLePlugin.this){
+          if (scanCallbackContext == null)
+            return;
 
-        JSONObject returnObj = new JSONObject();
-        addProperty(returnObj, keyError, errorStartScan);
+          JSONObject returnObj = new JSONObject();
+          addProperty(returnObj, keyError, errorStartScan);
 
-        if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
-          addProperty(returnObj, keyMessage, "Scan already started");
-        } else if (errorCode == ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
-          addProperty(returnObj, keyMessage, "Application registration failed");
-        } else if (errorCode == ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED) {
-          addProperty(returnObj, keyMessage, "Feature unsupported");
-        } else if (errorCode == ScanCallback.SCAN_FAILED_INTERNAL_ERROR) {
-          addProperty(returnObj, keyMessage, "Internal error");
-        } else {
-          addProperty(returnObj, keyMessage, logScanStartFail);
+          if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
+            addProperty(returnObj, keyMessage, "Scan already started");
+          } else if (errorCode == ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
+            addProperty(returnObj, keyMessage, "Application registration failed");
+          } else if (errorCode == ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED) {
+            addProperty(returnObj, keyMessage, "Feature unsupported");
+          } else if (errorCode == ScanCallback.SCAN_FAILED_INTERNAL_ERROR) {
+            addProperty(returnObj, keyMessage, "Internal error");
+          } else {
+            addProperty(returnObj, keyMessage, logScanStartFail);
+          }
+
+          scanCallbackContext.error(returnObj);
+          scanCallbackContext = null;
         }
-
-        scanCallbackContext.error(returnObj);
-        scanCallbackContext = null;
       }
 
       @Override
       public void onScanResult(int callbackType, ScanResult result) {
-        if (scanCallbackContext == null)
-          return;
+        synchronized(BluetoothLePlugin.this){
+          if (scanCallbackContext == null)
+            return;
 
-        JSONObject returnObj = new JSONObject();
+          JSONObject returnObj = new JSONObject();
 
-        addDevice(returnObj, result.getDevice());
-        addProperty(returnObj, keyRssi, result.getRssi());
-        addPropertyBytes(returnObj, keyAdvertisement, result.getScanRecord().getBytes());
-        addProperty(returnObj, keyStatus, statusScanResult);
+          addDevice(returnObj, result.getDevice());
+          addProperty(returnObj, keyRssi, result.getRssi());
+          addPropertyBytes(returnObj, keyAdvertisement, result.getScanRecord().getBytes());
+          addProperty(returnObj, keyStatus, statusScanResult);
 
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-        pluginResult.setKeepCallback(true);
-        scanCallbackContext.sendPluginResult(pluginResult);
+          PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+          pluginResult.setKeepCallback(true);
+          scanCallbackContext.sendPluginResult(pluginResult);
+        }
       }
     };
   }
