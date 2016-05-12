@@ -93,6 +93,9 @@ Another option is to connect to the device and use the "Device Information" (0x1
 See the following StackOverflow posts for more info: [here](https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-energy-peripheral) and [here](https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios)
 
 
+## Data Values ##
+
+
 ## Emulator ##
 Neither Android nor iOS support Bluetooth on emulators, so you'll need to test on a real device.
 
@@ -942,7 +945,7 @@ bluetoothle.read(readSuccess, readError, params);
 ```javascript
 {
   "status": "read",
-  "value": "AQ==",
+  "value": "UmVhZCBIZWxsbyBXb3JsZA==", //Read Hello World
   "characteristic": "2a38",
   "name": "Polar H7 3B321015",
   "service": "180d",
@@ -989,7 +992,7 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 
 {
   "status": "subscribedResult",
-  "value": "BkY=",
+  "value": "U3Vic2NyaWJlIEhlbGxvIFdvcmxk", //Subscribe Hello World
   "characteristic": "2a37",
   "name": "Polar H7 3B321015",
   "service": "180d",
@@ -1053,21 +1056,21 @@ bluetoothle.write(writeSuccess, writeError, params);
 Value is a base64 encoded string of bytes to write. Use bluetoothle.bytesToEncodedString(bytes) to convert to base64 encoded string from a unit8Array.
 To write without response, set type to "noResponse". Any other value will default to write with response. Note, no callback will occur on write without response on iOS.
 ```javascript
-var string = "Hello World";
+var string = "Write Hello World";
 var bytes = bluetoothle.stringToBytes(string);
 var encodedString = bluetoothle.bytesToEncodedString(bytes);
 
 //Note, this example doesn't actually work since it's read only characteristic
-{"value":encodedString,"service":"180F","characteristic":"2A19","type":"noResponse","address":"ABC123"}
+{"value":"V3JpdGUgSGVsbG8gV29ybGQ=","service":"180F","characteristic":"2A19","type":"noResponse","address":"ABC123"}
 ```
 
 ##### Success #####
 Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array. See characteristic's specification and example below on how to correctly parse this.
 
 ```javascript
-var returnObj = {"status":"written","service":"180F","characteristic":"2A19","value":"SGVsbG8gV29ybGQ=","address":"ABC123"}
+var returnObj = {"status":"written","service":"180F","characteristic":"2A19","value":"V3JpdGUgSGVsbG8gV29ybGQ=","address":"ABC123"}
 var bytes = bluetoothle.encodedStringToBytes(returnObj.value);
-var string = bluetoothle.bytesToString(bytes); //This should equal Hello World!
+var string = bluetoothle.bytesToString(bytes); //This should equal Write Hello World
 ```
 
 
@@ -1157,14 +1160,14 @@ var string = "Hello World";
 var bytes = bluetoothle.stringToBytes(string);
 var encodedString = bluetoothle.bytesToEncodedString(bytes);
 
-{"service":"180D","characteristic":"2A37","descriptor":"2902","value":encodedString,"address":"ABC123"}
+{"service":"180D","characteristic":"2A37","descriptor":"2902","value":"AQAAAAAAAAA=","address":"ABC123"}
 ```
 
 ##### Success #####
 Value is a base64 encoded string of written bytes. Use bluetoothle.encodedStringToBytes(obj.value) to convert to a unit8Array.
 
 ```javascript
-{"status":"writeDescriptor","service":"180D","characteristic":"2A37", "descriptor":"2902","value":"SGVsbG8gV29ybGQ","address":"ABC123"}
+{"status":"writeDescriptor","service":"180D","characteristic":"2A37", "descriptor":"2902","value":"AQAAAAAAAAA=","address":"ABC123"}
 var bytes = bluetoothle.encodedStringToBytes(returnObj.value);
 var string = bluetoothle.bytesToString(bytes); //This should equal Hello World!
 ```
@@ -1548,7 +1551,7 @@ bluetoothle.initializePeripheral(success, error, params);
   "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
   "service":"1234",
   "characteristic":"ABCD",
-  requestId":0,
+  requestId":0, //This integer value will be incremented every read/writeRequested
   "offset":0
 }
 ```
@@ -1560,7 +1563,7 @@ bluetoothle.initializePeripheral(success, error, params);
   "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
   "service":"1234",
   "characteristic":"ABCD",
-  "requestId":2,
+  "requestId":1, //This integer value will be incremented every read/writeRequested
   "value":"V3JpdGUgSGVsbG8gV29ybGQ=", //Write Hello World
   "offset":0
 }
@@ -1652,8 +1655,7 @@ var params = {
         //authenticatedSignedWrites: true,
         //notifyEncryptionRequired: true,
         //indicateEncryptionRequired: true,
-      },
-      value: "base64encodedstring"
+      }
     }
   ]
 };
