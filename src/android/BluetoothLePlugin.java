@@ -118,6 +118,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyIsScanning = "isScanning";
   private final String keyIsConnected = "isConnected";
   private final String keyIsDiscovered = "isDiscovered";
+  private final String keyIsBonded = "isBonded";
   private final String keyPeripheral = "peripheral";
   private final String keyState = "state";
   private final String keyDiscoveredState = "discoveredState";
@@ -371,6 +372,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
       isConnectedAction(args,callbackContext);
     } else if ("isDiscovered".equals(action)) {
       isDiscoveredAction(args, callbackContext);
+    } else if ("isBonded".equals(action)) {
+      isBondedAction(args, callbackContext);
     } else if ("requestConnectionPriority".equals(action)) {
       requestConnectionPriorityAction(args, callbackContext);
     } else if ("mtu".equals(action)) {
@@ -2387,6 +2390,40 @@ public class BluetoothLePlugin extends CordovaPlugin {
     JSONObject returnObj = new JSONObject();
 
     addProperty(returnObj, keyIsDiscovered, result);
+
+    addDevice(returnObj, device);
+
+    callbackContext.success(returnObj);
+  }
+
+  private void isBondedAction(JSONArray args, CallbackContext callbackContext) {
+    if (isNotInitialized(callbackContext, true)) {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      return;
+    }
+
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      return;
+    }
+
+    HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
+    if (connection == null) {
+      return;
+    }
+
+    BluetoothGatt bluetoothGatt = (BluetoothGatt)connection.get(keyPeripheral);
+    BluetoothDevice device = bluetoothGatt.getDevice();
+
+    boolean result = (device.getBondState() == BluetoothDevice.BOND_BONDED);
+
+    JSONObject returnObj = new JSONObject();
+
+    addProperty(returnObj, keyIsConnected, result);
 
     addDevice(returnObj, device);
 

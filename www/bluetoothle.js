@@ -93,6 +93,9 @@ var bluetoothle = {
   isDiscovered: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isDiscovered", [params]);
   },
+  isBonded: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isBonded", [params]);
+  },
   hasPermission: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermission", []);
   },
