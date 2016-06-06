@@ -1409,7 +1409,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       bondCallbackContext.sendPluginResult(pluginResult);
       return;
     } else {
-      //device.setPairingConfirmation(true);
+      device.setPairingConfirmation(false);
       device.createBond();
     }
   }
