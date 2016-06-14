@@ -27,6 +27,7 @@ I'm available part time for Bluetooth Low Energy, Ionic and Cordova projects. Th
 
 * Instead of specifying serviceUuids, serviceUuid, characteristicUuid, etc in the params, use services, service, characteristic, etc. Check out the scan-related, discovery-related and read/write/subscribe operation functions for more info. Discovery related functions will also return uuid properties instead of serviceUuid, characteristicUuid or descriptorUuid.
 * The connecting and disconnecting events were removed.
+* If you were using "manufacturer data" field from advertising, change `scanStatus.advertisement` to `scanStatus.advertisement.manufacturerData`
 
 ## Upgrade 3.x to 4.x ##
 
