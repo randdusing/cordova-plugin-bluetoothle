@@ -27,6 +27,9 @@ var bluetoothle = {
   disconnect: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "disconnect", [params]);
   },
+  bond: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "bond", [params]);
+  },
   close: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "close", [params]);
   },
@@ -89,6 +92,9 @@ var bluetoothle = {
   },
   isDiscovered: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isDiscovered", [params]);
+  },
+  isBonded: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isBonded", [params]);
   },
   hasPermission: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermission", []);
