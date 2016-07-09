@@ -1,10 +1,11 @@
-## master - 2016-05-01
+## 4.1.0 - 2016-07-09
 - wasConnected helper function
 - Improved subscribe with Android. No longer need to specify whether notification or indication
 - Read, write, subscribe, unsubscribe, readDescriptor, writeDescriptor queueing for Android [\#263](https://github.com/randdusing/BluetoothLE/issues/263), [\#153](https://github.com/randdusing/BluetoothLE/issues/153)
 - Everything now runs on the single WebCore thread with Android. It should prevent issues with race conditions
 - Fix issue with writeDescriptor on Android
 - Fix issue with UUID validation on iOS
+- Fix issue with undefined params obj on startScan on Android.
 
 ## 4.0.0 - 2016-03-30
 - Update OS X

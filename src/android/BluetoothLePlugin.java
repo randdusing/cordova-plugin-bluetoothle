@@ -1046,6 +1046,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     //Get the service UUIDs from the arguments
     JSONObject obj = getArgsObject(args);
+    //Default to empty object if null, ideally part of getArgsObject, but not sure how other functions would be affected
+    if (obj == null) {
+      obj = new JSONObject();
+    }
     UUID[] uuids = getServiceUuids(obj);
 
     //Save the callback context for reporting back found connections. Also the isScanning flag
@@ -1065,7 +1069,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     } else {
       /* build the ScanFilters */
       ArrayList<ScanFilter> scanFilter = new ArrayList<ScanFilter>();
-      for (UUID uuid : getServiceUuids(obj)) {
+      for (UUID uuid : uuids) {
         ScanFilter.Builder builder = new ScanFilter.Builder();
         builder.setServiceUuid(new ParcelUuid(uuid));
         scanFilter.add(builder.build());
