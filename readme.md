@@ -2,8 +2,9 @@
 This plugin allows you to interact with Bluetooth LE devices on Android, iOS, and partially on Windows.
 
 
-## Available for Hire ##
-I'm available part time for Bluetooth Low Energy, Ionic and Cordova projects. This would really help keep the project alive and up to date. You can contact me via: <randdusing@gmail.com>, [Facebook](https://www.facebook.com/randdusing), [LinkedIn](https://www.linkedin.com/in/randdusing) or [Twitter](https://twitter.com/randdusing) for more information.
+## ~~Available for Hire~~ ##
+I'm no longer available for hire at the moment, but I'm still open to questions. You can contact me via: <randdusing@gmail.com>, [Facebook](https://www.facebook.com/randdusing), [LinkedIn](https://www.linkedin.com/in/randdusing) or [Twitter](https://twitter.com/randdusing).
+If you're questions could help others, please post them here as I'd would like to start an FAQ section.
 
 
 ## Requirements ##
