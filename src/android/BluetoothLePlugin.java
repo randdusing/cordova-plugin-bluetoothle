@@ -68,7 +68,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private CallbackContext scanCallbackContext;
   private CallbackContext permissionsCallback;
   private CallbackContext locationCallback;
-  private CallbackContext bondCallbackContext;
 
   private CallbackContext initPeripheralCallback;
   private BluetoothGattServer gattServer;
@@ -78,6 +77,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
   //Store connections and all their callbacks
   private HashMap<Object, HashMap<Object, Object>> connections;
+
+  //Store bonds
+  private HashMap<String, CallbackContext> bonds = new HashMap<String, CallbackContext>();
 
   //Discovery related variables
   private final int STATE_UNDISCOVERED = 0;
@@ -116,9 +118,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyIsInitialized = "isInitialized";
   private final String keyIsEnabled = "isEnabled";
   private final String keyIsScanning = "isScanning";
+  private final String keyIsBonded = "isBonded";
   private final String keyIsConnected = "isConnected";
   private final String keyIsDiscovered = "isDiscovered";
-  private final String keyIsBonded = "isBonded";
   private final String keyPeripheral = "peripheral";
   private final String keyState = "state";
   private final String keyDiscoveredState = "discoveredState";
@@ -134,6 +136,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String statusScanStarted = "scanStarted";
   private final String statusScanStopped = "scanStopped";
   private final String statusScanResult = "scanResult";
+  private final String statusBonded = "bonded";
+  private final String statusBonding = "bonding";
+  private final String statusUnbonded = "unbonded";
   private final String statusConnected = "connected";
   private final String statusDisconnected = "disconnected";
   private final String statusClosed = "closed";
@@ -148,9 +153,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String statusRssi = "rssi";
   private final String statusConnectionPriorityRequested = "connectionPriorityRequested";
   private final String statusMtu = "mtu";
-  private final String statusBonded = "bonded";
-  private final String statusBonding = "bonding";
-  private final String statusBondNone = "none";
 
   //Properties
   private final String propertyBroadcast = "broadcast";
@@ -184,6 +186,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String errorArguments = "arguments";
   private final String errorStartScan = "startScan";
   private final String errorStopScan = "stopScan";
+  private final String errorBond = "bond";
+  private final String errorUnbond = "unbond";
   private final String errorConnect = "connect";
   private final String errorReconnect = "reconnect";
   private final String errorDiscover = "discover";
@@ -216,6 +220,12 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String logAlreadyScanning = "Scanning already in progress";
   private final String logScanStartFail = "Scan failed to start";
   private final String logNotScanning = "Not scanning";
+  //Bonding
+  private final String logBonded = "Device already bonded";
+  private final String logBonding = "Device already bonding";
+  private final String logUnbonded = "Device already unbonded";
+  private final String logBondFail = "Device failed to bond on return";
+  private final String logUnbondFail = "Device failed to unbond on return";
   //Connection
   private final String logPreviouslyConnected = "Device previously connected, reconnect or close for new device";
   private final String logConnectFail = "Connection failed";
@@ -305,14 +315,16 @@ public class BluetoothLePlugin extends CordovaPlugin {
       stopScanAction(callbackContext);
     } else if ("retrieveConnected".equals(action)) {
       retrieveConnectedAction(args, callbackContext);
+    } else if ("bond".equals(action)) {
+      bondAction(args, callbackContext);
+    } else if ("unbond".equals(action)) {
+      unbondAction(args, callbackContext);
     } else if ("connect".equals(action)) {
       connectAction(args, callbackContext);
     } else if ("reconnect".equals(action)) {
       reconnectAction(args, callbackContext);
     } else if ("disconnect".equals(action)) {
       disconnectAction(args, callbackContext);
-    } else if ("bond".equals(action)) {
-      bondAction(args, callbackContext);
     } else if ("services".equals(action)) {
       JSONObject returnObj = new JSONObject();
       addProperty(returnObj, keyError, errorServices);
@@ -1221,6 +1233,163 @@ public class BluetoothLePlugin extends CordovaPlugin {
     callbackContext.sendPluginResult(pluginResult);
   }
 
+  private void bondAction(JSONArray args, CallbackContext callbackContext) {
+    if (!isBondReceiverRegistered) {
+      cordova.getActivity().registerReceiver(mBondReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+      isBondReceiverRegistered = true;
+    }
+
+    if (isNotInitialized(callbackContext, true)) {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      return;
+    }
+
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      return;
+    }
+
+    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+    if (device == null) {
+      JSONObject returnObj = new JSONObject();
+
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, logNoDevice);
+      addProperty(returnObj, keyAddress, address);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    CallbackContext checkCallback = (CallbackContext) bonds.get(address);
+    if (checkCallback != null) {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, logBonding);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    int bondState = device.getBondState();
+    if (bondState == BluetoothDevice.BOND_BONDED || bondState == BluetoothDevice.BOND_BONDING) {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, bondState == BluetoothDevice.BOND_BONDED ? logBonded : logBonding);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    bonds.put(address, callbackContext);
+
+    boolean result = device.createBond();
+
+    if (!result) {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, logBondFail);
+
+      callbackContext.error(returnObj);
+      bonds.remove(address);
+    }
+  }
+
+  private void unbondAction(JSONArray args, CallbackContext callbackContext) {
+    if (!isBondReceiverRegistered) {
+      cordova.getActivity().registerReceiver(mBondReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+      isBondReceiverRegistered = true;
+    }
+
+    if (isNotInitialized(callbackContext, true)) {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      return;
+    }
+
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      return;
+    }
+
+    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+    if (device == null) {
+      JSONObject returnObj = new JSONObject();
+
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, logNoDevice);
+      addProperty(returnObj, keyAddress, address);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    CallbackContext checkCallback = (CallbackContext) bonds.get(address);
+    if (checkCallback != null) {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, logBonding);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    int bondState = device.getBondState();
+    if (bondState == BluetoothDevice.BOND_NONE || bondState == BluetoothDevice.BOND_BONDING) {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorUnbond);
+      addProperty(returnObj, keyMessage, bondState == BluetoothDevice.BOND_NONE ? logUnbonded : logBonding);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    bonds.put(address, callbackContext);
+
+    boolean result = false;
+    try {
+      java.lang.reflect.Method mi = device.getClass().getMethod("removeBond");
+      Boolean returnValue = (Boolean) mi.invoke(device);
+      result = returnValue.booleanValue();
+    } catch (Exception e) {
+      Log.d("BLE", e.getMessage());
+    }
+
+    if (!result) {
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      addProperty(returnObj, keyError, errorUnbond);
+      addProperty(returnObj, keyMessage, logUnbondFail);
+
+      callbackContext.error(returnObj);
+      bonds.remove(address);
+    }
+  }
+
   private void connectAction(JSONArray args, CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
       return;
@@ -1360,62 +1529,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     bluetoothGatt.disconnect();
-  }
-
-  private void bondAction(JSONArray args, CallbackContext callbackContext) {
-    //Save init callback
-    bondCallbackContext = callbackContext;
-
-    if (isNotInitialized(callbackContext, true)) {
-      return;
-    }
-
-    JSONObject obj = getArgsObject(args);
-    if (isNotArgsObject(obj, callbackContext)) {
-      return;
-    }
-
-    Activity activity = cordova.getActivity();
-
-    if (obj != null && !isBondReceiverRegistered) {
-      android.util.Log.i("REG", "registerReceiver Bond");
-      //Add a receiver to pick up when Bluetooth state changes
-      activity.registerReceiver(mBondReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
-      activity.registerReceiver(mBondReceiver, new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
-      isBondReceiverRegistered = true;
-    }
-
-    String address = getAddress(obj);
-    if (isNotAddress(address, callbackContext)) {
-      return;
-    }
-
-    HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
-    if (connection == null) {
-      return;
-    }
-
-    BluetoothGatt bluetoothGatt = (BluetoothGatt) connection.get(keyPeripheral);
-    BluetoothDevice device = bluetoothGatt.getDevice();
-
-    if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-      JSONObject returnObj = new JSONObject();
-      addProperty(returnObj, keyStatus, statusBonded);
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      bondCallbackContext.sendPluginResult(pluginResult);
-      return;
-    } else if (device.getBondState() == BluetoothDevice.BOND_BONDING) {
-      JSONObject returnObj = new JSONObject();
-      addProperty(returnObj, keyStatus, statusBonding);
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-      pluginResult.setKeepCallback(true);
-      bondCallbackContext.sendPluginResult(pluginResult);
-      return;
-    } else {
-      device.setPairingConfirmation(false);
-      device.createBond();
-    }
   }
 
   private void closeAction(JSONArray args, CallbackContext callbackContext) {
@@ -2286,6 +2399,44 @@ public class BluetoothLePlugin extends CordovaPlugin {
     callbackContext.success(returnObj);
   }
 
+  private void isBondedAction(JSONArray args, CallbackContext callbackContext) {
+    if (isNotInitialized(callbackContext, true)) {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      return;
+    }
+
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      return;
+    }
+
+    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+    if (device == null) {
+      JSONObject returnObj = new JSONObject();
+
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, logNoDevice);
+      addProperty(returnObj, keyAddress, address);
+
+      callbackContext.error(returnObj);
+      return;
+    }
+
+    boolean result = (device.getBondState() == BluetoothDevice.BOND_BONDED);
+
+    JSONObject returnObj = new JSONObject();
+
+    addProperty(returnObj, keyIsBonded, result);
+
+    addDevice(returnObj, device);
+
+    callbackContext.success(returnObj);
+  }
+
   private void wasConnectedAction(JSONArray args, CallbackContext callbackContext) {
     if (isNotInitialized(callbackContext, true)) {
       return;
@@ -2398,40 +2549,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
     JSONObject returnObj = new JSONObject();
 
     addProperty(returnObj, keyIsDiscovered, result);
-
-    addDevice(returnObj, device);
-
-    callbackContext.success(returnObj);
-  }
-
-  private void isBondedAction(JSONArray args, CallbackContext callbackContext) {
-    if (isNotInitialized(callbackContext, true)) {
-      return;
-    }
-
-    JSONObject obj = getArgsObject(args);
-    if (isNotArgsObject(obj, callbackContext)) {
-      return;
-    }
-
-    String address = getAddress(obj);
-    if (isNotAddress(address, callbackContext)) {
-      return;
-    }
-
-    HashMap<Object, Object> connection = wasNeverConnected(address, callbackContext);
-    if (connection == null) {
-      return;
-    }
-
-    BluetoothGatt bluetoothGatt = (BluetoothGatt) connection.get(keyPeripheral);
-    BluetoothDevice device = bluetoothGatt.getDevice();
-
-    boolean result = (device.getBondState() == BluetoothDevice.BOND_BONDED);
-
-    JSONObject returnObj = new JSONObject();
-
-    addProperty(returnObj, keyIsBonded, result);
 
     addDevice(returnObj, device);
 
@@ -2580,47 +2697,44 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final BroadcastReceiver mBondReceiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
-      if (bondCallbackContext == null) {
-        return;
-      }
       if (intent.getAction().equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+        BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1);
+        int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
+
+        String address = device.getAddress();
+
+        CallbackContext callback = (CallbackContext) bonds.get(address);
+        if (callback == null) {
+          return;
+        }
+
         JSONObject returnObj = new JSONObject();
-        PluginResult pluginResult;
-        switch (intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR)) {
+
+        addDevice(returnObj, device);
+
+        boolean keepCallback = false;
+
+        switch (bondState) {
           case BluetoothDevice.BOND_BONDED:
-            cordova.getActivity().unregisterReceiver(mBondReceiver);
-            isBondReceiverRegistered = false;
-
             addProperty(returnObj, keyStatus, statusBonded);
-
-            pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-            pluginResult.setKeepCallback(true);
-            bondCallbackContext.sendPluginResult(pluginResult);
             break;
           case BluetoothDevice.BOND_BONDING:
             addProperty(returnObj, keyStatus, statusBonding);
-
-            pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-            pluginResult.setKeepCallback(true);
-            bondCallbackContext.sendPluginResult(pluginResult);
+            keepCallback = true;
             break;
           case BluetoothDevice.BOND_NONE:
-            addProperty(returnObj, keyStatus, statusBondNone);
-
-            pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
-            pluginResult.setKeepCallback(true);
-            bondCallbackContext.sendPluginResult(pluginResult);
+            addProperty(returnObj, keyStatus, statusUnbonded);
             break;
         }
-      } else if (intent.getAction().equals(BluetoothDevice.ACTION_PAIRING_REQUEST)) {
-        try {
-          //android.util.Log.i("TAG","ACTION_PAIRING_REQUEST");
-          //BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-          //device.setPairingConfirmation(true);
-        } catch (Exception e) {
-          e.printStackTrace();
+
+        if (!keepCallback) {
+          bonds.remove(address);
         }
 
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+        pluginResult.setKeepCallback(keepCallback);
+        callback.sendPluginResult(pluginResult);
       }
     }
   };

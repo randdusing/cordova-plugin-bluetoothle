@@ -18,6 +18,12 @@ var bluetoothle = {
   retrieveConnected: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "retrieveConnected", [params]);
   },
+  bond: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "bond", [params]);
+  },
+  unbond: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "unbond", [params]);
+  },
   connect: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "connect", [params]);
   },
@@ -26,9 +32,6 @@ var bluetoothle = {
   },
   disconnect: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "disconnect", [params]);
-  },
-  bond: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "bond", [params]);
   },
   close: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "close", [params]);
@@ -84,6 +87,9 @@ var bluetoothle = {
   isScanning: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "isScanning", []);
   },
+  isBonded: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isBonded", [params]);
+  },
   wasConnected: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "wasConnected", [params]);
   },
@@ -92,9 +98,6 @@ var bluetoothle = {
   },
   isDiscovered: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "isDiscovered", [params]);
-  },
-  isBonded: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "isBonded", [params]);
   },
   hasPermission: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermission", []);

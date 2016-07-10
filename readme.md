@@ -109,6 +109,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.startScan] (#startscan)
 * [bluetoothle.stopScan] (#stopscan)
 * [bluetoothle.retrieveConnected] (#retrieveconnected)
+* [bluetoothle.bond] (#bond)
+* [bluetoothle.unbond] (#unbond)
 * [bluetoothle.connect] (#connect)
 * [bluetoothle.reconnect] (#reconnect)
 * [bluetoothle.disconnect] (#disconnect)
@@ -130,6 +132,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isInitialized] (#isinitialized)
 * [bluetoothle.isEnabled] (#isenabled)
 * [bluetoothle.isScanning] (#isscanning)
+* [bluetoothle.isBonded] (#isbonded)
 * [bluetoothle.wasConnected] (#wasconnected)
 * [bluetoothle.isConnected] (#isconnected)
 * [bluetoothle.isDiscovered] (#isdiscovered)
@@ -161,6 +164,8 @@ Whenever the error callback is executed, the return object will contain the erro
 * disable - Bluetooth isn't disabled (Can't enabled if already disabled)
 * startScan - Scan couldn't be started (Is the scan already running?)
 * stopScan - Scan couldn't be stopped (Is the scan already stopped?)
+* bond - Bond couldn't be formed (Is it already bonding? Is the device Android?)
+* unbond - Bond couldn' be broken (Is it already unbonding? Is the device Android?)
 * connect - Connection attempt failed (Is the device address correct?)
 * reconnect - Reconnection attempt failed (Was the device ever connected?)
 * discover - Failed to discover device (Is the device already discovered or discovering?)
@@ -183,6 +188,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * isNotDisconnected - Device is not disconnected (Don't call connect or reconnect while connected)
 * isNotConnected - Device isn't connected (Don't call discover or any read/write operations)
 * isDisconnected - Device is disconnected (Don't call disconnect)
+* isBonded - Operation is unsupported. (Is the device Android?)
 
 For example:
 ```javascript
@@ -401,6 +407,78 @@ An array of device objects:
     "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
   }
 ]
+```
+
+
+
+### bond ###
+Bond with a device. The first success callback should always return with ```status == bonding```. If the bond is created, the callback will return again with ```status == bonded```. If the bonding popup is canceled or the wrong code is entered, the callback will return again with ```status == unbonded```. The device doesn't need to be connected to initiate bonding. Android support only.
+
+```javascript
+bluetoothle.bond(bondSuccess, bondError, params);
+```
+
+##### Params #####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{
+  "address": "5A:94:4B:38:B3:FD"
+}
+```
+
+##### Success #####
+* status => bonded = Device is bonded
+* status => bonding = Device is bonding
+* status => unbonded = Device is unbonded
+
+```javascript
+{
+  "name": "Hello World",
+  "address": "5A:94:4B:38:B3:FD",
+  "status": "bonded"
+}
+
+{
+  "name": "Hello World",
+  "address": "5A:94:4B:38:B3:FD",
+  "status": "bonding"
+}
+
+{
+  "name": "Hello World",
+  "address": "5A:94:4B:38:B3:FD",
+  "status": "unbonded"
+}
+```
+
+
+
+### unbond ###
+Unbond with a device. The success callback should always return with ```status == unbonded```. The device doesn't need to be connected to initiate bonding. Android support only.
+
+```javascript
+bluetoothle.unbond(unbondSuccess, unbondError, params);
+```
+
+##### Params #####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{
+  "address": "5A:94:4B:38:B3:FD"
+}
+```
+
+##### Success #####
+* status => unbonded = Device is unbonded
+
+```javascript
+{
+  "name": "Hello World",
+  "address": "5A:94:4B:38:B3:FD",
+  "status": "unbonded"
+}
 ```
 
 
