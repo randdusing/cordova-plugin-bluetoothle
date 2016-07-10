@@ -1,3 +1,6 @@
+## 4.2.0 - 2016-07-09
+- Added ability to bond/unbond on Android
+
 ## 4.1.0 - 2016-07-09
 - wasConnected helper function
 - Improved subscribe with Android. No longer need to specify whether notification or indication

@@ -73,6 +73,9 @@ NSString *const errorDisable = @"disable";
 NSString *const errorArguments = @"arguments";
 NSString *const errorStartScan = @"startScan";
 NSString *const errorStopScan = @"stopScan";
+NSString *const errorBond = @"bond";
+NSString *const errorUnbond = @"unbond";
+NSString *const errorIsBonded = @"isBonded";
 NSString *const errorConnect = @"connect";
 NSString *const errorReconnect = @"reconnect";
 NSString *const errorDiscover = @"discover";
@@ -828,6 +831,20 @@ NSString *const operationWrite = @"write";
 
   //Return the array
   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:peripheralsOut];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)bond:(CDVInvokedUrlCommand *)command {
+  NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorBond, keyError, logOperationUnsupported, keyMessage, nil];
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)unbond:(CDVInvokedUrlCommand *)command {
+  NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorUnbond, keyError, logOperationUnsupported, keyMessage, nil];
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
   [pluginResult setKeepCallbackAsBool:false];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -1816,6 +1833,13 @@ NSString *const operationWrite = @"write";
 
   NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, keyIsScanning, nil];
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)isBonded:(CDVInvokedUrlCommand *)command {
+  NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorIsBonded, keyError, logOperationUnsupported, keyMessage, nil];
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
   [pluginResult setKeepCallbackAsBool:false];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
