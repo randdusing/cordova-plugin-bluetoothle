@@ -1730,6 +1730,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return false;
     }
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+      bluetoothGatt.setCharacteristicNotification(characteristic, true);
+    }
+
     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(clientConfigurationDescriptorUuid);
 
     if (isNotDescriptor(descriptor, device, callbackContext)) {
@@ -1821,6 +1825,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     if (isNotCharacteristic(characteristic, device, callbackContext)) {
       return false;
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+      bluetoothGatt.setCharacteristicNotification(characteristic, false);
     }
 
     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(clientConfigurationDescriptorUuid);
