@@ -1730,10 +1730,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return false;
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-      bluetoothGatt.setCharacteristicNotification(characteristic, true);
-    }
-
     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(clientConfigurationDescriptorUuid);
 
     if (isNotDescriptor(descriptor, device, callbackContext)) {
@@ -1768,6 +1764,15 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (!result) {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorValueNotSet);
+      callbackContext.error(returnObj);
+      return false;
+    }
+
+    result = bluetoothGatt.setCharacteristicNotification(characteristic, true);
+
+    if (!result) {
+      addProperty(returnObj, keyError, errorSubscription);
+      addProperty(returnObj, keyMessage, logSubscribeFail);
       callbackContext.error(returnObj);
       return false;
     }
@@ -1827,10 +1832,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return false;
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-      bluetoothGatt.setCharacteristicNotification(characteristic, false);
-    }
-
     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(clientConfigurationDescriptorUuid);
 
     if (isNotDescriptor(descriptor, device, callbackContext)) {
@@ -1860,6 +1861,15 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (!result) {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorValueNotSet);
+      callbackContext.error(returnObj);
+      return false;
+    }
+
+    result = bluetoothGatt.setCharacteristicNotification(characteristic, false);
+
+    if (!result) {
+      addProperty(returnObj, keyError, errorSubscription);
+      addProperty(returnObj, keyMessage, logSubscribeFail);
       callbackContext.error(returnObj);
       return false;
     }
