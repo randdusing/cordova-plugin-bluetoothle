@@ -3,6 +3,8 @@ var gatt = Windows.Devices.Bluetooth.GenericAttributeProfile;
 var deviceInfo = Windows.Devices.Enumeration.DeviceInformation;
 var wsc = Windows.Security.Cryptography;
 
+var WATCHER, scanCallback;
+
 var initialized = false;
 var cachedServices = [];
 
@@ -10,8 +12,13 @@ module.exports = {
 
   initialize: function (successCallback, errorCallback, params) {
     var selector = "System.Devices.InterfaceClassGuid:=\"{6E3BB679-4372-40C8-9EAA-4509DF260CD8}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
-    deviceInfo.findAllAsync(selector, null).then(function (devices) {
-      if (devices.length > 0) {
+    // TODO: Enumerate available Bluetooth radios using another query
+    deviceInfo.findAllAsync(/*selector, null*/).then(function (devices) {
+      var blRadios = devices.filter(function (device) {
+          return /bluetooth/i.test(device.id);
+      });
+
+      if (blRadios.length > 0) {
         initialized = true;
         successCallback({ status: "enabled" });
       } else {
@@ -71,6 +78,139 @@ module.exports = {
     }, function (error) {
       errorCallback({ error: "retrieveConnected", message: error.message });
     });
+  },
+
+  startScan: function (successCallback, errorCallback, params) {
+
+    var DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
+    var DeviceInformationKind = Windows.Devices.Enumeration.DeviceInformationKind;
+    var DeviceWatcherStatus = Windows.Devices.Enumeration.DeviceWatcherStatus;
+    var GattProfile = Windows.Devices.Bluetooth.GenericAttributeProfile;
+
+    var NAME_KEY = "System.ItemNameDisplay";
+    var RSSI_KEY = "System.Devices.Aep.SignalStrength";
+    var ADDRESS_KEY = "System.Devices.Aep.DeviceAddress";
+
+    if (!WATCHER) {
+      // watch BLE devices using device watcher.
+      var selector = "(System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\") AND " +
+                      "(System.Devices.Aep.CanPair:=System.StructuredQueryType.Boolean#True OR " +
+                      "System.Devices.Aep.IsPaired:=System.StructuredQueryType.Boolean#True)";
+
+      WATCHER = DeviceInformation.createWatcher(selector, [NAME_KEY, ADDRESS_KEY, RSSI_KEY], DeviceInformationKind.associationEndpoint);
+    }
+
+    if (WATCHER.status !== DeviceWatcherStatus.started &&
+      WATCHER.status !== DeviceWatcherStatus.created &&
+      WATCHER.status !== DeviceWatcherStatus.aborted) {
+
+      errorCallback({ error: "startScan", message: 'Scan already in progress' });
+      return;
+    }
+
+    scanCallback = function (obj) {
+
+      if (obj.type !== 'added')
+        // We're not interested in device characteristics updates
+        // unless continuousScan === true (which is not yet supported)
+        return;
+
+      var device = obj.detail[0];
+
+      // TODO: Add "advertisement" property - it is not available directly
+      // but probably could be obtained using GattDeviceService
+      var deviceInfo = {
+        status: 'scanResult',
+        rssi: device.properties.hasKey(RSSI_KEY) && device.properties.lookup(RSSI_KEY),
+        name: device.properties.hasKey(NAME_KEY) && device.properties.lookup(NAME_KEY),
+        address: device.properties.hasKey(ADDRESS_KEY) && device.properties.lookup(ADDRESS_KEY),
+      };
+
+      successCallback(deviceInfo, { keepCallback: true });
+    };
+
+    WATCHER.addEventListener("added", scanCallback, false);
+    // Although we're not interested in device characteristics updated we still need to attach
+    // listener to 'updated' event to catch devices that could be found after the initial scan is completed
+    WATCHER.addEventListener("updated", scanCallback, false);
+    WATCHER.start();
+
+    successCallback({ status: 'scanStarted' }, { keepCallback: true });
+  },
+
+  stopScan: function (successCallback, errorCallback) {
+    var DeviceWatcherStatus = Windows.Devices.Enumeration.DeviceWatcherStatus;
+
+    if (WATCHER && (WATCHER.status === DeviceWatcherStatus.started ||
+      WATCHER.status === DeviceWatcherStatus.enumerationCompleted)) {
+
+      WATCHER.stop();
+      WATCHER.removeEventListener("added", scanCallback);
+      WATCHER.removeEventListener("updated", scanCallback);
+
+      successCallback({ status: "scanStopped" });
+      return;
+    }
+
+    errorCallback({ error: "stopScan", message: "Scan is either not yet started or already stopped" });
+  },
+
+  connect: function (successCallback, errorCallback, params) {
+      if (!initialized) {
+        errorCallback({ error: "connect", message: "Not initialized." });
+        return;
+      }
+
+      var address = params[0].address;
+
+      var DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
+      var DeviceInformationKind = Windows.Devices.Enumeration.DeviceInformationKind;
+
+      var selector = "(System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\") AND " +
+                     "(System.Devices.Aep.CanPair:=System.StructuredQueryType.Boolean#True OR " +
+                     "System.Devices.Aep.IsPaired:=System.StructuredQueryType.Boolean#True)";
+
+      // TODO: use cached device instead of searching it again
+      DeviceInformation.findAllAsync(selector, [], DeviceInformationKind.associationEndpoint)
+      .then(function (devices) {
+        return Windows.Devices.Bluetooth.BluetoothLEDevice.fromIdAsync(devices[0].id)
+      })
+      .then(function (bleDevice) {
+        var DevicePairingProtectionLevel = Windows.Devices.Enumeration.DevicePairingProtectionLevel;
+        var DevicePairingResultStatus = Windows.Devices.Enumeration.DevicePairingResultStatus;
+
+        if (bleDevice.deviceInformation.pairing.isPaired) {
+          return bleDevice;
+        }
+
+        if (!bleDevice.deviceInformation.pairing.canPair) {
+          throw { error: "connect", message: "The device does not support pairing" };
+        }
+
+        // TODO: investigate if it is possible to pair without user prompt
+        return bleDevice.deviceInformation.pairing.pairAsync(DevicePairingProtectionLevel.none)
+        .then(function (res) {
+          if (res.status === DevicePairingResultStatus.paired ||
+              res.status === DevicePairingResultStatus.alreadyPaired)
+            return bleDevice;
+
+          // TODO: provide error code based on DevicePairingResultStatus.alreadyPaired enum
+          throw { error: "connect", message: "The device rejected the connection" };
+        });
+      })
+      .done(function (bleDevice) {
+        var result = {
+          name: bleDevice.deviceInformation.name,
+          address: address,
+          status: "connected"
+        };
+
+        // Need to use keepCallback to be able to report "disconnect" event
+        // https://github.com/randdusing/cordova-plugin-bluetoothle#connect
+        successCallback(result, { keepCallback: true });
+      }, function (err) {
+        errorCallback(err);
+      });
   },
 
   close: function (successCallback, errorCallback, params) {
