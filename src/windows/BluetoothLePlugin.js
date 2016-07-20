@@ -7,40 +7,49 @@ var WATCHER, scanCallback;
 
 var initialized = false;
 var cachedServices = [];
+// Adapter that will be used
+var BL_ADAPTER;
 
 module.exports = {
 
   initialize: function (successCallback, errorCallback, params) {
-    var selector = "System.Devices.InterfaceClassGuid:=\"{6E3BB679-4372-40C8-9EAA-4509DF260CD8}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
-    // TODO: Enumerate available Bluetooth radios using another query
-    deviceInfo.findAllAsync(/*selector, null*/).then(function (devices) {
-      var blRadios = devices.filter(function (device) {
-          return /bluetooth/i.test(device.id);
-      });
+    Windows.Devices.Radios.Radio.getRadiosAsync()
+    .then(function (radios) {
+      // Just pick the first radio device for now
+      var radio = radios.filter(function (radio) {
+        return radio.kind === Windows.Devices.Radios.RadioKind.bluetooth;
+      })[0];
 
-      if (blRadios.length > 0) {
-        initialized = true;
-        successCallback({ status: "enabled" });
-      } else {
-        if (params && params.length > 0 && params[0].request) {
-          try {
-            Windows.UI.ApplicationSettings.SettingsPane.show();
-          } catch (ex) {
-            Windows.System.Launcher.launchUriAsync(Windows.Foundation.Uri("ms-settings-bluetooth:"));
-          }
-        }
-        errorCallback({ error: "initialize", message: "No BLE devices found." });
+      if (!radio) {
+        throw { error: "initialize", message: "No bluetooth radios available on device" };
       }
-    }, function (error) {
-      if (params && params.length > 0 && params[0].request) {
-        try {
-          Windows.UI.ApplicationSettings.SettingsPane.show();
-        } catch (ex) {
-          Windows.System.Launcher.launchUriAsync(Windows.Foundation.Uri("ms-settings-bluetooth:"));
+
+      BL_ADAPTER = radio;
+      BL_ADAPTER.onstatechanged = function (e) {
+        switch (e.target.state) {
+          case Windows.Devices.Radios.RadioState.on:
+            state = 'enabled';
+            break;
+          default:
+            state = 'disabled';
         }
+
+        successCallback({ status: state }, { keepCallback: true });
+      };
+
+      if (BL_ADAPTER.state === Windows.Devices.Radios.RadioState.on) {
+        successCallback({ status: 'enabled' }, { keepCallback: true });
+        return;
       }
-      errorCallback({ error: "initialize", message: error.message });
-    });
+
+      var request = params[0] ? !!params[0].request : false;
+      if (request) {
+        // radio.setStateAsync(Windows.Devices.Radios.RadioState.on) doesn't work somehow
+        // so try to invoke settings in an old way
+        Windows.System.Launcher.launchUriAsync(Windows.Foundation.Uri("ms-settings-bluetooth:"));
+      }
+    })
+    .done(null, errorCallback);
   },
 
   retrieveConnected: function (successCallback, errorCallback, params) {
