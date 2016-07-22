@@ -8,8 +8,6 @@ var WATCH_CACHE = {};
 
 var initialized = false;
 var cachedServices = [];
-// Adapter that will be used
-var BL_ADAPTER;
 
 module.exports = {
 
@@ -47,9 +45,33 @@ module.exports = {
   },
 
   initialize2: function (successCallback, errorCallback, params) {
+
+    var request = params[0] ? !!params[0].request : false;
+    var statusReceiver = params[0] ? !!params[0].statusReceiver : false;
+
+    // If statusReceiver option is specified we would report state multiple
+    // times so we need to instruct cordova not to dispose callbacks
+    var callbackOptions = statusReceiver ? { keepCallback: true } : {};
+
+    function reportAdapterState(e) {
+      var state;
+      switch (e.target.state) {
+        case Windows.Devices.Radios.RadioState.on:
+          initialized = true;
+          state = 'enabled';
+          break;
+        default:
+          initialized = false;
+          state = 'disabled';
+      }
+
+      successCallback({ status: state }, callbackOptions);
+    }
+
     Windows.Devices.Radios.Radio.getRadiosAsync()
     .then(function (radios) {
-      // Just pick the first radio device for now
+      // There is a very small chance that there are more than one bluetooth
+      // radio device is available so we'll just pick the first one from the list
       var radio = radios.filter(function (radio) {
         return radio.kind === Windows.Devices.Radios.RadioKind.bluetooth;
       })[0];
@@ -58,31 +80,15 @@ module.exports = {
         throw { error: "initialize", message: "No bluetooth radios available on device" };
       }
 
-      BL_ADAPTER = radio;
-      BL_ADAPTER.onstatechanged = function (e) {
-        switch (e.target.state) {
-          case Windows.Devices.Radios.RadioState.on:
-            initialized = true;
-            state = 'enabled';
-            break;
-          default:
-            initialized = false;
-            state = 'disabled';
-        }
-
-        successCallback({ status: state }, { keepCallback: true });
-      };
-
-      if (BL_ADAPTER.state === Windows.Devices.Radios.RadioState.on) {
-        initialized = true;
-        successCallback({ status: 'enabled' }, { keepCallback: true });
-        return;
+      if (statusReceiver) {
+        radio.addEventListener('statechanged', reportAdapterState);
       }
 
-      var request = params[0] ? !!params[0].request : false;
-      if (request) {
-        // radio.setStateAsync(Windows.Devices.Radios.RadioState.on) doesn't work somehow
-        // so try to invoke settings in an old way
+      reportAdapterState({ target: radio });
+
+      if (radio.state !== Windows.Devices.Radios.RadioState.on && request) {
+        // radio.setStateAsync(Windows.Devices.Radios.RadioState.on) doesn't
+        // work somehow so try to invoke settings in an old way.
         Windows.System.Launcher.launchUriAsync(Windows.Foundation.Uri("ms-settings-bluetooth:"));
       }
     })
