@@ -13,6 +13,9 @@ module.exports = {
 
   initialize: function (successCallback, errorCallback, params) {
 
+    // If Windows.Devices.Radios namespace is available we will try to use it for
+    // initialization. Otherwise fall back to default behaviour which is to
+    // search for all Gatt-enabled devices around. See randdusing/cordova-plugin-bluetoothle/#284
     if (Windows.Devices.Radios) {
       return module.exports.initialize2(successCallback, errorCallback, params);
     }
@@ -46,6 +49,8 @@ module.exports = {
 
   initialize2: function (successCallback, errorCallback, params) {
 
+    var Radios = Windows.Devices.Radios;
+
     var request = params[0] ? !!params[0].request : false;
     var statusReceiver = params[0] ? !!params[0].statusReceiver : false;
 
@@ -56,7 +61,7 @@ module.exports = {
     function reportAdapterState(e) {
       var state;
       switch (e.target.state) {
-        case Windows.Devices.Radios.RadioState.on:
+        case Radios.RadioState.on:
           initialized = true;
           state = 'enabled';
           break;
@@ -68,12 +73,12 @@ module.exports = {
       successCallback({ status: state }, callbackOptions);
     }
 
-    Windows.Devices.Radios.Radio.getRadiosAsync()
+    Radios.Radio.getRadiosAsync()
     .then(function (radios) {
       // There is a very small chance that there are more than one bluetooth
       // radio device is available so we'll just pick the first one from the list
       var radio = radios.filter(function (radio) {
-        return radio.kind === Windows.Devices.Radios.RadioKind.bluetooth;
+        return radio.kind === Radios.RadioKind.bluetooth;
       })[0];
 
       if (!radio) {
@@ -86,7 +91,7 @@ module.exports = {
 
       reportAdapterState({ target: radio });
 
-      if (radio.state !== Windows.Devices.Radios.RadioState.on && request) {
+      if (radio.state !== Radios.RadioState.on && request) {
         // radio.setStateAsync(Windows.Devices.Radios.RadioState.on) doesn't
         // work somehow so try to invoke settings in an old way.
         Windows.System.Launcher.launchUriAsync(Windows.Foundation.Uri("ms-settings-bluetooth:"));
@@ -110,7 +115,7 @@ module.exports = {
       for (var i = 0; i < params[0].services.length; i++) {
         var uuid = params[0].services[i];
         if (uuid.length == 4) {
-            uuid = "0000" + uuid + "-0000-1000-8000-00805F9B34FB";
+          uuid = "0000" + uuid + "-0000-1000-8000-00805F9B34FB";
         }
         selector += (i == 0) ? " AND ( " : " OR ";
         selector += "System.DeviceInterface.Bluetooth.ServiceGuid:=\"{" + uuid + "}\"";
@@ -135,13 +140,10 @@ module.exports = {
   startScan: function (successCallback, errorCallback, params) {
 
     var DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
-    var DeviceInformationKind = Windows.Devices.Enumeration.DeviceInformationKind;
     var DeviceWatcherStatus = Windows.Devices.Enumeration.DeviceWatcherStatus;
-    var GattProfile = Windows.Devices.Bluetooth.GenericAttributeProfile;
 
     var NAME_KEY = "System.ItemNameDisplay";
     var RSSI_KEY = "System.Devices.Aep.SignalStrength";
-    var ADDRESS_KEY = "System.Devices.Aep.DeviceAddress";
     var CONTAINER_ID_KEY = "System.Devices.Aep.ContainerId";
 
     // Drop cache first
@@ -150,8 +152,7 @@ module.exports = {
     if (!WATCHER) {
       // watch BLE devices using device watcher.
       var selector = Windows.Devices.Bluetooth.BluetoothLEDevice.getDeviceSelectorFromConnectionStatus(false);
-
-      WATCHER = DeviceInformation.createWatcher(selector, [NAME_KEY, ADDRESS_KEY, RSSI_KEY, CONTAINER_ID_KEY]);
+      WATCHER = DeviceInformation.createWatcher(selector, [NAME_KEY, RSSI_KEY, CONTAINER_ID_KEY]);
     }
 
     if (WATCHER.status !== DeviceWatcherStatus.started &&
@@ -173,18 +174,16 @@ module.exports = {
 
       // TODO: Add "advertisement" property - it is not available directly
       // but probably could be obtained using GattDeviceService
+      var deviceAddress = device.properties.hasKey(CONTAINER_ID_KEY) && device.properties.lookup(CONTAINER_ID_KEY);
+      // Put device into cache to be able to get it faster in 'connect'
+      WATCH_CACHE[deviceAddress] = device;
+
       var deviceInfo = {
         status: 'scanResult',
         rssi: device.properties.hasKey(RSSI_KEY) && device.properties.lookup(RSSI_KEY),
         name: device.properties.hasKey(NAME_KEY) && device.properties.lookup(NAME_KEY),
-        address: device.properties.hasKey(CONTAINER_ID_KEY) && device.properties.lookup(CONTAINER_ID_KEY),
+        address: deviceAddress
       };
-
-      var deviceAddress = device.properties.hasKey(CONTAINER_ID_KEY) && device.properties.lookup(CONTAINER_ID_KEY);
-      if (deviceAddress) {
-        // Put device into cache to be able to get it faster in 'connect'
-        WATCH_CACHE[deviceAddress] = device;
-      }
 
       successCallback(deviceInfo, { keepCallback: true });
     };
@@ -230,20 +229,19 @@ module.exports = {
     var DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
     var DeviceInformationKind = Windows.Devices.Enumeration.DeviceInformationKind;
 
-    var selector = "System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\" AND " +
-                   "System.Devices.Aep.ContainerId:=\"{" + address + "}\" AND " +
-                   "(System.Devices.Aep.CanPair:=System.StructuredQueryType.Boolean#True OR " +
-                   "System.Devices.Aep.IsPaired:=System.StructuredQueryType.Boolean#True)";
-
     WinJS.Promise.wrap(address)
-    .then(function (address) {
+    .then(function (deviceAddress) {
       // If we have cached device info return it right now
-      if (WATCH_CACHE[address]) return [WATCH_CACHE[address]];
+      if (WATCH_CACHE[deviceAddress]) return [WATCH_CACHE[deviceAddress]];
       // Otherwise try to search it again
-      return DeviceInformation.findAllAsync(selector, ["System.Devices.Aep.ContainerId"], DeviceInformationKind.associationEndpoint)
+      var selector = "System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\" AND " +
+                      "System.Devices.Aep.ContainerId:=\"{" + deviceAddress + "}\" AND " +
+                      "(System.Devices.Aep.CanPair:=System.StructuredQueryType.Boolean#True OR " +
+                      "System.Devices.Aep.IsPaired:=System.StructuredQueryType.Boolean#True)";
+      return DeviceInformation.findAllAsync(selector, ["System.Devices.Aep.ContainerId"], DeviceInformationKind.associationEndpoint);
     })
     .then(function (devices) {
-      return Windows.Devices.Bluetooth.BluetoothLEDevice.fromIdAsync(devices[0].id)
+      return Windows.Devices.Bluetooth.BluetoothLEDevice.fromIdAsync(devices[0].id);
     })
     .then(function (bleDevice) {
       var DevicePairingProtectionLevel = Windows.Devices.Enumeration.DevicePairingProtectionLevel;
@@ -282,7 +280,7 @@ module.exports = {
           successCallback(result);
           bleDevice.removeEventListener('connectionstatuschanged', connectionStatusListener);
         }
-      })
+      });
 
       // Need to use keepCallback to be able to report "disconnect" event
       // https://github.com/randdusing/cordova-plugin-bluetoothle#connect
@@ -327,15 +325,15 @@ module.exports = {
           var deviceName;
           var serviceIds = [];
           for (var i = 0; i < services.length; i++) {
-              var UuidRe = /\{([0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12})\}_/;
-              var serviceId = UuidRe.exec(services[i].id)[1];
-              var re = /0000([0-9a-f]{4})\-0000\-1000\-8000\-00805f9b34fb/;
-              var shortUuidMatch = re.exec(serviceId);
-              if (shortUuidMatch != null) {
-                serviceId = shortUuidMatch[1];
-              }
-              serviceIds.push(serviceId);
-              deviceName = services[i].name;
+            var UuidRe = /\{([0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12})\}_/;
+            var serviceId = UuidRe.exec(services[i].id)[1];
+            var re = /0000([0-9a-f]{4})\-0000\-1000\-8000\-00805f9b34fb/;
+            var shortUuidMatch = re.exec(serviceId);
+            if (shortUuidMatch != null) {
+              serviceId = shortUuidMatch[1];
+            }
+            serviceIds.push(serviceId);
+            deviceName = services[i].name;
           }
           successCallback({ status: "services", services: serviceIds, name: deviceName, address: deviceId });
         } else {
@@ -542,9 +540,9 @@ module.exports = {
       var value = params[0].value;
       var writeOption;
       if (params[0].type !== undefined && params[0].type == "noResponse") {
-          writeOption = gatt.GattWriteOption.writeWithoutResponse;
+        writeOption = gatt.GattWriteOption.writeWithoutResponse;
       } else {
-          writeOption = gatt.GattWriteOption.writeWithResponse;
+        writeOption = gatt.GattWriteOption.writeWithResponse;
       }
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
@@ -645,22 +643,22 @@ function getService(deviceId, serviceId) {
       }
     }
     if (serviceId.length == 4) {
-        serviceId = "0000" + serviceId + "-0000-1000-8000-00805F9B34FB";
+      serviceId = "0000" + serviceId + "-0000-1000-8000-00805F9B34FB";
     }
     var selector = "System.Devices.ContainerId:={" + deviceId + "} AND System.DeviceInterface.Bluetooth.ServiceGuid:=\"{" + serviceId + "}\" AND System.Devices.InterfaceClassGuid:=\"{6E3BB679-4372-40C8-9EAA-4509DF260CD8}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
     deviceInfo.findAllAsync(selector, null).then(function (services) {
       if (services.length > 0) {
         gatt.GattDeviceService.fromIdAsync(services[0].id)
-         .then(function (deviceService) {
-           if (deviceService) {
-             cachedServices.push({ deviceId: deviceId, serviceId: serviceId, deviceService: deviceService });
-             successCallback(deviceService);
-           } else {
-             errorCallback("Error retrieving deviceService, check the app's permissions for this service (plugin.xml).");
-           }
-         }, function (error) {
-           errorCallback(error);
-         });
+          .then(function (deviceService) {
+            if (deviceService) {
+              cachedServices.push({ deviceId: deviceId, serviceId: serviceId, deviceService: deviceService });
+              successCallback(deviceService);
+            } else {
+              errorCallback("Error retrieving deviceService, check the app's permissions for this service (plugin.xml).");
+            }
+          }, function (error) {
+            errorCallback(error);
+          });
       } else {
         errorCallback("Device or service not found.");
       }
@@ -766,16 +764,16 @@ function getCharacteristicsInfo(serviceId, characteristicId) {
 
 function getServiceInfos() {
   return [
-   {
-     uuid: 0x1811,
-     characteristics: [
-       { uuid: 0x2A47, descriptors: [] },
-       { uuid: 0x2A46, descriptors: [0x2902, ] },
-       { uuid: 0x2A48, descriptors: [] },
-       { uuid: 0x2A45, descriptors: [0x2902, ] },
-       { uuid: 0x2A44, descriptors: [] },
-     ]
-   },
+    {
+      uuid: 0x1811,
+      characteristics: [
+        { uuid: 0x2A47, descriptors: [] },
+        { uuid: 0x2A46, descriptors: [0x2902, ] },
+        { uuid: 0x2A48, descriptors: [] },
+        { uuid: 0x2A45, descriptors: [0x2902, ] },
+        { uuid: 0x2A44, descriptors: [] },
+      ]
+    },
   {
     uuid: 0x180F,
     characteristics: [
