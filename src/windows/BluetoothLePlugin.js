@@ -115,7 +115,7 @@ module.exports = {
       for (var i = 0; i < params[0].services.length; i++) {
         var uuid = params[0].services[i];
         if (uuid.length == 4) {
-          uuid = "0000" + uuid + "-0000-1000-8000-00805F9B34FB";
+            uuid = "0000" + uuid + "-0000-1000-8000-00805F9B34FB";
         }
         selector += (i == 0) ? " AND ( " : " OR ";
         selector += "System.DeviceInterface.Bluetooth.ServiceGuid:=\"{" + uuid + "}\"";
@@ -325,15 +325,15 @@ module.exports = {
           var deviceName;
           var serviceIds = [];
           for (var i = 0; i < services.length; i++) {
-            var UuidRe = /\{([0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12})\}_/;
-            var serviceId = UuidRe.exec(services[i].id)[1];
-            var re = /0000([0-9a-f]{4})\-0000\-1000\-8000\-00805f9b34fb/;
-            var shortUuidMatch = re.exec(serviceId);
-            if (shortUuidMatch != null) {
-              serviceId = shortUuidMatch[1];
-            }
-            serviceIds.push(serviceId);
-            deviceName = services[i].name;
+              var UuidRe = /\{([0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12})\}_/;
+              var serviceId = UuidRe.exec(services[i].id)[1];
+              var re = /0000([0-9a-f]{4})\-0000\-1000\-8000\-00805f9b34fb/;
+              var shortUuidMatch = re.exec(serviceId);
+              if (shortUuidMatch != null) {
+                serviceId = shortUuidMatch[1];
+              }
+              serviceIds.push(serviceId);
+              deviceName = services[i].name;
           }
           successCallback({ status: "services", services: serviceIds, name: deviceName, address: deviceId });
         } else {
@@ -540,9 +540,9 @@ module.exports = {
       var value = params[0].value;
       var writeOption;
       if (params[0].type !== undefined && params[0].type == "noResponse") {
-        writeOption = gatt.GattWriteOption.writeWithoutResponse;
+          writeOption = gatt.GattWriteOption.writeWithoutResponse;
       } else {
-        writeOption = gatt.GattWriteOption.writeWithResponse;
+          writeOption = gatt.GattWriteOption.writeWithResponse;
       }
 
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
@@ -643,22 +643,22 @@ function getService(deviceId, serviceId) {
       }
     }
     if (serviceId.length == 4) {
-      serviceId = "0000" + serviceId + "-0000-1000-8000-00805F9B34FB";
+        serviceId = "0000" + serviceId + "-0000-1000-8000-00805F9B34FB";
     }
     var selector = "System.Devices.ContainerId:={" + deviceId + "} AND System.DeviceInterface.Bluetooth.ServiceGuid:=\"{" + serviceId + "}\" AND System.Devices.InterfaceClassGuid:=\"{6E3BB679-4372-40C8-9EAA-4509DF260CD8}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
     deviceInfo.findAllAsync(selector, null).then(function (services) {
       if (services.length > 0) {
         gatt.GattDeviceService.fromIdAsync(services[0].id)
-          .then(function (deviceService) {
-            if (deviceService) {
-              cachedServices.push({ deviceId: deviceId, serviceId: serviceId, deviceService: deviceService });
-              successCallback(deviceService);
-            } else {
-              errorCallback("Error retrieving deviceService, check the app's permissions for this service (plugin.xml).");
-            }
-          }, function (error) {
-            errorCallback(error);
-          });
+         .then(function (deviceService) {
+           if (deviceService) {
+             cachedServices.push({ deviceId: deviceId, serviceId: serviceId, deviceService: deviceService });
+             successCallback(deviceService);
+           } else {
+             errorCallback("Error retrieving deviceService, check the app's permissions for this service (plugin.xml).");
+           }
+         }, function (error) {
+           errorCallback(error);
+         });
       } else {
         errorCallback("Device or service not found.");
       }
@@ -764,16 +764,16 @@ function getCharacteristicsInfo(serviceId, characteristicId) {
 
 function getServiceInfos() {
   return [
-    {
-      uuid: 0x1811,
-      characteristics: [
-        { uuid: 0x2A47, descriptors: [] },
-        { uuid: 0x2A46, descriptors: [0x2902, ] },
-        { uuid: 0x2A48, descriptors: [] },
-        { uuid: 0x2A45, descriptors: [0x2902, ] },
-        { uuid: 0x2A44, descriptors: [] },
-      ]
-    },
+   {
+     uuid: 0x1811,
+     characteristics: [
+       { uuid: 0x2A47, descriptors: [] },
+       { uuid: 0x2A46, descriptors: [0x2902, ] },
+       { uuid: 0x2A48, descriptors: [] },
+       { uuid: 0x2A45, descriptors: [0x2902, ] },
+       { uuid: 0x2A44, descriptors: [] },
+     ]
+   },
   {
     uuid: 0x180F,
     characteristics: [

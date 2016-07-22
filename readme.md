@@ -295,7 +295,7 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
 ```
 
 ##### Params #####
-* services = An array of service IDs to filter the scan or empty array / null
+* services = An array of service IDs to filter the scan or empty array / null. This parameter is not supported on Windows platform yet.
 * iOS - See [iOS Docs](https://developer.apple.com/library/ios/documentation/CoreBluetooth/Reference/CBCentralManager_Class/#//apple_ref/doc/constant_group/Peripheral_Scanning_Options)
   * allowDuplicates = True/false to allow duplicate advertisement packets, defaults to false.
 * Android - See [Android Docs](http://developer.android.com/reference/android/bluetooth/le/ScanSettings.html)
@@ -326,6 +326,7 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
   * rssi = signal strength
   * advertisement = advertisement data in encoded string of bytes, use bluetoothle.encodedStringToBytes() (Android)
   * advertisement = advertisement hash with the keys specified [here](https://developer.apple.com/library/ios/documentation/CoreBluetooth/Reference/CBCentralManagerDelegate_Protocol/#//apple_ref/doc/constant_group/Advertisement_Data_Retrieval_Keys) (iOS)
+  * advertisement = empty (Windows)
 
 ```javascript
 {
@@ -2044,10 +2045,9 @@ The BluetoothLE plugin uses an adapter to interact with each device's Bluetooth 
 
 document.addEventListener('deviceready', function () {
 
-    new Promise(function (resolve, reject) {
+    new Promise(function (resolve) {
 
-        bluetoothle.initialize(resolve, reject,
-            { request: true, statusReceiver: false });
+        bluetoothle.initialize(resolve, { request: true, statusReceiver: false });
 
     }).then(initializeSuccess, handleError);
 
@@ -2296,8 +2296,7 @@ function stopScan() {
 
     new Promise(function (resolve, reject) {
 
-        bluetoothle.storpScan(resolve, reject,
-            { address: result.address });
+        bluetoothle.stopScan(resolve, reject);
 
     }).then(stopScanSuccess, handleError);
 }
