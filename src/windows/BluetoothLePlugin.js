@@ -275,6 +275,15 @@ module.exports = {
         status: "connected"
       };
 
+      // Attach listener to device to report disconnected event
+      bleDevice.addEventListener('connectionstatuschanged', function connectionStatusListener(e) {
+        if (e.target.connectionStatus === Windows.Devices.Bluetooth.BluetoothConnectionStatus.disconnected) {
+          result.status = "disconnected";
+          successCallback(result);
+          bleDevice.removeEventListener('connectionstatuschanged', connectionStatusListener);
+        }
+      })
+
       // Need to use keepCallback to be able to report "disconnect" event
       // https://github.com/randdusing/cordova-plugin-bluetoothle#connect
       successCallback(result, { keepCallback: true });
