@@ -1,3 +1,6 @@
+## 4.2.1 - 2016-07-25
+- Fix issue with queuing getting stuck when device disconnects / closes
+
 ## 4.2.0 - 2016-07-09
 - Added ability to bond/unbond on Android
 
