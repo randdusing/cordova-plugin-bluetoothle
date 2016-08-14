@@ -61,8 +61,9 @@ PhoneGap Build
 
 ## Debugging ##
 Check out these guides for lower level debugging on Android and iOS:
-[iOS](https://developer.apple.com/bug-reporting/profiles-and-logs/) - Scroll down to Bluetooth for iOS.
-[Android](http://blog.bluetooth.com/debugging-bluetooth-with-an-android-app/)
+
+* [iOS](https://developer.apple.com/bug-reporting/profiles-and-logs/) - Scroll down to Bluetooth for iOS.
+* [Android](http://blog.bluetooth.com/debugging-bluetooth-with-an-android-app/)
 
 
 ## Installation Quirks (Android) ##
