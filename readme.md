@@ -65,6 +65,8 @@ Check out these guides for lower level debugging on Android and iOS:
 * [iOS](https://developer.apple.com/bug-reporting/profiles-and-logs/) - Scroll down to Bluetooth for iOS.
 * [Android](http://blog.bluetooth.com/debugging-bluetooth-with-an-android-app/)
 
+Apps like [LightBlue](https://itunes.apple.com/us/app/lightblue-explorer-bluetooth/id557428110?mt=8) are great for verifying Bluetooth LE behavior.
+
 
 ## Installation Quirks (Android) ##
 The latest version of the plugin requires you to set the Android target API to a minimum of 23 to support permission requirements for scanning. If you can't target 23, please use plugin version 2.4.0 or below.
