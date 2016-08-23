@@ -85,6 +85,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final int STATE_UNDISCOVERED = 0;
   private final int STATE_DISCOVERING = 1;
   private final int STATE_DISCOVERED = 2;
+  private final String discoverClearCache = "clearCache";
 
   //Quick Writes
   private LinkedList<byte[]> queueQuick = new LinkedList<byte[]>();
@@ -1631,7 +1632,35 @@ public class BluetoothLePlugin extends CordovaPlugin {
     connection.put(keyDiscoveredState, STATE_DISCOVERING);
     connection.put(operationDiscover, callbackContext);
 
+    boolean clearCache = false;
+    if (obj != null) {
+      clearCache = getClearCache(obj);
+    }
+
+    if (clearCache) {
+      refreshDeviceCache(bluetoothGatt);
+    }
+
     bluetoothGatt.discoverServices();
+  }
+
+  private boolean getClearCache(JSONObject obj) {
+    return obj.optBoolean(discoverClearCache, false);
+  }
+
+  private boolean refreshDeviceCache(BluetoothGatt gatt) {
+    try {
+      BluetoothGatt localBluetoothGatt = gatt;
+      java.lang.reflect.Method localMethod = localBluetoothGatt.getClass().getMethod("refresh", new Class[0]);
+      if (localMethod != null) {
+        boolean bool = ((Boolean) localMethod.invoke(localBluetoothGatt, new Object[0])).booleanValue();
+        return bool;
+      }
+    } 
+    catch (Exception localException) {
+      Log.e("BLE", "An exception occured while refreshing device cache");
+    }
+    return false;
   }
 
   private boolean readAction(Operation operation) {
