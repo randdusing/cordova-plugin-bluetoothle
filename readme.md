@@ -622,7 +622,7 @@ bluetoothle.close(closeSuccess, closeError, params);
 
 
 ### discover ###
-Discover all the devices services, characteristics and descriptors. Doesn't need to be called again after disconnecting and then reconnecting. If using iOS, you shouldn't use discover and services/characteristics/descriptors on the same device. There seems to be an issue with calling discover on iOS8 devices, so use with caution.
+Discover all the devices services, characteristics and descriptors. Doesn't need to be called again after disconnecting and then reconnecting. If using iOS, you shouldn't use discover and services/characteristics/descriptors on the same device. There seems to be an issue with calling discover on iOS8 devices, so use with caution.  On some Android versions, the discovered services may be cached for a device.  Subsequent discover events will make use of this cache.  If your device's services change, set the clearCache parameter to force Android to re-discover services.
 
 ```javascript
 bluetoothle.discover(discoverSuccess, discoverError, params);
@@ -630,10 +630,12 @@ bluetoothle.discover(discoverSuccess, discoverError, params);
 
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
+* clearCache = true / false (default) Force the device to re-discover services, instead of relying on cache from previous discovery (Android only)
 
 ```javascript
 {
-  "address": "00:22:D0:3B:32:10"
+  "address": "00:22:D0:3B:32:10",
+  "clearCache": true
 }
 ```
 
