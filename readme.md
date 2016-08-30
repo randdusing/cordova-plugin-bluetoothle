@@ -118,8 +118,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.startScan] (#startscan)
 * [bluetoothle.stopScan] (#stopscan)
 * [bluetoothle.retrieveConnected] (#retrieveconnected)
-* [bluetoothle.bond] (#bond)
-* [bluetoothle.unbond] (#unbond)
+* [bluetoothle.bond] (#bond) (Android)
+* [bluetoothle.unbond] (#unbond) (Android)
 * [bluetoothle.connect] (#connect)
 * [bluetoothle.reconnect] (#reconnect)
 * [bluetoothle.disconnect] (#disconnect)
@@ -141,7 +141,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isInitialized] (#isinitialized)
 * [bluetoothle.isEnabled] (#isenabled)
 * [bluetoothle.isScanning] (#isscanning)
-* [bluetoothle.isBonded] (#isbonded)
+* [bluetoothle.isBonded] (#isbonded) (Android)
 * [bluetoothle.wasConnected] (#wasconnected)
 * [bluetoothle.isConnected] (#isconnected)
 * [bluetoothle.isDiscovered] (#isdiscovered)
@@ -1405,6 +1405,35 @@ bluetoothle.isScanning(isScanning);
 ```javascript
 {
   "isScanning": false
+}
+```
+
+
+
+### isBonded ###
+Determine whether the device is bonded or not, or error if not initialized. Android support only.
+
+```javascript
+bluetoothle.isBonded(isBondedSuccess, isBondedError, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+
+```javascript
+{
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+}
+```
+
+##### Success #####
+* status => isBonded = true/false
+
+```javascript
+{
+  "name": "Polar H7 3B321015",
+  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "isBonded": false
 }
 ```
 
