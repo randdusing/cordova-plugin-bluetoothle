@@ -103,9 +103,6 @@ Another option is to connect to the device and use the "Device Information" (0x1
 See the following StackOverflow posts for more info: [here](https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-energy-peripheral) and [here](https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios)
 
 
-## Data Values ##
-
-
 ## Emulator ##
 Neither Android nor iOS support Bluetooth on emulators, so you'll need to test on a real device.
 
