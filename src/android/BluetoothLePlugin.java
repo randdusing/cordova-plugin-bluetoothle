@@ -285,10 +285,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String operationMtu = "mtu";
 
   private final String baseUuidStart = "0000";
-  private final String baseUuidEnd = "-0000-1000-8000-00805f9b34fb";
+  private final String baseUuidEnd = "-0000-1000-8000-00805F9B34FB";
 
   //Client Configuration UUID for notifying/indicating
-  private final UUID clientConfigurationDescriptorUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+  private final UUID clientConfigurationDescriptorUuid = UUID.fromString("00002902-0000-1000-8000-00805F9B34FB");
 
   public BluetoothLePlugin() {
 
@@ -2965,7 +2965,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   }
 
   private String formatUuid(UUID uuid) {
-    String uuidString = uuid.toString();
+    String uuidString = uuid.toString().toUpperCase();
 
     if (uuidString.startsWith(baseUuidStart) && uuidString.endsWith(baseUuidEnd)) {
       return uuidString.substring(4, 8);
