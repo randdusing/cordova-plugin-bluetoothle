@@ -3823,6 +3823,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
         connection = new HashMap<Object, Object>();
         connection.put(keyPeripheral, gatt);
         connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
+        connection.put(keyDiscoveredState, STATE_UNDISCOVERED);
 
         connections.put(device.getAddress(), connection);
 
