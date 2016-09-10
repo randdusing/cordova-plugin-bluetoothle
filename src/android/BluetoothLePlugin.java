@@ -85,7 +85,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final int STATE_UNDISCOVERED = 0;
   private final int STATE_DISCOVERING = 1;
   private final int STATE_DISCOVERED = 2;
-  private final String discoverClearCache = "clearCache";
 
   //Quick Writes
   private LinkedList<byte[]> queueQuick = new LinkedList<byte[]>();
@@ -1632,20 +1631,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
     connection.put(keyDiscoveredState, STATE_DISCOVERING);
     connection.put(operationDiscover, callbackContext);
 
-    boolean clearCache = false;
-    if (obj != null) {
-      clearCache = getClearCache(obj);
-    }
-
-    if (clearCache) {
+    if (obj != null && obj.optBoolean("clearCache", false)) {
       refreshDeviceCache(bluetoothGatt);
     }
 
     bluetoothGatt.discoverServices();
-  }
-
-  private boolean getClearCache(JSONObject obj) {
-    return obj.optBoolean(discoverClearCache, false);
   }
 
   private boolean refreshDeviceCache(BluetoothGatt gatt) {
