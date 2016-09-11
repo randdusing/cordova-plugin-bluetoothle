@@ -499,6 +499,7 @@ bluetoothle.connect(connectSuccess, connectError, params);
 
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
+* autoConnect = Automatically connect as soon as the remote device becomes available (Android)
 
 ```javascript
 {
