@@ -1,5 +1,10 @@
-## 4.2.1 - 2016-07-25
-- Fix issue with queuing getting stuck when device disconnects / closes
+## 4.3.0 - 2016-09-21
+- Fix issue with queuing getting stuck when device disconnects / closes [\#315](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/315)
+- Add ability to force rediscover via clearCache parameter (Android) [\#340](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/340)
+- UUIDs are now always uppercase [\#337](https://github.com/randdusing/BluetoothLE/issues/337)
+- Fix issue with discoveredState being null on connect error, which caused NullPointerExceptions [\#342](https://github.com/randdusing/BluetoothLE/issues/342)
+- Add ability to auto connect via autoConnect parameter (Android) [\#333](https://github.com/randdusing/BluetoothLE/issues/333)
+- Update package.json engines [\#348](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/348)
 
 ## 4.2.0 - 2016-07-09
 - Added ability to bond/unbond on Android
