@@ -25,16 +25,17 @@
     "cordova-ios",
     "cordova-windows"
   ],
-  "engines": [
-    {
-      "name": "cordova-plugman",
-      "version": ">=5.0.0"
-    },
-    {
-      "name": "cordova-android",
-      "version": ">=5.0.0"
+  "engines": {
+    "cordovaDependencies": {
+      "4.2.0": {
+        "cordova": ">=5.0.0",
+        "cordova-android": ">=5.0.0"
+      },
+      "5.0.0": {
+        "cordova": ">=100"
+      }
     }
-  ],
+  },
   "author": "Rand Dusing",
   "license": "MIT",
   "bugs": {
