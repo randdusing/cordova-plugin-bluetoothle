@@ -1832,6 +1832,7 @@ bluetoothle.removeAllServices(success, error);
 
 ### startAdvertising ###
 Start advertising as a BLE device. Note: This needs to be improved so services can be used for both Android and iOS.
+On iOS, the advertising devices likes to rename itself back to the name of the device, i.e. Rand' iPhone
 
 ```javascript
 bluetoothle.startAdvertising(success, error, params);
