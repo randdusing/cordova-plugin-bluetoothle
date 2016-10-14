@@ -1669,7 +1669,7 @@ bluetoothle.initializePeripheral(success, error, params);
   "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
   "service":"1234",
   "characteristic":"ABCD",
-  requestId":0, //This integer value will be incremented every read/writeRequested
+  "requestId":0, //This integer value will be incremented every read/writeRequested
   "offset":0
 }
 ```
@@ -1687,30 +1687,30 @@ bluetoothle.initializePeripheral(success, error, params);
 }
 ```
 
-###### subscribedToCharacteristic ######
+###### subscribed ######
 ```javascript
 {
-  "status":"subscribedToCharacteristic",
+  "status":"subscribed",
   "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
   "service":"1234",
   "characteristic":"ABCD"
 }
 ```
 
-###### unsubscribedToCharacteristic ######
+###### unsubscribed ######
 ```javascript
 {
-  "status":"unsubscribedToCharacteristic",
+  "status":"unsubscribed",
   "address":"5163F1E0-5341-AF9B-9F67-613E15EC83F7",
   "service":"1234",
   "characteristic":"ABCD"
 }
 ```
 
-###### peripheralManagerIsReadyToUpdateSubscribers ######
+###### notificationReady ######
 ```javascript
 {
-  "status":"peripheralManagerIsReadyToUpdateSubscribers"
+  "status":"notificationReady"
 }
 ```
 
