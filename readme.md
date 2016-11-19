@@ -564,6 +564,7 @@ bluetoothle.reconnect(reconnectSuccess, reconnectError, params);
 
 ### disconnect ###
 Disconnect from a Bluetooth LE device. It's simpler to just call close().
+**Starting with iOS 10, disconnecting before closing seems required!**
 
 ```javascript
 bluetoothle.disconnect(disconnectSuccess, disconnectError, params);
@@ -592,6 +593,7 @@ bluetoothle.disconnect(disconnectSuccess, disconnectError, params);
 
 ### close ###
 Close/dispose a Bluetooth LE device. Prior to 2.7.0, you needed to disconnect to the device before closing, but this is no longer the case.
+**Starting with iOS 10, disconnecting before closing seems required!**
 
 ```javascript
 bluetoothle.close(closeSuccess, closeError, params);
