@@ -1424,7 +1424,7 @@ bluetoothle.isBonded(isBondedSuccess, isBondedError, params);
 
 ```javascript
 {
-  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+  "address": "5A:94:4B:38:B3:FD"
 }
 ```
 
@@ -1434,7 +1434,7 @@ bluetoothle.isBonded(isBondedSuccess, isBondedError, params);
 ```javascript
 {
   "name": "Polar H7 3B321015",
-  "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63",
+  "address": "5A:94:4B:38:B3:FD",
   "isBonded": false
 }
 ```
