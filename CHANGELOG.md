@@ -1,3 +1,6 @@
+## 4.3.1 - 2017-01-21
+- Update plugin.xml to prevent possible conflicts with other plugins
+
 ## 4.3.0 - 2016-09-21
 - Add ability to force rediscover via clearCache parameter (Android) [\#340](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/340)
 - UUIDs are now always uppercase [\#337](https://github.com/randdusing/BluetoothLE/issues/337)
