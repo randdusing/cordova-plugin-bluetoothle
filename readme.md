@@ -2628,7 +2628,7 @@ function reportValue(serviceUuid, characteristicUuid, value) {
 
 ```
 
-That's it! Find the complete sample here: https://github.com/Microsoft/cordova-samples/tree/master/cordova-plugin-bluetoothle.
+That's it! Find the complete sample here: https://github.com/Microsoft/cordova-samples/tree/c3135acbf5e59c0b7fd0f7f097c07c57aa275974/cordova-plugin-bluetoothle.
 
 
 ## More information ##
