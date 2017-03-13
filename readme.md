@@ -77,6 +77,10 @@ Scanning works differently in the background. There seem to be three different s
 3. Background (Screen Off) - Service UUID must be specified. allowDuplicates is ignored, so a device will only be returned once per scan. One possible work around is to start and stop the scan while in background. Unfortunately, there's a slim chance that the app may fall asleep again in between starting and stopping the scan.
 
 
+## Usage Description (iOS) ##
+iOS now requires a usage description in the plist file. Use the following plugin to easily customize it: [cordova-plugin-bluetooth-peripheral-usage-description](https://github.com/randdusing/cordova-plugin-bluetooth-peripheral-usage-description)
+
+
 ## Discovery Quirks (iOS vs Android) ##
 Discovery works differently between Android and iOS. In Android, a single function is called to initiate discovery of all services, characteristics and descriptors on the device. In iOS, a single function is called to discover the device's services. Then another function to discover the characteristics of a particular service. And then another function to discover the descriptors of a particular characteristic. The [Device plugin](https://github.com/apache/cordova-plugin-device) should be used to properly determine the device and make the proper calls if necessary. Additionally, if a device is disconnected, it must be rediscovered when running on iOS. **iOS now supports Android style discovery, but use with caution. It's a bit buggy on iOS8, but seems to work fine on iOS9.**
 
