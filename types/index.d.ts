@@ -832,7 +832,7 @@ declare namespace BluetootlePlugin {
 
     interface Descriptors extends DeviceInfo {
         /** Characteristic's UUID */
-        characterisitic: string,
+        characteristic: string,
         /** Service's UUID */
         service: string,
         /* Array of descriptor UUIDs */
@@ -841,7 +841,7 @@ declare namespace BluetootlePlugin {
 
     interface OperationResult extends DeviceInfo {
         /** Characteristic UUID */
-        characterisitic: string,
+        characteristic: string,
         /** Service's UUID */
         service: string,
         /** Base64 encoded string of bytes */
@@ -850,7 +850,7 @@ declare namespace BluetootlePlugin {
 
     interface UnsubscribeResult extends DeviceInfo {
         /** Characteristic UUID */
-        characterisitic: string,
+        characteristic: string,
         /** Service's UUID */
         service: string,
     }
