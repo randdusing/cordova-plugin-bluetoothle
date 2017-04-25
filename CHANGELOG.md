@@ -1,3 +1,6 @@
+## 4.3.3 - 2017-04-27
+- Fix typescript typings typos
+
 ## 4.3.2 - 2017-03-03
 - Add typescript typings
 
