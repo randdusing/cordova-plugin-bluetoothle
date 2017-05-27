@@ -9,6 +9,9 @@ var bluetoothle = {
   disable: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "disable", []);
   },
+  getAdapterInfo: function(successCallback) {
+    cordova.exec(successCallback, successCallback, bluetoothleName, "getAdapterInfo", []);
+  },  
   startScan: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]);
   },
