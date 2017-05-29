@@ -123,6 +123,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyIsBonded = "isBonded";
   private final String keyIsConnected = "isConnected";
   private final String keyIsDiscovered = "isDiscovered";
+  private final String keyIsDiscoverable = "isDiscoverable";
   private final String keyPeripheral = "peripheral";
   private final String keyState = "state";
   private final String keyDiscoveredState = "discoveredState";
@@ -309,6 +310,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
       initializeAction(args, callbackContext);
     } else if ("enable".equals(action)) {
       enableAction(callbackContext);
+    } else if ("getAdapterInfo".equals(action)) {
+      getAdapterInfoAction(callbackContext);
     } else if ("disable".equals(action)) {
       disableAction(callbackContext);
     } else if ("startScan".equals(action)) {
@@ -1006,6 +1009,47 @@ public class BluetoothLePlugin extends CordovaPlugin {
       pluginResult.setKeepCallback(true);
       initCallbackContext.sendPluginResult(pluginResult);
     }
+  }
+
+  
+  /**
+  * Retrieves a minimal set of adapter details 
+  * (address, name, initialized state, enabled state, scanning state, discoverable state)
+  */
+  private void getAdapterInfoAction(CallbackContext callbackContext) {    
+    JSONObject returnObj = new JSONObject();    
+
+    // Not yet initialized
+    if (bluetoothAdapter == null) {      
+      Activity activity = cordova.getActivity();
+      BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+      BluetoothAdapter bluetoothAdapterTmp = bluetoothManager.getAdapter();
+
+      // Since the adapter is not officially initialized, retrieve only the address and the name from the temp ad-hoc adapter
+      addProperty(returnObj, keyAddress, bluetoothAdapterTmp.getAddress());
+      addProperty(returnObj, keyName, bluetoothAdapterTmp.getName());
+      addProperty(returnObj, keyIsInitialized, false);
+      addProperty(returnObj, keyIsEnabled, false);
+      addProperty(returnObj, keyIsScanning, false);
+      addProperty(returnObj, keyIsDiscoverable, false);
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(true);
+      callbackContext.sendPluginResult(pluginResult);
+      return;      
+    } else {
+      // Already initialized, so use the bluetoothAdapter class property to get all the info
+      addProperty(returnObj, keyAddress, bluetoothAdapter.getAddress());
+      addProperty(returnObj, keyName, bluetoothAdapter.getName());
+      addProperty(returnObj, keyIsInitialized, true);
+      addProperty(returnObj, keyIsEnabled, bluetoothAdapter.isEnabled());
+      addProperty(returnObj, keyIsScanning, (scanCallbackContext != null));
+      addProperty(returnObj, keyIsDiscoverable, bluetoothAdapter.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+      pluginResult.setKeepCallback(true);
+      callbackContext.sendPluginResult(pluginResult);      
+      return;
+    }
+    
   }
 
   private void enableAction(CallbackContext callbackContext) {

@@ -111,6 +111,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.initialize] (#initialize)
 * [bluetoothle.enable] (#enable) (Android)
 * [bluetoothle.disable] (#disable) (Android)
+* [bluetoothle.getAdapterInfo] (#getAdapterInfo) (Android)
 * [bluetoothle.startScan] (#startscan)
 * [bluetoothle.stopScan] (#stopscan)
 * [bluetoothle.retrieveConnected] (#retrieveconnected)
@@ -290,6 +291,27 @@ bluetoothle.disable(disableSuccess, disableError);
 ##### Success #####
 The successCallback isn't actually used. Listen to initialize callbacks for change in Bluetooth state. A successful disable will return an error => enable via initialize error callback.
 
+
+### getAdapterInfo ###
+Retrieve useful information such as the address, name, and various states (initialized, enabled, scanning, discoverable).
+This can be very useful when the general state of the adapter has been lost, and we would otherwise need to go through a series of callbacks to get the correct state (first initialized, then enabled, then isScanning, and so forth). 
+The result of this method allows us to take business logic decisions while avoiding a large part of the callback hell.
+
+Currently the discoverable state does not have any relevance because there is no "setDiscoverable" functionality in place.
+That may change in the future.
+
+```javascript
+bluetoothle.getAdapterInfo(successCallback);
+```
+
+##### Success #####
+The successCallback contains the following properties:
+ * name = the adapters's display name
+ * address = the adapter's address
+ * isInitialized = boolean value, true if the adapter was initialized, otherwise false
+ * isEnabled = boolean value, true if the adapter was enabled, otherwise false
+ * isScanning = boolean value, true if the adapter is currently scanning, otherwise false
+ * isDiscoverable = boolean value, true if the adapter is in discoverable mode, otherwise false (currently largely false)
 
 
 ### startScan ###
