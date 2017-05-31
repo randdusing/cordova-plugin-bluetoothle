@@ -1,3 +1,7 @@
+## 4.4.0 - 2017-05-30
+- Use updated device name while scanning [\#430](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/430)
+- #getAdapterInfo() for Android [\#429](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/429)
+
 ## 4.3.3 - 2017-04-27
 - Fix typescript typings typos
 
