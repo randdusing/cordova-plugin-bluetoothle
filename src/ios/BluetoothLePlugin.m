@@ -3336,10 +3336,6 @@ NSString *const operationWrite = @"write";
 
   NSData *data = [[NSData alloc] initWithBase64EncodedString:string options:0];
 
-  if (data == nil || data.length == 0) {
-    return nil;
-  }
-
   return data;
 }
 
