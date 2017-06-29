@@ -1,3 +1,6 @@
+## 4.4.1 - 2017-06-28
+- Allow values to empty on iOS [\#435](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/435)
+
 ## 4.4.0 - 2017-05-30
 - Use updated device name while scanning [\#430](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/430)
 - #getAdapterInfo() for Android [\#429](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/429)
