@@ -157,6 +157,7 @@ module.exports = {
 
     if (WATCHER.status !== DeviceWatcherStatus.started &&
       WATCHER.status !== DeviceWatcherStatus.created &&
+      WATCHER.status !== DeviceWatcherStatus.stopped &&
       WATCHER.status !== DeviceWatcherStatus.aborted) {
 
       errorCallback({ error: "startScan", message: 'Scan already in progress' });
