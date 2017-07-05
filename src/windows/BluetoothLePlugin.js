@@ -106,8 +106,6 @@ module.exports = {
       return;
     }
 
-    var services;
-    var searchServices;
     var deviceIdsFound = [];
     var result = [];
     var selector = "System.Devices.InterfaceClassGuid:=\"{6E3BB679-4372-40C8-9EAA-4509DF260CD8}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
