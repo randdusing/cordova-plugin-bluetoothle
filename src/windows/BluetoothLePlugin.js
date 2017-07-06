@@ -106,8 +106,6 @@ module.exports = {
       return;
     }
 
-    var services;
-    var searchServices;
     var deviceIdsFound = [];
     var result = [];
     var selector = "System.Devices.InterfaceClassGuid:=\"{6E3BB679-4372-40C8-9EAA-4509DF260CD8}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
@@ -692,7 +690,7 @@ function getDescriptor(deviceId, serviceId, characteristicId, descriptorId) {
   return new WinJS.Promise(function (successCallback, errorCallback, progressDispatch) {
     getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
       if (descriptorId.length == 4) {
-        descriptorId = gatt.GattDescriptor.convertShortIdToUuid(parseInt("0x" + descriptorId, 16))
+        descriptorId = gatt.GattDescriptor.convertShortIdToUuid(parseInt("0x" + descriptorId, 16));
       }
       var descriptors = characteristic.getDescriptors(descriptorId);
       if (descriptors.length > 0) {
