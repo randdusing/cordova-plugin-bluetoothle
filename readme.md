@@ -238,7 +238,7 @@ bluetoothle.initialize(initializeResult, params);
 
 ##### Params #####
 * request = true / false (default) - Should user be prompted to enable Bluetooth
-* statusReceiver = true (default) / false - Should change in Bluetooth status notifications be sent.
+* statusReceiver = true / false (default) - Should change in Bluetooth status notifications be sent.
 * restoreKey = A unique string to identify your app. Bluetooth Central background mode is required to use this, but background mode doesn't seem to require specifying the restoreKey.
 
 ```javascript
