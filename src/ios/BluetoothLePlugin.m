@@ -656,10 +656,6 @@ NSString *const operationWrite = @"write";
   [self.commandDelegate sendPluginResult:pluginResult callbackId:initPeripheralCallback];
 }
 
-- (void)peripheralManager:(CBPeripheralManager *)peripheral willRestoreState:(NSDictionary *)dict {
-
-}
-
 //Actions
 - (void)initialize:(CDVInvokedUrlCommand *)command {
   //Save the callback
@@ -2822,45 +2818,47 @@ NSString *const operationWrite = @"write";
   }
 }
 
-- (void)peripheralDidUpdateRSSI:(CBPeripheral *)peripheral error:(NSError *)error {
-  //Get connection
-  NSMutableDictionary* connection = [connections objectForKey:peripheral.identifier];
-  if (connection == nil) {
-    return;
-  }
+- (void) peripheral:(CBPeripheral *)peripheral didReadRSSI:(NSNumber *)RSSI error:(NSError *)error {
+   NSLog(@"Got RSSI update in didReadRSSI : %4.1f", [RSSI doubleValue]);
 
-  //Get the proper callback for write operation
-  NSString* callback = [connection objectForKey:operationRssi];
-  [connection removeObjectForKey:operationRssi];
+    //Get connection
+    NSMutableDictionary* connection = [connections objectForKey:peripheral.identifier];
+    if (connection == nil) {
+        return;
+    }
+    
+    //Get the proper callback for write operation
+    NSString* callback = [connection objectForKey:operationRssi];
+    [connection removeObjectForKey:operationRssi];
+    
+    //Return if callback is null
+    if (callback == nil)  {
+        return;
+    }
+    
+   //Create the initial return object
+   NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    
+   [self addDevice:peripheral :returnObj];
+    
+   //If error exists, return error
+   if (error != nil) {
+     [returnObj setValue:errorRssi forKey:keyError];
+     [returnObj setValue:error.description forKey:keyMessage];
 
-  //Return if callback is null
-  if (callback == nil)  {
-    return;
-  }
+     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+     [pluginResult setKeepCallbackAsBool:false];
+     [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+     return;
+   }
 
-  //Create the initial return object
-  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+   //Return RSSI value
+   [returnObj setValue:RSSI forKey:keyRssi];
+   [returnObj setValue:statusRssi forKey:keyStatus];
 
-  [self addDevice:peripheral :returnObj];
-
-  //If error exists, return error
-  if (error != nil) {
-    [returnObj setValue:errorRssi forKey:keyError];
-    [returnObj setValue:error.description forKey:keyMessage];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
-    return;
-  }
-
-  //Return RSSI value
-  [returnObj setValue:peripheral.RSSI forKey:keyRssi];
-  [returnObj setValue:statusRssi forKey:keyStatus];
-
-  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-  [pluginResult setKeepCallbackAsBool:false];
-  [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+   [pluginResult setKeepCallbackAsBool:false];
+   [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
 }
 
 //Helpers for Callbacks
