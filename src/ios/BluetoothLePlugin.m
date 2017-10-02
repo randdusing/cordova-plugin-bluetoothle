@@ -2071,10 +2071,6 @@ NSString *const operationWrite = @"write";
   [self.commandDelegate sendPluginResult:pluginResult callbackId:initCallback];
 }
 
-- (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary *)dict {
-  //Needed to support background mode
-}
-
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
   //If no scan callback, nothing can be returned
   if (scanCallback == nil) {
