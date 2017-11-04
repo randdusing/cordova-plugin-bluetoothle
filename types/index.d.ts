@@ -7,7 +7,7 @@ declare namespace BluetoothlePlugin {
          *
          */
         initialize(
-            initializeResult:(result: { status: boolean }) => void,
+            initializeResult:(result: { status: 'enabled' | 'disabled' }) => void,
             params?: InitParams): void;
 
         /**
@@ -275,7 +275,7 @@ declare namespace BluetoothlePlugin {
          *
          */
         readDescriptor(
-            readDescriptorSuccess: (descriptor: Descriptor) => void,
+            readDescriptorSuccess: (descriptor: DescriptorResult) => void,
             readDescriptorError: (error: Error) => void,
             params: OperationDescriptorParams): void;
 
@@ -288,7 +288,7 @@ declare namespace BluetoothlePlugin {
          *
          */
         writeDescriptor(
-            writeDescriptorSuccess: (descriptor: Descriptor) => void,
+            writeDescriptorSuccess: (descriptor: DescriptorResult) => void,
             writeDescriptorError: (error: Error) => void,
             params: WriteDescriptorParams): void;
 
@@ -571,13 +571,13 @@ declare namespace BluetoothlePlugin {
 
     /* Available status of device */
     type Status = "scanStarted" | "scanStopped" | "scanResult" | "connected" | "disconnected"
-                        | "bonding" | "bonded" | "unbonded" | "closed" | "services" | "discovered"
-                        | "characteristics" | "descriptors" | "read" | "subscribed" | "unsubscribed"
-                        | "subscribedResult" | "written" | "readDescriptor" | "writeDescriptor"
-                        | "rssi" | "mtu" | "connectionPriorityRequested" |"enabled" | "disabled"
-                        | "readRequested" | "writeRequested" | "mtuChanged" | "notifyReady" | "notifySent"
-                        | "serviceAdded" | "serviceRemoved" | "allServicesRemoved" | "advertisingStarted"
-                        | "advertisingStopped" | "responded" | "notified";
+        | "bonding" | "bonded" | "unbonded" | "closed" | "services" | "discovered"
+        | "characteristics" | "descriptors" | "read" | "subscribed" | "unsubscribed"
+        | "subscribedResult" | "written" | "readDescriptor" | "writeDescriptor"
+        | "rssi" | "mtu" | "connectionPriorityRequested" |"enabled" | "disabled"
+        | "readRequested" | "writeRequested" | "mtuChanged" | "notifyReady" | "notifySent"
+        | "serviceAdded" | "serviceRemoved" | "allServicesRemoved" | "advertisingStarted"
+        | "advertisingStopped" | "responded" | "notified";
 
     /** Avaialable connection priorities */
     type ConnectionPriority = "low" | "balanced" | "high";
@@ -771,12 +771,12 @@ declare namespace BluetoothlePlugin {
         /** Service's uuid */
         uuid: string,
         /** Array of characteristics */
-        characteristics : CharacteristicList[]
+        characteristics : Characteristic[]
     }
 
     interface Characteristic {
         /* Array of descriptors */
-        descriptors?: any,
+        descriptors?: Descriptor[],
         /**  Characteristic's uuid */
         uuid: string,
         /**
@@ -812,17 +812,14 @@ declare namespace BluetoothlePlugin {
             writeEncryptionRequired?: boolean
         }
     }
-
-    interface CharacteristicList {
-        /** Array of cahracteristic objects */
-        characteristics: Characteristic[],
-        /** Characteristic's UUID */
-        uuid: string
+    
+    interface Descriptor {
+        uuid: string;
     }
 
     interface Device extends DeviceInfo {
         /** Device's services */
-        sercices: Service[]
+        services: Service[]
     }
 
     interface Services extends DeviceInfo {
@@ -855,7 +852,7 @@ declare namespace BluetoothlePlugin {
         service: string,
     }
 
-    interface Descriptor extends OperationResult {
+    interface DescriptorResult extends OperationResult {
         descriptor: string
     }
 
