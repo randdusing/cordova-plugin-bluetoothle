@@ -1,3 +1,6 @@
+## 4.4.3 - 2017-11-08
+- Use didReadRSSI
+
 ## 4.4.2 - 2017-07-04
 - Allow Windows scanning to be restarted [\#438](https://github.com/randdusing/cordova-plugin-bluetoothle/pull/438)
 

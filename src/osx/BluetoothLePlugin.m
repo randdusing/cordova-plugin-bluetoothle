@@ -2822,7 +2822,7 @@ NSString *const operationWrite = @"write";
   }
 }
 
-- (void)peripheralDidUpdateRSSI:(CBPeripheral *)peripheral error:(NSError *)error {
+- (void) peripheral:(CBPeripheral *)peripheral didReadRSSI:(NSNumber *)RSSI error:(NSError *)error {
   //Get connection
   NSMutableDictionary* connection = [connections objectForKey:peripheral.identifier];
   if (connection == nil) {
@@ -2855,7 +2855,7 @@ NSString *const operationWrite = @"write";
   }
 
   //Return RSSI value
-  [returnObj setValue:peripheral.RSSI forKey:keyRssi];
+  [returnObj setValue:RSSI forKey:keyRssi];
   [returnObj setValue:statusRssi forKey:keyStatus];
 
   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
