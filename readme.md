@@ -92,7 +92,7 @@ Read, write, subscribe, unsubscribe, readDescriptor and writeDescriptor queueing
 ## UUIDs ##
 UUIDs can be 16 bits or 128 bits. The "out of the box" UUIDs from the link below are 16 bits.
 Since iOS returns the 16 bit version of the "out of the box" UUIDs even if a 128 bit UUID was used in the parameters, the 16 bit version should always be used for the "out of the box" UUIDs for consistency.
-Android on the other hand only uses the 128 bit version, but the plugin will automatically convert 16 bit UUIDs to the 128 bit version on input and output. For a list of out of the box UUIDS, see [Bluetooth Developer Portal](https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx)
+Android on the other hand only uses the 128 bit version, but the plugin will automatically convert 16 bit UUIDs to the 128 bit version on input and output. For a list of out of the box UUIDS, see [Bluetooth Developer Portal](https://www.bluetooth.com/specifications/gatt/services)
 
 
 ## Advertisement Data / MAC Address ##
