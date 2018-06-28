@@ -1,3 +1,6 @@
+## 4.4.4 - 2018-06-28
+- Fix typescript typings typo
+
 ## 4.4.3 - 2017-11-08
 - Use didReadRSSI
 
