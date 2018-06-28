@@ -337,7 +337,7 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
     "180D",
     "180F"
   ],
-  "allowDuplicates": true
+  "allowDuplicates": true,
   "scanMode": bluetoothle.SCAN_MODE_LOW_LATENCY,
   "matchMode": bluetoothle.MATCH_MODE_AGGRESSIVE,
   "matchNum": bluetoothle.MATCH_NUM_MAX_ADVERTISEMENT,

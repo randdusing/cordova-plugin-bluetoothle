@@ -913,7 +913,7 @@ declare namespace BluetoothlePlugin {
 }
 
 interface Window {
-    bluetoothle: BluetootlePlugin.Bluetoothle
+    bluetoothle: BluetoothlePlugin.Bluetoothle
 }
 
-declare var bluetoothle: BluetootlePlugin.Bluetoothle;
+declare var bluetoothle: BluetoothlePlugin.Bluetoothle;
