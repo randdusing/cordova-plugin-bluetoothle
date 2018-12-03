@@ -112,10 +112,10 @@ module.exports = {
     if (params[0].services && params[0].services.length > 0) {
       for (var i = 0; i < params[0].services.length; i++) {
         var uuid = params[0].services[i];
-        if (uuid.length == 4) {
+        if (uuid.length === 4) {
             uuid = "0000" + uuid + "-0000-1000-8000-00805F9B34FB";
         }
-        selector += (i == 0) ? " AND ( " : " OR ";
+        selector += (i === 0) ? " AND ( " : " OR ";
         selector += "System.DeviceInterface.Bluetooth.ServiceGuid:=\"{" + uuid + "}\"";
       }
       selector += " )";
@@ -124,7 +124,7 @@ module.exports = {
       for (var i = 0; i < devices.length; i++) {
         var deviceId = devices[i].properties["System.Devices.ContainerId"];
         var deviceName = devices[i].name;
-        if (deviceIdsFound.indexOf(deviceId) == -1) {
+        if (deviceIdsFound.indexOf(deviceId) === -1) {
           deviceIdsFound.push(deviceId);
           result.push({ name: deviceName, address: deviceId });
         }
@@ -142,10 +142,8 @@ module.exports = {
 
     var NAME_KEY = "System.ItemNameDisplay";
     var RSSI_KEY = "System.Devices.Aep.SignalStrength";
-    var CONTAINER_ID_KEY = "System.Devices.Aep.ContainerId";
+    var CONTAINER_ID_KEY = "System.Devices.Aep.DeviceAddress";
 
-    // Drop cache first
-    WATCH_CACHE = {};
 
     if (!WATCHER) {
       // watch BLE devices using device watcher.
@@ -175,7 +173,6 @@ module.exports = {
       // but probably could be obtained using GattDeviceService
       var deviceAddress = device.properties.hasKey(CONTAINER_ID_KEY) && device.properties.lookup(CONTAINER_ID_KEY);
       // Put device into cache to be able to get it faster in 'connect'
-      WATCH_CACHE[deviceAddress] = device;
 
       var deviceInfo = {
         status: 'scanResult',
@@ -225,22 +222,15 @@ module.exports = {
       return;
     }
 
-    var DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
-    var DeviceInformationKind = Windows.Devices.Enumeration.DeviceInformationKind;
-
     WinJS.Promise.wrap(address)
     .then(function (deviceAddress) {
-      // If we have cached device info return it right now
-      if (WATCH_CACHE[deviceAddress]) return [WATCH_CACHE[deviceAddress]];
-      // Otherwise try to search it again
-      var selector = "System.Devices.Aep.ProtocolId:=\"{bb7bb05e-5972-42b5-94fc-76eaa7084d49}\" AND " +
-                      "System.Devices.Aep.ContainerId:=\"{" + deviceAddress + "}\" AND " +
-                      "(System.Devices.Aep.CanPair:=System.StructuredQueryType.Boolean#True OR " +
-                      "System.Devices.Aep.IsPaired:=System.StructuredQueryType.Boolean#True)";
-      return DeviceInformation.findAllAsync(selector, ["System.Devices.Aep.ContainerId"], DeviceInformationKind.associationEndpoint);
+      if (typeof deviceAddress === 'string') {
+        deviceAddress = parseInt('0x' + deviceAddress.replace(/:/g, ''));
+      }
+      return deviceAddress;
     })
-    .then(function (devices) {
-      return Windows.Devices.Bluetooth.BluetoothLEDevice.fromIdAsync(devices[0].id);
+    .then(function (deviceAddress) {
+      return Windows.Devices.Bluetooth.BluetoothLEDevice.fromBluetoothAddressAsync(deviceAddress);
     })
     .then(function (bleDevice) {
       var DevicePairingProtectionLevel = Windows.Devices.Enumeration.DevicePairingProtectionLevel;
@@ -295,12 +285,14 @@ module.exports = {
       return;
     }
 
+    var deviceId;
+
     if (params && params.length > 0 && params[0].address) {
-      var deviceId = params[0].address;
+      deviceId = params[0].address;
 
       for (var i = 0; i < cachedServices.length;) {
         var service = cachedServices[i];
-        if (service.deviceId == deviceId) {
+        if (service.deviceId === deviceId) {
           cachedServices.splice(i, 1);
           service.deviceService.close();
         } else {
@@ -308,6 +300,7 @@ module.exports = {
         }
       }
     }
+    successCallback({ address: deviceId, status: 'closed'});
   },
 
   services: function (successCallback, errorCallback, params) {
