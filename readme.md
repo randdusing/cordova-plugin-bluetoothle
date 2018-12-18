@@ -1,5 +1,5 @@
 # Cordova Bluetooth LE Plugin
-This plugin allows you to interact with Bluetooth LE devices on Android, iOS, and partially on Windows.
+This plugin allows you to interact with Bluetooth LE devices on Android, iOS, and Windows.
 
 
 ## Requirements ##
@@ -8,6 +8,7 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 * Android 4.3 or higher, Android Cordova library 5.0.0 or higher, target Android API 23 or higher
 * iOS 7 or higher
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
+* Windows 10 UWP
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
 * List of devices: http://www.bluetooth.com/Pages/Bluetooth-Smart-Devices-List.aspx
 
@@ -31,7 +32,6 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 
 ## To Do ##
 
-* Expand Windows support
 * Improved notifications on peripheral/server role between Android and iOS
 * Code refactoring. It's getting pretty messy.
 
@@ -101,6 +101,7 @@ One option is to set Manufacturer Specific Data in the advertisement packet if t
 Another option is to connect to the device and use the "Device Information" (0x180A) service, but connecting to each device is much more energy intensive than scanning for advertisement data.
 See the following StackOverflow posts for more info: [here](https://stackoverflow.com/questions/18973098/get-mac-address-of-bluetooth-low-energy-peripheral) and [here](https://stackoverflow.com/questions/22833198/get-advertisement-data-for-ble-in-ios)
 
+Advertisement data is not supported on Windows 10 UWP. 
 
 ## Emulator ##
 Neither Android nor iOS support Bluetooth on emulators, so you'll need to test on a real device.
@@ -330,6 +331,8 @@ bluetoothle.startScan(startScanSuccess, startScanError, params);
   * matchMode - Defaults to Aggressive. Available from API23.
   * matchNum - Defaults to One Advertisement. Available from API23.
   * callbackType - Defaults to All Matches. Available from API21 / API 23. *Note: Careful using this one. When using CALLBACK_TYPE_FIRST_MATCH on a Nexus 7 on API 21, I received a Feature Unsupported error when starting the scan.
+* Windows 10 UWP
+  * isConnectable - Windows 10 will, by default, show all devices ever seen by the system, even if the device is off. If you want to only devices that are on and connectable, set this to true.
 
 ```javascript
 {
