@@ -151,7 +151,6 @@ module.exports = {
       if (params && params[0] && params[0].isConnectable) {
         selector += ' AND System.Devices.Aep.Bluetooth.Le.IsConnectable:=System.StructuredQueryType.Boolean#True';
       }
-      console.info('selector used is', selector);
       WATCHER = WindowsDeviceInfo.createWatcher(selector, PROPERTY_COLLECTION);
     }
 
@@ -227,46 +226,16 @@ module.exports = {
     }
 
     getDeviceByAddress(address)
-    // .then(function (bleDevice) {
-    //   var DevicePairingProtectionLevel = Windows.Devices.Enumeration.DevicePairingProtectionLevel;
-    //   var DevicePairingResultStatus = Windows.Devices.Enumeration.DevicePairingResultStatus;
-    //
-    //   if (!bleDevice || !bleDevice.deviceInformation || !bleDevice.deviceInformation.pairing) {
-    //     throw {error: "connect", message: "The device is not found"};
-    //   }
-    //
-    //   if (bleDevice.deviceInformation.pairing.isPaired) {
-    //     return bleDevice;
-    //   }
-    //
-    //   if (!bleDevice.deviceInformation.pairing.canPair) {
-    //     throw { error: "connect", message: "The device does not support pairing" };
-    //   }
-    //
-    //   // TODO: investigate if it is possible to pair without user prompt
-    //   return bleDevice.deviceInformation.pairing.pairAsync(DevicePairingProtectionLevel.none)
-    //   .then(function (res) {
-    //     if (res.status === DevicePairingResultStatus.paired ||
-    //         res.status === DevicePairingResultStatus.alreadyPaired)
-    //       return bleDevice;
-    //
-    //     // TODO: provide error code based on DevicePairingResultStatus.alreadyPaired enum
-    //     throw { error: "connect", message: "The device rejected the connection" };
-    //   });
-    // })
     .then(function(bleDevice){
       if (bleDevice.connectionStatus === BluetoothConnectionStatus.connected) {
-        console.log('device is connected');
         return bleDevice;
       }
-      console.log('device is not connected');
       //if we're not already connected, getting the services will cause a connection to happen
       return bleDevice.getGattServicesAsync(WindowsBluetooth.BluetoothCacheMode.uncached).then(function(){
         return bleDevice;
       });
     })
     .done(function (bleDevice) {
-      console.log('result of connect', bleDevice, bleDevice.connectionStatus === BluetoothConnectionStatus.connected);
       var result = {
         name: bleDevice.deviceInformation.name,
         address: address,
@@ -275,15 +244,12 @@ module.exports = {
 
       // Attach listener to device to report disconnected event
       bleDevice.addEventListener('connectionstatuschanged', function connectionStatusListener(e) {
-        console.log('connection changed event', e, e.target.connectionStatus === BluetoothConnectionStatus.disconnected);
         if (e.target.connectionStatus === BluetoothConnectionStatus.disconnected) {
           result.status = "disconnected";
-          console.log('calling connect callback with', result);
           successCallback(result);
           bleDevice.removeEventListener('connectionstatuschanged', connectionStatusListener);
         }
       });
-      console.log('calling connect callback with', result);
       // Need to use keepCallback to be able to report "disconnect" event
       // https://github.com/randdusing/cordova-plugin-bluetoothle#connect
       successCallback(result, { keepCallback: true });
@@ -502,8 +468,6 @@ module.exports = {
       return;
     }
 
-    console.log('params to subscribe', params);
-
     if (params && params.length > 0 && params[0].address && params[0].service && params[0].characteristic) {
       var deviceId = params[0].address;
       var serviceId = params[0].service;
@@ -539,7 +503,6 @@ module.exports = {
         errorCallback({ error: "subscribe", message: error });
       });
     } else {
-      console.log('invalid params', params && params[0]);
       errorCallback({ error: "subscribe", message: "Invalid parameters." });
     }
   },
@@ -787,7 +750,6 @@ androidActions.forEach(function(key){
 
   module.exports[key] = function(successCallback, errorCallback, params) {
     var error = 'Function "' + key + '" is not implemented';
-    console.error(error);
     errorCallback({error: key, message: error});
   };
 });
