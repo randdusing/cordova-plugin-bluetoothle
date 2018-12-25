@@ -1,3 +1,6 @@
+## 4.5.0 - 2018-12-25
+- Improve Windows support
+
 ## 4.4.4 - 2018-06-28
 - Fix typescript typings typo
 
