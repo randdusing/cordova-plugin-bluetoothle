@@ -1,3 +1,6 @@
+## 4.5.1 - 2018-01-05
+- Allow disable timeout on Android
+
 ## 4.5.0 - 2018-12-25
 - Improve Windows support
 
