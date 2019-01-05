@@ -709,11 +709,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
     settingsBuilder.setConnectable(connectable);
 
     int timeout = obj.optInt("timeout", 1000);
-    if (timeout < 1 || timeout > 180000) {
+    if (timeout < 0 || timeout > 180000) {
       JSONObject returnObj = new JSONObject();
 
       addProperty(returnObj, "error", "startAdvertising");
-      addProperty(returnObj, "message", "Invalid timeout (1 - 180000)");
+      addProperty(returnObj, "message", "Invalid timeout (0 - 180000)");
 
       callbackContext.error(returnObj);
       return;
