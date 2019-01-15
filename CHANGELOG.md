@@ -1,3 +1,6 @@
+## 4.5.2 - 2018-01-14
+- Fix typescript typings typo
+
 ## 4.5.1 - 2018-01-05
 - Allow disable timeout on Android
 
