@@ -303,12 +303,18 @@ NSString *const operationWrite = @"write";
   }
 
   NSDictionary* obj = (NSDictionary *)[command.arguments objectAtIndex:0];
-  NSMutableArray* services = [self getUuids:obj forType:@"services"];
+  NSMutableDictionary* advertData = [NSMutableDictionary dictionary];
+
+  [advertData setValue:[self getUuids:obj forType:@"services"] forKey:CBAdvertisementDataServiceUUIDsKey];
   NSString* name = [obj valueForKey:@"name"];
+
+  if (name) {
+    [advertData setValue:name forKey:CBAdvertisementDataLocalNameKey];
+  }
 
   advertisingCallback = command.callbackId;
 
-  [peripheralManager startAdvertising:@{ CBAdvertisementDataServiceUUIDsKey : services, CBAdvertisementDataLocalNameKey: name}];
+  [peripheralManager startAdvertising:advertData];
 }
 
 - (void)stopAdvertising:(CDVInvokedUrlCommand *)command {
