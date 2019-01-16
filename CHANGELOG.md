@@ -1,3 +1,6 @@
+## 4.5.3 - 2018-01-15
+- Handle optional name when advertising on iOS
+
 ## 4.5.2 - 2018-01-14
 - Fix typescript typings typo
 
