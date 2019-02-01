@@ -1,10 +1,10 @@
-## 4.5.3 - 2018-01-15
+## 4.5.3 - 2019-01-15
 - Handle optional name when advertising on iOS
 
-## 4.5.2 - 2018-01-14
+## 4.5.2 - 2019-01-14
 - Fix typescript typings typo
 
-## 4.5.1 - 2018-01-05
+## 4.5.1 - 2019-01-05
 - Allow disable timeout on Android
 
 ## 4.5.0 - 2018-12-25
