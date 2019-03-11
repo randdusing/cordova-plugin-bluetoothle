@@ -116,6 +116,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyDescriptor = "descriptor";
   private final String keyDescriptors = "descriptors";
   private final String keyValue = "value";
+  private final String keyTimeStamp = "timeStamp";
   private final String keyType = "type";
   private final String keyIsInitialized = "isInitialized";
   private final String keyIsEnabled = "isEnabled";
@@ -4049,6 +4050,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       addProperty(returnObj, keyStatus, statusSubscribedResult);
       addPropertyBytes(returnObj, keyValue, characteristic.getValue());
+      addProperty(returnObj, keyTimeStamp, System.currentTimeMillis());
 
       //Return the characteristic value
       PluginResult result = new PluginResult(PluginResult.Status.OK, returnObj);

@@ -19,6 +19,7 @@ NSString *const keyCharacteristics = @"characteristics";
 NSString *const keyDescriptor = @"descriptor";
 NSString *const keyDescriptors = @"descriptors";
 NSString *const keyValue = @"value";
+NSString *const keyTimeStamp = @"timeStamp";
 NSString *const keyType = @"type";
 NSString *const keyIsInitialized = @"isInitialized";
 NSString *const keyIsEnabled = @"isEnabled";
@@ -2599,6 +2600,10 @@ NSString *const operationWrite = @"write";
     }
 
     [returnObj setValue:statusSubscribedResult forKey:keyStatus];
+
+    long long milliseconds = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+    NSString *str = [NSString stringWithFormat:@"%lld", milliseconds];
+    [returnObj setValue:str forKey:keyTimeStamp];
 
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:true];
