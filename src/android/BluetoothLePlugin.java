@@ -4092,6 +4092,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
           addProperty(returnObj, keyError, errorWrite);
           addProperty(returnObj, keyMessage, logWriteFailReturn);
+          addProperty(returnObj, keyStatus, status);
           callbackContext.error(returnObj);
         }
 
@@ -4119,6 +4120,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
         //Else it failed
         addProperty(returnObj, keyError, errorWrite);
         addProperty(returnObj, keyMessage, logWriteFailReturn);
+        addProperty(returnObj, keyStatus, status);
         callbackContext.error(returnObj);
       }
     }
