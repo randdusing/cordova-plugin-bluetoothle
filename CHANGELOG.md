@@ -1,3 +1,6 @@
+## 4.5.4 - 2019-05-31
+- Add write response error code on Android
+
 ## 4.5.3 - 2019-01-15
 - Handle optional name when advertising on iOS
 
