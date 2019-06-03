@@ -511,7 +511,7 @@ declare namespace BluetoothlePlugin {
          *
          */
         isAdvertising(
-            success: (result: { status: boolean }) => void,
+            success: (result: { isAdvertising: boolean }) => void,
             error: (error: Error) => void): void;
 
         /**
