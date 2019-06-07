@@ -1,3 +1,6 @@
+## 4.5.5 - 2019-06-06
+- Fixed typings
+
 ## 4.5.4 - 2019-05-31
 - Add write response error code on Android
 
