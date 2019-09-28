@@ -614,7 +614,9 @@ declare namespace BluetoothlePlugin {
         /** Defaults to One Advertisement. Available from API23 (Android) */
         matchNum?: BluetoothMatchNum,
         /** Defaults to All Matches. Available from API21 / API 23. (Android) */
-        callbackType?: BluetoothCallbackType
+        callbackType?: BluetoothCallbackType,
+        /** True/false to show only connectable devices, rather than all devices ever seen, defaults to false (Windows)*/
+        isConnectable?: boolean
     }
 
     interface NotifyParams {
