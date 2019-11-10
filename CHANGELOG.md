@@ -1,3 +1,6 @@
+## 4.5.6 - 2019-11-10
+- Fix issue when adding descriptors
+
 ## 4.5.5 - 2019-06-06
 - Fixed typings
 

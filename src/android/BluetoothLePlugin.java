@@ -560,11 +560,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
       JSONArray descriptorsIn = obj.optJSONArray("descriptors");
 
       if (descriptorsIn != null) {
-        for (int j = 0; j < descriptorsIn.length(); i++) {
+        for (int j = 0; j < descriptorsIn.length(); j++) {
           JSONObject descriptorIn = null;
 
           try {
-            descriptorIn = descriptorsIn.getJSONObject(i);
+            descriptorIn = descriptorsIn.getJSONObject(j);
           } catch (JSONException ex) {
             continue;
           }
