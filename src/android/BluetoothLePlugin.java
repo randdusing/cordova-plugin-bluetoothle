@@ -136,6 +136,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
   //Status Types
   private final String statusEnabled = "enabled";
   private final String statusDisabled = "disabled";
+  private final String statusTurningOn = "turningOn";
+  private final String statusTurningOff = "turningOff";
   private final String statusScanStarted = "scanStarted";
   private final String statusScanStopped = "scanStopped";
   private final String statusScanResult = "scanResult";
@@ -939,11 +941,27 @@ public class BluetoothLePlugin extends CordovaPlugin {
   }
 
   private void initializeAction(JSONArray args, CallbackContext callbackContext) {
-    //Save init callback
+
+    Activity activity = cordova.getActivity();
+    JSONObject obj = getArgsObject(args);
+
+    if (!isReceiverRegistered) {
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        activity.registerReceiver(mReceiver, filter);
+        isReceiverRegistered = true;
+    }
+
+    //Get Bluetooth adapter via Bluetooth Manager
+    BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+    bluetoothAdapter = bluetoothManager.getAdapter();
+
+    connections = new HashMap<Object, HashMap<Object, Object>>();
+
+    JSONObject returnObj = new JSONObject();
+
     initCallbackContext = callbackContext;
 
     if (bluetoothAdapter != null) {
-      JSONObject returnObj = new JSONObject();
       PluginResult pluginResult;
 
       if (bluetoothAdapter.isEnabled()) {
@@ -963,24 +981,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       return;
     }
-
-    Activity activity = cordova.getActivity();
-
-    JSONObject obj = getArgsObject(args);
-
-    if (obj != null && getStatusReceiver(obj)) {
-      //Add a receiver to pick up when Bluetooth state changes
-      activity.registerReceiver(mReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-      isReceiverRegistered = true;
-    }
-
-    //Get Bluetooth adapter via Bluetooth Manager
-    BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
-    bluetoothAdapter = bluetoothManager.getAdapter();
-
-    connections = new HashMap<Object, HashMap<Object, Object>>();
-
-    JSONObject returnObj = new JSONObject();
 
     //If it's already enabled,
     if (bluetoothAdapter.isEnabled()) {
@@ -2784,16 +2784,24 @@ public class BluetoothLePlugin extends CordovaPlugin {
             pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
             pluginResult.setKeepCallback(true);
             initCallbackContext.sendPluginResult(pluginResult);
-
             break;
           case BluetoothAdapter.STATE_ON:
-
             addProperty(returnObj, keyStatus, statusEnabled);
-
             pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
             pluginResult.setKeepCallback(true);
             initCallbackContext.sendPluginResult(pluginResult);
-
+            break;
+          case BluetoothAdapter.STATE_TURNING_OFF:
+              addProperty(returnObj, keyStatus, statusTurningOff);
+              pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+              pluginResult.setKeepCallback(true);
+              initCallbackContext.sendPluginResult(pluginResult);
+            break;
+          case BluetoothAdapter.STATE_TURNING_ON:
+              addProperty(returnObj, keyStatus, statusTurningOn);
+              pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
+              pluginResult.setKeepCallback(true);
+              initCallbackContext.sendPluginResult(pluginResult);
             break;
         }
       }
