@@ -1,3 +1,6 @@
+## 4.5.7 - 2020-02-11
+- Stop scan when Bluetooth is disabled on Android v6+
+
 ## 4.5.6 - 2019-11-10
 - Fix issue when adding descriptors
 
