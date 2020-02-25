@@ -35,6 +35,18 @@
     <header-file src="src/ios/BluetoothLePlugin.h" />
     <source-file src="src/ios/BluetoothLePlugin.m" />
     <framework src="CoreBluetooth.framework" />
+    <edit-config file="*-Info.plist" mode="merge" target="NSLocationAlwaysUsageDescription">
+      <string>Need to location permission for find the alcohol checker Do you allow this app to get location permissions?</string>
+    </edit-config>
+    <edit-config file="*-Info.plist" mode="merge" target="NSLocationWhenInUseUsageDescription">
+      <string>Need to location permission for find the alcohol checker Do you allow this app to get location permissions?</string>
+    </edit-config>
+    <edit-config file="*-Info.plist" mode="merge" target="NSBluetoothAlwaysUsageDescription">
+      <string>Need to bluetooth for connect alcohol checker Do you allow this app to open bluetooth?</string>
+    </edit-config>
+    <edit-config file="*-Info.plist" mode="merge" target="NSBluetoothPeripheralUsageDescription">
+      <string>Need to bluetooth for connect alcohol checker Do you allow this app to open bluetooth?</string>
+    </edit-config>
   </platform>
   <platform name="osx">
     <config-file target="config.xml" parent="/*">
