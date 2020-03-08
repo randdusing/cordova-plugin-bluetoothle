@@ -1,3 +1,6 @@
+## 4.5.8 - 2020-03-08
+- Improve connection reliability on Android
+
 ## 4.5.7 - 2020-02-11
 - Stop scan when Bluetooth is disabled on Android v6+
 
