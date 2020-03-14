@@ -1,3 +1,7 @@
+## 4.5.9 - 2020-03-13
+- Add null check when disabling scan on newer Android versions
+- Update docs
+
 ## 4.5.8 - 2020-03-08
 - Improve connection reliability on Android
 
