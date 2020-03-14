@@ -2781,7 +2781,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
             connections = new HashMap<Object, HashMap<Object, Object>>();
             if (scanCallbackContext != null) {
               if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+                BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
+                // Unsure why some devices return null
+                if (scanner != null) {
+                  scanner.stopScan(scanCallback);
+                }
               }
             }
             scanCallbackContext = null;
