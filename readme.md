@@ -2038,7 +2038,7 @@ var params = {
 
 
 ### notify ###
-Update a value for a subscription. Currently all subscribed devices will receive update. Device specific updates will be added in the future. If ```sent``` equals false in the return value, you must wait for the ```peripheralManagerIsReadyToUpdateSubscribers``` event before sending more updates.
+Update a value for a subscription. Currently all subscribed devices will receive updates on iOS. Device specific updates will be added in the future. On Android, a device address is required. If ```sent``` equals false in the return value, you must wait for the ```peripheralManagerIsReadyToUpdateSubscribers``` event before sending more updates.
 
 ```javascript
 bluetoothle.notify(success, error, params);
