@@ -684,7 +684,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
-    if (advertiser == null || !bluetoothAdapter.isMultipleAdvertisementSupported()) {
+    if (advertiser == null) {
       JSONObject returnObj = new JSONObject();
 
       addProperty(returnObj, "error", "startAdvertising");
@@ -759,7 +759,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
   private void stopAdvertisingAction(JSONArray args, CallbackContext callbackContext) {
     BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
-    if (advertiser == null || !bluetoothAdapter.isMultipleAdvertisementSupported()) {
+    if (advertiser == null) {
       JSONObject returnObj = new JSONObject();
 
       addProperty(returnObj, "error", "startAdvertising");
