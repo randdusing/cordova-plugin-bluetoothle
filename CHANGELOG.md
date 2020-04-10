@@ -1,3 +1,6 @@
+## 4.5.10 - 2020-04-10
+- Remove unnecessary check when advertising
+
 ## 4.5.9 - 2020-03-13
 - Add null check when disabling scan on newer Android versions
 - Update docs
