@@ -2006,7 +2006,7 @@ bluetoothle.isAdvertising(success, error);
 
 
 ### respond ###
-Respond to a read or write request
+Respond to a read or write request. On Android, a device address is required
 
 ```javascript
 bluetoothle.respond(success, error, params);
