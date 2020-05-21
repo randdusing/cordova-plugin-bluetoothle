@@ -440,12 +440,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     initPeripheralCallback = callbackContext;
 
-    //Re-opening Gatt server seems to cause some issues
-    if (gattServer == null) {
-      Activity activity = cordova.getActivity();
-      BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
-      gattServer = bluetoothManager.openGattServer(activity.getApplicationContext(), bluetoothGattServerCallback);
-    }
+    initGattServer();
 
     JSONObject returnObj = new JSONObject();
     addProperty(returnObj, keyStatus, statusEnabled);
@@ -2790,18 +2785,29 @@ public class BluetoothLePlugin extends CordovaPlugin {
             }
             scanCallbackContext = null;
 
+            gattServer = null;
+
             pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
             pluginResult.setKeepCallback(true);
             initCallbackContext.sendPluginResult(pluginResult);
 
+            if (initPeripheralCallback != null) initPeripheralCallback.sendPluginResult(pluginResult);
+
+            break;
+          case BluetoothAdapter.STATE_TURNING_OFF:
+            gattServer.close();
             break;
           case BluetoothAdapter.STATE_ON:
 
             addProperty(returnObj, keyStatus, statusEnabled);
 
+            initGattServer();
+
             pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
             pluginResult.setKeepCallback(true);
             initCallbackContext.sendPluginResult(pluginResult);
+
+            if (initPeripheralCallback != null) initPeripheralCallback.sendPluginResult(pluginResult);
 
             break;
         }
@@ -4536,4 +4542,13 @@ public class BluetoothLePlugin extends CordovaPlugin {
       }
     }
   };
+
+  private void initGattServer() {
+    //Re-opening Gatt server seems to cause some issues
+    if (gattServer == null) {
+      Activity activity = cordova.getActivity();
+      BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+      gattServer = bluetoothManager.openGattServer(activity.getApplicationContext(), bluetoothGattServerCallback);
+    }
+  }
 }
