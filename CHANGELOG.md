@@ -1,3 +1,6 @@
+## 4.5.11 - 2020-05-20
+- Reinitialize gatt server when Bluetooth resets [\#302](https://github.com/randdusing/BluetoothLE/issues/302)
+
 ## 4.5.10 - 2020-04-10
 - Remove unnecessary check when advertising
 
