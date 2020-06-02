@@ -577,7 +577,7 @@ declare namespace BluetoothlePlugin {
         | "rssi" | "mtu" | "connectionPriorityRequested" |"enabled" | "disabled"
         | "readRequested" | "writeRequested" | "mtuChanged" | "notifyReady" | "notifySent"
         | "serviceAdded" | "serviceRemoved" | "allServicesRemoved" | "advertisingStarted"
-        | "advertisingStopped" | "responded" | "notified";
+        | "advertisingStopped" | "responded" | "notified" | "notificationSent";
 
     /** Avaialable connection priorities */
     type ConnectionPriority = "low" | "balanced" | "high";
@@ -814,7 +814,7 @@ declare namespace BluetoothlePlugin {
             writeEncryptionRequired?: boolean
         }
     }
-    
+
     interface Descriptor {
         uuid: string;
     }
