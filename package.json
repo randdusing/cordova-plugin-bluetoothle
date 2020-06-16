@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-bluetoothle",
-  "version": "4.5.12",
+  "version": "4.5.13",
   "description": "Use the Bluetooth Low Energy plugin to connect your Cordova app to new Bluetooth devices like heart rate monitors, thermometers, etc...",
   "types": "./types/index.d.ts",
   "cordova": {

@@ -1,3 +1,6 @@
+## 4.5.13 - 2020-06-16
+- Use fine location permissions to fix scanning in Android 10 [\#579](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/579)
+
 ## 4.5.12 - 2020-06-03
 - Update types
 
