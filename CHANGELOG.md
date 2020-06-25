@@ -1,3 +1,6 @@
+## 4.5.14 - 2020-06-25
+- Fix NPE in Android [\#615](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/615)
+
 ## 4.5.13 - 2020-06-16
 - Use fine location permissions to fix scanning in Android 10 [\#579](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/579)
 
