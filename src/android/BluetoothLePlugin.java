@@ -1056,6 +1056,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return;
     }
 
+    //Get Bluetooth adapter via Bluetooth Manager before enable it
+    Activity activity = cordova.getActivity();
+    BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+    bluetoothAdapter = bluetoothManager.getAdapter();
     boolean result = bluetoothAdapter.enable();
 
     if (!result) {
