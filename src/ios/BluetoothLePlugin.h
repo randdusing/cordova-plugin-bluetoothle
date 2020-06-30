@@ -15,7 +15,7 @@
   int requestId;
   NSMutableDictionary* requestsHash;
   NSMutableDictionary* servicesHash;
-    
+
   BOOL writeQIsRunning;
   int writeQtype;
   NSInteger writeQLocation;
