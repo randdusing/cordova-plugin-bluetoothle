@@ -490,7 +490,7 @@ NSString *const operationWrite = @"write";
       error = logUnknown;
       break;
     }
-      
+
     case CBManagerStateResetting: {
       error = logResetting;
       break;
