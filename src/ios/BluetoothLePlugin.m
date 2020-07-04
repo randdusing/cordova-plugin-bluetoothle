@@ -2857,7 +2857,7 @@ NSString *const operationWrite = @"write";
   [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
 }
 
-//Helpers for Callbacks
+//This is called when peripheral is ready to accept more data when using write without response
 - (void)peripheralIsReadyToSendWriteWithoutResponse:(CBPeripheral *)peripheral {
   CBCharacteristic * const characteristic = currentWriteCharacteristic;
   currentWriteCharacteristic = nil;
@@ -2894,6 +2894,7 @@ NSString *const operationWrite = @"write";
   }
 }
 
+//Helpers for Callbacks
 - (NSMutableDictionary*) ensureCallback: (CBUUID *) characteristicUuid forConnection:(NSMutableDictionary*) connection {
   //See if callback map exists for characteristic
   NSMutableDictionary* characteristicCallbacks = [connection objectForKey:characteristicUuid];
@@ -3680,7 +3681,9 @@ NSString *const operationWrite = @"write";
     self->currentWriteCharacteristic = characteristic;
   }
 
-  [peripheral writeValue:data forCharacteristic:characteristic type:self->writeQtype];
+  if (peripheral.canSendWriteWithoutResponse) {
+    [peripheral writeValue:data forCharacteristic:characteristic type:self->writeQtype];
+  }
 }
 
 @end
