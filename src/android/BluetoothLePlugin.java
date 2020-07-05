@@ -1831,7 +1831,17 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return false;
     }
 
-    boolean result = false;
+    //Subscribe to the characteristic
+    boolean result = bluetoothGatt.setCharacteristicNotification(characteristic, true);
+
+    if (!result) {
+      addProperty(returnObj, keyError, errorWriteDescriptor);
+      addProperty(returnObj, keyMessage, logWriteDescriptorValueNotSet);
+      callbackContext.error(returnObj);
+      return false;
+    }
+
+    result = false;
 
     //Use properties to determine whether notification or indication should be used
     if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == BluetoothGattCharacteristic.PROPERTY_NOTIFY) {
@@ -4239,20 +4249,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
           callbackContext.success(returnObj);
         } else {
-          //Subscribe to the characteristic
-          boolean result = gatt.setCharacteristicNotification(characteristic, true);
-
           CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationSubscribe);
 
           //If no callback, just return
           if (callbackContext == null) {
-            return;
-          }
-
-          if (!result) {
-            addProperty(returnObj, keyError, errorSubscription);
-            addProperty(returnObj, keyMessage, logSubscribeFail);
-            callbackContext.error(returnObj);
             return;
           }
 
