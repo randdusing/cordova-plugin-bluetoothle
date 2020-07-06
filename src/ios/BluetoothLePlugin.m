@@ -3666,23 +3666,32 @@ NSString *const operationWrite = @"write";
 
 - (void)writeDataToCharacteristic:(CBCharacteristic *)characteristic toPeripheral:(CBPeripheral*) peripheral {
   NSData *data;
-  if (self->writeQLocation + self->writeQChunkSize > self->writeQLength) {
-    NSInteger currentLength = self->writeQLength - self->writeQLocation;
-    NSMutableData *mutableData = [[NSMutableData alloc] initWithData:[self->writeQData subdataWithRange:NSMakeRange(self->writeQLocation, currentLength)]];
-    data = [[NSData alloc] initWithData:mutableData];
-    self->writeQLocation = self->writeQLocation + currentLength;
-  } else {
-    data = [self->writeQData subdataWithRange:NSMakeRange(self->writeQLocation, self->writeQChunkSize)];
-    self->writeQLocation = self->writeQLocation + self->writeQChunkSize;
-  }
 
-  // Since WriteWithoutResponse triggers a different callback which has no access to characteristic
   if (self->writeQtype == CBCharacteristicWriteWithoutResponse) {
+    // Since WriteWithoutResponse triggers a different callback which has no access to characteristic
     self->currentWriteCharacteristic = characteristic;
-  }
 
-  if (peripheral.canSendWriteWithoutResponse) {
-    [peripheral writeValue:data forCharacteristic:characteristic type:self->writeQtype];
+    while (self->writeQLocation < self->writeQLength && peripheral.canSendWriteWithoutResponse) {
+      NSInteger currentLength = self->writeQLength - self->writeQLocation;
+      NSInteger chunkSize = currentLength < self->writeQChunkSize ? currentLength : self->writeQChunkSize;
+
+      data = [self->writeQData subdataWithRange:NSMakeRange(self->writeQLocation, chunkSize)];
+
+      [peripheral writeValue:data forCharacteristic:characteristic type:self->writeQtype];
+
+      self->writeQLocation = self->writeQLocation + chunkSize;
+    }
+  } else {
+    while (self->writeQLocation < self->writeQLength) {
+      NSInteger currentLength = self->writeQLength - self->writeQLocation;
+      NSInteger chunkSize = currentLength < self->writeQChunkSize ? currentLength : self->writeQChunkSize;
+
+      data = [self->writeQData subdataWithRange:NSMakeRange(self->writeQLocation, chunkSize)];
+
+      [peripheral writeValue:data forCharacteristic:characteristic type:self->writeQtype];
+
+      self->writeQLocation = self->writeQLocation + chunkSize;
+    }
   }
 }
 
