@@ -477,7 +477,7 @@ module.exports = {
       getCharacteristic(deviceId, serviceId, characteristicId).then(function (characteristic, deviceName) {
         var convertedCharacteristic = convertCharacteristic(characteristic);
         var descriptorValue;
-        if (isNotification === null) {
+        if (isNotification == null) {
           isNotification = convertedCharacteristic.properties.notify === 'true';
         }
 
