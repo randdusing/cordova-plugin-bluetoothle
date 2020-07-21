@@ -1,3 +1,10 @@
+## 5.0.0 - 2020-07-21
+- Improves writeQ performance [\#617](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/617)
+- Potentially breaking change, thus the version bump:
+  - iOS 10 required
+  - writeQ returns a success callback even with iOS's noResponse type. Ignore callback to keep existing behavior
+  - Review writeQ section of [readme](https://github.com/randdusing/cordova-plugin-bluetoothle#writeq)
+
 ## 4.5.14 - 2020-06-25
 - Fix NPE in Android [\#615](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/615)
 
