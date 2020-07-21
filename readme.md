@@ -96,7 +96,7 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 
 * Cordova 5.0.0 or higher
 * Android 4.3 or higher, Android Cordova library 5.0.0 or higher, target Android API 23 or higher
-* iOS 7 or higher
+* iOS 10 or higher
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
 * Windows 10 UWP
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
@@ -1281,11 +1281,12 @@ var string = bluetoothle.bytesToString(bytes); //This should equal Write Hello W
 
 
 ### writeQ ###
-Write Quick / Queue, use this method to quickly execute write without response commands when writing more than 20 bytes at a time. The data will automatically be split up into 20 bytes packets. On iOS, these packets are written immediately since iOS uses queues. You probably won't see much of a performance increase using writeQ. On Android, a queue isn't used internally. Instead another call shouldn't be made until onCharacteristicWrite is called. This could be done at the Javascript layer, but the Javascript to plugin "bridge" must be crossed twice, which leads to some significant slow downs when milliseconds make a difference. For even better write throughput, use requestConnectionPriority('high') as well. Note, no callback will occur on write without response on iOS.
+Write Quick / Queue, use this method to quickly execute write without response commands when writing more than 20 bytes at a time. The data will automatically be split up into 20 bytes packets by default or you can increase that by setting `chunkSize`. On iOS, these packets are written immediately since iOS uses queues. You probably won't see much of a performance increase using writeQ unless you use `type="noResponse"` and set `chunkSize` higher than 20. On Android, a queue isn't used internally. Instead another call shouldn't be made until onCharacteristicWrite is called. This could be done at the Javascript layer, but the Javascript to plugin "bridge" must be crossed twice, which leads to some significant slow downs when milliseconds make a difference. For even better write throughput, use requestConnectionPriority('high') and mtu(SAME_VALUE_AS_CHUNK_SIZE_PARAM) as well.
 
 Warnings
 * This is experimental. Test heavily before using in any production code.
-* iOS won't see much performance gain, but Android should.
+* To see a performance gain you should use this in combination with requestConnectionPriority('high') and mtu(`MTU_VALUE`) and then calling this method with `type="noResponse"` and set `chunkSize` to `MTU_VALUE`.
+* Only supported on iOS11+.
 * Only supports one call at a time. Don't execute back to back, use on multiple devices, or multiple characteristics.
 
 ```javascript
@@ -1293,7 +1294,12 @@ bluetoothle.writeQ(writeSuccess, writeError, params);
 ```
 
 ##### Params #####
-See write() above.
+* address = The address/identifier provided by the scan's return object
+* service = The service's UUID
+* characteristic = The characteristic's UUID
+* value = Base64 encoded string
+* type = Set to "noResponse" to enable write without response, all other values will write normally.
+* chunkSize = Define the size of packets. This should be according to MTU value
 
 ##### Success #####
 See write() above.

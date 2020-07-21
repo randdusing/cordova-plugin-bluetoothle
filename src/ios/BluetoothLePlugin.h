@@ -15,6 +15,14 @@
   int requestId;
   NSMutableDictionary* requestsHash;
   NSMutableDictionary* servicesHash;
+
+  BOOL writeQIsRunning;
+  int writeQtype;
+  NSInteger writeQLocation;
+  NSInteger writeQLength;
+  NSInteger writeQChunkSize;
+  NSData *writeQData;
+  CBCharacteristic *currentWriteCharacteristic;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;

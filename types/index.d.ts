@@ -265,7 +265,7 @@ declare namespace BluetoothlePlugin {
         writeQ(
             writeSuccess: (result: OperationResult) => void,
             writeError: (error: Error) => void,
-            params: WriteCharacteristicParams): void;
+            params: WriteQCharacteristicParams): void;
 
         /**
          * Read a particular characterist's descriptor
@@ -657,6 +657,11 @@ declare namespace BluetoothlePlugin {
         value: string,
         /* Set to "noResponse" to enable write without response, all other values will write normally. */
         type?: string
+    }
+
+    interface WriteQCharacteristicParams extends WriteCharacteristicParams {
+        /* Define the size of packets. This should be according to MTU value */
+        chunkSize?: number
     }
 
     interface WriteDescriptorParams extends DescriptorParams {
