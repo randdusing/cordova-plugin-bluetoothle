@@ -57,7 +57,7 @@ import android.util.Log;
 public class BluetoothLePlugin extends CordovaPlugin {
   //Initialization related variables
   private final int REQUEST_BT_ENABLE = 59627; /*Random integer*/
-  private final int REQUEST_ACCESS_COARSE_LOCATION = 59628;
+  private final int REQUEST_ACCESS_FINE_LOCATION = 59628;
   private final int REQUEST_LOCATION_SOURCE_SETTINGS = 59629;
   private BluetoothAdapter bluetoothAdapter;
   private boolean isReceiverRegistered = false;
@@ -874,7 +874,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   public void hasPermissionAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
+    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
 
     callbackContext.success(returnObj);
   }
@@ -889,7 +889,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     permissionsCallback = callbackContext;
-    cordova.requestPermission(this, REQUEST_ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
+    cordova.requestPermission(this, REQUEST_ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
   }
 
   public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
@@ -900,7 +900,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     //Just call hasPermission again to verify
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "requestPermission", cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION));
+    addProperty(returnObj, "requestPermission", cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
 
     permissionsCallback.success(returnObj);
   }
@@ -1008,16 +1008,16 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
   }
 
-  
+
   /**
-  * Retrieves a minimal set of adapter details 
+  * Retrieves a minimal set of adapter details
   * (address, name, initialized state, enabled state, scanning state, discoverable state)
   */
-  private void getAdapterInfoAction(CallbackContext callbackContext) {    
-    JSONObject returnObj = new JSONObject();    
+  private void getAdapterInfoAction(CallbackContext callbackContext) {
+    JSONObject returnObj = new JSONObject();
 
     // Not yet initialized
-    if (bluetoothAdapter == null) {      
+    if (bluetoothAdapter == null) {
       Activity activity = cordova.getActivity();
       BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
       BluetoothAdapter bluetoothAdapterTmp = bluetoothManager.getAdapter();
@@ -1032,7 +1032,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
       pluginResult.setKeepCallback(true);
       callbackContext.sendPluginResult(pluginResult);
-      return;      
+      return;
     } else {
       // Already initialized, so use the bluetoothAdapter class property to get all the info
       addProperty(returnObj, keyAddress, bluetoothAdapter.getAddress());
@@ -1043,10 +1043,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyIsDiscoverable, bluetoothAdapter.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE);
       PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
       pluginResult.setKeepCallback(true);
-      callbackContext.sendPluginResult(pluginResult);      
+      callbackContext.sendPluginResult(pluginResult);
       return;
     }
-    
+
   }
 
   private void enableAction(CallbackContext callbackContext) {
@@ -1692,7 +1692,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
         boolean bool = ((Boolean) localMethod.invoke(localBluetoothGatt, new Object[0])).booleanValue();
         return bool;
       }
-    } 
+    }
     catch (Exception localException) {
       Log.e("BLE", "An exception occured while refreshing device cache");
     }
@@ -2113,7 +2113,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     queueQuick.clear();
 
     int length = value.length;
-    int chunkSize = 20;
+    int chunkSize = obj.optInt("chunkSize", 20);
     int offset = 0;
 
     do {

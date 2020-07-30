@@ -265,7 +265,7 @@ declare namespace BluetoothlePlugin {
         writeQ(
             writeSuccess: (result: OperationResult) => void,
             writeError: (error: Error) => void,
-            params: WriteCharacteristicParams): void;
+            params: WriteQCharacteristicParams): void;
 
         /**
          * Read a particular characterist's descriptor
@@ -577,7 +577,7 @@ declare namespace BluetoothlePlugin {
         | "rssi" | "mtu" | "connectionPriorityRequested" |"enabled" | "disabled"
         | "readRequested" | "writeRequested" | "mtuChanged" | "notifyReady" | "notifySent"
         | "serviceAdded" | "serviceRemoved" | "allServicesRemoved" | "advertisingStarted"
-        | "advertisingStopped" | "responded" | "notified";
+        | "advertisingStopped" | "responded" | "notified" | "notificationSent";
 
     /** Avaialable connection priorities */
     type ConnectionPriority = "low" | "balanced" | "high";
@@ -657,6 +657,11 @@ declare namespace BluetoothlePlugin {
         value: string,
         /* Set to "noResponse" to enable write without response, all other values will write normally. */
         type?: string
+    }
+
+    interface WriteQCharacteristicParams extends WriteCharacteristicParams {
+        /* Define the size of packets. This should be according to MTU value */
+        chunkSize?: number
     }
 
     interface WriteDescriptorParams extends DescriptorParams {
@@ -814,7 +819,7 @@ declare namespace BluetoothlePlugin {
             writeEncryptionRequired?: boolean
         }
     }
-    
+
     interface Descriptor {
         uuid: string;
     }

@@ -28,6 +28,7 @@ NSString *const keyIsDiscovered = @"isDiscovered";
 NSString *const keyIsDiscoveredQueue = @"isDiscoveredQueue";
 NSString *const keyPeripheral = @"peripheral";
 NSString *const keyAllowDuplicates = @"allowDuplicates";
+NSString *const keyChunkSize = @"chunkSize";
 
 //Write Type
 NSString *const writeTypeNoResponse = @"noResponse";
@@ -475,32 +476,32 @@ NSString *const operationWrite = @"write";
 - (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral {
   NSString* error = nil;
   switch ([peripheral state]) {
-    case CBPeripheralManagerStatePoweredOff: {
+    case CBManagerStatePoweredOff: {
       error = logPoweredOff;
       break;
     }
 
-    case CBPeripheralManagerStateUnauthorized: {
+    case CBManagerStateUnauthorized: {
       error = logUnauthorized;
       break;
     }
 
-    case CBPeripheralManagerStateUnknown: {
+    case CBManagerStateUnknown: {
       error = logUnknown;
       break;
     }
 
-    case CBPeripheralManagerStateResetting: {
+    case CBManagerStateResetting: {
       error = logResetting;
       break;
     }
 
-    case CBPeripheralManagerStateUnsupported: {
+    case CBManagerStateUnsupported: {
       error = logUnsupported;
       break;
     }
 
-    case CBPeripheralManagerStatePoweredOn: {
+    case CBManagerStatePoweredOn: {
       //Bluetooth on!
       break;
     }
@@ -675,7 +676,7 @@ NSString *const operationWrite = @"write";
   if (centralManager != nil) {
     NSDictionary* returnObj = nil;
     CDVPluginResult* pluginResult = nil;
-    if ([centralManager state] == CBCentralManagerStatePoweredOn)
+    if ([centralManager state] == CBManagerStatePoweredOn)
     {
 
         returnObj = [NSDictionary dictionaryWithObjectsAndKeys: statusEnabled, keyStatus, nil];
@@ -1565,9 +1566,9 @@ NSString *const operationWrite = @"write";
   }
 
   //Get the value to write
-  NSData* value = [self getValue:obj];
+  writeQData = [self getValue:obj];
   //And ensure it's not empty
-  if (value == nil) {
+  if (writeQData == nil) {
     NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
     [self addDevice:peripheral :returnObj];
@@ -1585,34 +1586,15 @@ NSString *const operationWrite = @"write";
   [self addCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite forCallback:command.callbackId];
 
   //Get the write type (response or no response)
-  int writeType = [self getWriteType:obj];
+  writeQtype = [self getWriteType:obj];
 
-  NSUInteger length = [value length];
-  NSUInteger chunkSize = 20;
-  NSUInteger offset = 0;
-  do {
-    NSUInteger thisChunkSize = length - offset > chunkSize ? chunkSize : length - offset;
-    NSData* chunk = [NSData dataWithBytesNoCopy:(char *)[value bytes] + offset length:thisChunkSize freeWhenDone:NO];
+  writeQLength = [writeQData length];
+  writeQLocation = 0;
+  writeQChunkSize = [self getChunkSize:obj];
 
-    offset += thisChunkSize;
-    [peripheral writeValue:chunk forCharacteristic:characteristic type:writeType];
-  } while (offset < length);
+  writeQIsRunning = true;
 
-  //Write without response won't execute any callbacks, so return immediately
-  if (writeType == CBCharacteristicWriteWithoutResponse) {
-    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
-
-    [self addDevice:peripheral :returnObj];
-    [self addCharacteristic:characteristic :returnObj];
-
-    [self addValue:value toDictionary:returnObj];
-
-    [returnObj setValue:statusWritten forKey:keyStatus];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-    [pluginResult setKeepCallbackAsBool:false];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-  }
+  [self writeDataToCharacteristic:characteristic toPeripheral:peripheral];
 }
 
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command {
@@ -1825,7 +1807,7 @@ NSString *const operationWrite = @"write";
 
 - (void)isEnabled:(CDVInvokedUrlCommand *)command {
   //See if Bluetooth is currently enabled
-  NSNumber* result = [NSNumber numberWithBool:(centralManager != nil && centralManager.state == CBCentralManagerStatePoweredOn)];
+  NSNumber* result = [NSNumber numberWithBool:(centralManager != nil && centralManager.state == CBManagerStatePoweredOn)];
 
   NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, keyIsEnabled, nil];
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
@@ -2029,32 +2011,32 @@ NSString *const operationWrite = @"write";
   //Decide on error message
   NSString* error = nil;
   switch ([centralManager state]) {
-    case CBCentralManagerStatePoweredOff: {
+    case CBManagerStatePoweredOff: {
       error = logPoweredOff;
       break;
     }
 
-    case CBCentralManagerStateUnauthorized: {
+    case CBManagerStateUnauthorized: {
       error = logUnauthorized;
       break;
     }
 
-    case CBCentralManagerStateUnknown: {
+    case CBManagerStateUnknown: {
       error = logUnknown;
       break;
     }
 
-    case CBCentralManagerStateResetting: {
+    case CBManagerStateResetting: {
       error = logResetting;
       break;
     }
 
-    case CBCentralManagerStateUnsupported: {
+    case CBManagerStateUnsupported: {
       error = logUnsupported;
       break;
     }
 
-    case CBCentralManagerStatePoweredOn: {
+    case CBManagerStatePoweredOn: {
       //Bluetooth on!
       break;
     }
@@ -2678,41 +2660,47 @@ NSString *const operationWrite = @"write";
     return;
   }
 
-  //Get the proper callback for write operation
-  NSString* callback = [self getCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite];
-  [self removeCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite];
+  if (writeQIsRunning && (writeQLocation < writeQLength)) {
+    [self writeDataToCharacteristic:characteristic toPeripheral:peripheral];
+  } else {
+    //Get the proper callback for write operation
+    NSString* callback = [self getCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite];
+    [self removeCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite];
 
-  //Return if callback is null
-  if (callback == nil) {
-    return;
-  }
+    //Return if callback is null
+    if (callback == nil) {
+      return;
+    }
 
-  NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+    NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
 
-  [self addDevice:peripheral :returnObj];
-  [self addCharacteristic:characteristic :returnObj];
+    [self addDevice:peripheral :returnObj];
+    [self addCharacteristic:characteristic :returnObj];
 
-  //If error exists, return error
-  if (error != nil) {
-    [returnObj setValue:errorWrite forKey:keyError];
-    [returnObj setValue:error.description forKey:keyMessage];
+    //If error exists, return error
+    if (error != nil) {
+      [returnObj setValue:errorWrite forKey:keyError];
+      [returnObj setValue:error.description forKey:keyMessage];
 
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+      CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+      [pluginResult setKeepCallbackAsBool:false];
+      [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+      return;
+    }
+
+    //Add characteristic value to object
+    [self addValue:characteristic.value toDictionary:returnObj];
+
+    //Update status
+    [returnObj setValue:statusWritten forKey:keyStatus];
+
+    writeQIsRunning = false;
+
+    //Return data
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
     [pluginResult setKeepCallbackAsBool:false];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
-    return;
   }
-
-  //Add characteristic value to object
-  [self addValue:characteristic.value toDictionary:returnObj];
-
-  //Update status
-  [returnObj setValue:statusWritten forKey:keyStatus];
-
-  //Return data
-  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-  [pluginResult setKeepCallbackAsBool:false];
-  [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForDescriptor:(CBDescriptor *)descriptor error:(NSError *)error {
@@ -2867,6 +2855,43 @@ NSString *const operationWrite = @"write";
   CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
   [pluginResult setKeepCallbackAsBool:false];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+}
+
+//This is called when peripheral is ready to accept more data when using write without response
+- (void)peripheralIsReadyToSendWriteWithoutResponse:(CBPeripheral *)peripheral {
+  CBCharacteristic * const characteristic = currentWriteCharacteristic;
+  currentWriteCharacteristic = nil;
+
+  if (characteristic && writeQIsRunning) {
+    if (writeQLocation < writeQLength) {
+      [self writeDataToCharacteristic:characteristic toPeripheral:peripheral];
+    } else {
+      //Get connection
+      NSMutableDictionary* connection = [connections objectForKey:peripheral.identifier];
+      if (connection == nil) {
+        return;
+      }
+
+      //Get the proper callback for write operation
+      NSString* callback = [self getCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite];
+      [self removeCallback:characteristic.UUID forConnection:connection forOperationType:operationWrite];
+
+      NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+
+      [self addDevice:peripheral :returnObj];
+      [self addCharacteristic:characteristic :returnObj];
+
+      [self addValue:characteristic.value toDictionary:returnObj];
+
+      [returnObj setValue:statusWritten forKey:keyStatus];
+
+      writeQIsRunning = false;
+
+      CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+      [pluginResult setKeepCallbackAsBool:false];
+      [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
+    }
+  }
 }
 
 //Helpers for Callbacks
@@ -3049,7 +3074,7 @@ NSString *const operationWrite = @"write";
 }
 
 - (BOOL) isNotEnabled:(CDVInvokedUrlCommand *)command {
-  if (centralManager.state != CBCentralManagerStatePoweredOn) {
+  if (centralManager.state != CBManagerStatePoweredOn) {
     NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: errorEnable, keyError, logNotEnabled, keyMessage, nil];
 
     CDVPluginResult *pluginResult = nil;
@@ -3476,6 +3501,18 @@ NSString *const operationWrite = @"write";
   return CBCharacteristicWriteWithoutResponse;
 }
 
+-(int) getChunkSize:(NSDictionary *)obj {
+  NSNumber* chunkSize = [obj valueForKey:keyChunkSize];
+
+  if (chunkSize == nil) {
+    return 20;
+  }
+
+  int chunkSizeValue = [chunkSize intValue];
+
+  return chunkSizeValue;
+}
+
 -(NSObject*) formatName:(NSString*)name {
   if (name != nil) {
     return name;
@@ -3625,6 +3662,37 @@ NSString *const operationWrite = @"write";
   }
 
   return propertiesObject;
+}
+
+- (void)writeDataToCharacteristic:(CBCharacteristic *)characteristic toPeripheral:(CBPeripheral*) peripheral {
+  NSData *data;
+
+  if (self->writeQtype == CBCharacteristicWriteWithoutResponse) {
+    // Since WriteWithoutResponse triggers a different callback which has no access to characteristic
+    self->currentWriteCharacteristic = characteristic;
+
+    while (self->writeQLocation < self->writeQLength && peripheral.canSendWriteWithoutResponse) {
+      NSInteger currentLength = self->writeQLength - self->writeQLocation;
+      NSInteger chunkSize = currentLength < self->writeQChunkSize ? currentLength : self->writeQChunkSize;
+
+      data = [self->writeQData subdataWithRange:NSMakeRange(self->writeQLocation, chunkSize)];
+
+      [peripheral writeValue:data forCharacteristic:characteristic type:self->writeQtype];
+
+      self->writeQLocation = self->writeQLocation + chunkSize;
+    }
+  } else {
+    while (self->writeQLocation < self->writeQLength) {
+      NSInteger currentLength = self->writeQLength - self->writeQLocation;
+      NSInteger chunkSize = currentLength < self->writeQChunkSize ? currentLength : self->writeQChunkSize;
+
+      data = [self->writeQData subdataWithRange:NSMakeRange(self->writeQLocation, chunkSize)];
+
+      [peripheral writeValue:data forCharacteristic:characteristic type:self->writeQtype];
+
+      self->writeQLocation = self->writeQLocation + chunkSize;
+    }
+  }
 }
 
 @end

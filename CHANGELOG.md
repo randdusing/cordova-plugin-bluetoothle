@@ -1,3 +1,22 @@
+## 5.0.0 - 2020-07-21
+- Improves writeQ performance [\#617](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/617)
+- Potentially breaking change, thus the version bump:
+  - iOS 10 required
+  - writeQ returns a success callback even with iOS's noResponse type. Ignore callback to keep existing behavior
+  - Review writeQ section of [readme](https://github.com/randdusing/cordova-plugin-bluetoothle#writeq)
+
+## 4.5.14 - 2020-06-25
+- Fix NPE in Android [\#615](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/615)
+
+## 4.5.13 - 2020-06-16
+- Use fine location permissions to fix scanning in Android 10 [\#579](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/579)
+
+## 4.5.12 - 2020-06-03
+- Update types
+
+## 4.5.11 - 2020-05-20
+- Reinitialize gatt server when Bluetooth resets [\#302](https://github.com/randdusing/BluetoothLE/issues/302)
+
 ## 4.5.10 - 2020-04-10
 - Remove unnecessary check when advertising
 
