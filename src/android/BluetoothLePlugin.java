@@ -757,7 +757,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (advertiser == null) {
       JSONObject returnObj = new JSONObject();
 
-      addProperty(returnObj, "error", "startAdvertising");
+      addProperty(returnObj, "error", "stopAdvertising");
       addProperty(returnObj, "message", "Advertising isn't supported");
 
       callbackContext.error(returnObj);
@@ -765,6 +765,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     advertiser.stopAdvertising(advertiseCallback);
+    
+    if (isAdvertising) isAdvertising = false;
 
     JSONObject returnObj = new JSONObject();
     addProperty(returnObj, "status", "advertisingStopped");
@@ -2785,6 +2787,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
             }
             scanCallbackContext = null;
 
+            // Reset isAdvertising when adapter is off (if STATE_TURNING_OFF doesn't trigger)
+            if (isAdvertising) isAdvertising = false;
+            
             gattServer = null;
 
             pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
@@ -2795,7 +2800,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
             break;
           case BluetoothAdapter.STATE_TURNING_OFF:
-            gattServer.close();
+            // Reset isAdvertising when adapter is turning off
+            if (isAdvertising) isAdvertising = false;
+
+            // Make sure gattServer is not null (in case this triggers when it is null)
+            if (gattServer != null) gattServer.close();
             break;
           case BluetoothAdapter.STATE_ON:
 
