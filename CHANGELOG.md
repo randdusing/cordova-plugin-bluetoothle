@@ -1,3 +1,6 @@
+## 5.0.1 - 2020-07-31
+- Reset isAdvertising flag when Bluetooth resets [\#302](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/302)
+
 ## 5.0.0 - 2020-07-21
 - Improves writeQ performance [\#617](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/617)
 - Potentially breaking change, thus the version bump:
