@@ -1,3 +1,6 @@
+## 5.0.2 - 2020-08-05
+- Update cordovaDependencies to allow install [\#632](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/632)
+
 ## 5.0.1 - 2020-07-31
 - Reset isAdvertising flag when Bluetooth resets [\#302](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/302)
 
