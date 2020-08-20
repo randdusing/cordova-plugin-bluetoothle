@@ -1,3 +1,6 @@
+## 6.0.0 - 2020-08-19
+- Fix ordering issue with notifications
+
 ## 5.0.2 - 2020-08-05
 - Update cordovaDependencies to allow install [\#632](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/632)
 
