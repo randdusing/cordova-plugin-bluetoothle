@@ -1659,18 +1659,20 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     addDevice(returnObj, device);
 
-    int discoveredState = Integer.valueOf(connection.get(keyDiscoveredState).toString());
-    //Already initiated discovery
-    if (discoveredState == STATE_DISCOVERING) {
-      addProperty(returnObj, keyError, errorDiscover);
-      addProperty(returnObj, keyMessage, logAlreadyDiscovering);
-      callbackContext.error(returnObj);
-      return;
-    } else if (discoveredState == STATE_DISCOVERED) {
-      //Already discovered
-      returnObj = getDiscovery(bluetoothGatt);
-      callbackContext.success(returnObj);
-      return;
+    if (obj == null || !obj.optBoolean("clearCache", false)) {
+      int discoveredState = Integer.valueOf(connection.get(keyDiscoveredState).toString());
+      //Already initiated discovery
+      if (discoveredState == STATE_DISCOVERING) {
+        addProperty(returnObj, keyError, errorDiscover);
+        addProperty(returnObj, keyMessage, logAlreadyDiscovering);
+        callbackContext.error(returnObj);
+        return;
+      } else if (discoveredState == STATE_DISCOVERED) {
+        //Already discovered
+        returnObj = getDiscovery(bluetoothGatt);
+        callbackContext.success(returnObj);
+        return;
+      }
     }
 
     //Else undiscovered, so start discovery
