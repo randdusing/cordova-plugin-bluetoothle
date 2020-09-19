@@ -1,3 +1,6 @@
+## 6.0.1 - 2020-09-19
+- Force re-discovery when clearCache => true. [\#634](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/634)
+
 ## 6.0.0 - 2020-08-19
 - Fix ordering issue with notifications
 - Potential breaking change - Verify #subscribe() behavior closely!
