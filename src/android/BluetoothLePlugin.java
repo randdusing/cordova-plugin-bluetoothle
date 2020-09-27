@@ -713,6 +713,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
       callbackContext.error(returnObj);
       return;
     }
+    String adapterName = obj.optString("name");
+    bluetoothAdapter.setName(adapterName);
+
     settingsBuilder.setTimeout(timeout);
 
     String txPowerLevelS = obj.optString("txPowerLevel", "medium");
