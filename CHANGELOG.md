@@ -1,3 +1,6 @@
+## 6.0.2 - 2020-10-10
+- Add name when advertising
+
 ## 6.0.1 - 2020-09-19
 - Force re-discovery when clearCache => true. [\#634](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/634)
 
