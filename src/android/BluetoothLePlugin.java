@@ -1477,12 +1477,12 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (obj != null) {
       autoConnect = obj.optBoolean("autoConnect", false);
     }
-
     connections.put(device.getAddress(), connection);
 
     BluetoothGatt bluetoothGatt = null;
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-      bluetoothGatt = device.connectGatt(cordova.getActivity().getApplicationContext(), autoConnect, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
+      int transportMode = getTransportMode(obj);
+      bluetoothGatt = device.connectGatt(cordova.getActivity().getApplicationContext(), autoConnect, bluetoothGattCallback, transportMode);
     } else {
       bluetoothGatt = device.connectGatt(cordova.getActivity().getApplicationContext(), autoConnect, bluetoothGattCallback);
     }
@@ -3656,6 +3656,23 @@ public class BluetoothLePlugin extends CordovaPlugin {
     UUID[] uuids = new UUID[arrayList.size()];
     uuids = arrayList.toArray(uuids);
     return uuids;
+  }
+
+
+  private int getTransportMode(JSONObject obj) {
+    int transportMode = 0;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      transportMode = BluetoothDevice.TRANSPORT_AUTO;
+    }
+
+    if (obj != null && !obj.isNull("transport")) {
+      try {
+        transportMode = obj.getInt("transport");
+      } catch (JSONException e) {
+        Log.e("BLE", "An exception occurred while transport connection parameter, fall back to: BluetoothDevice.TRANSPORT_AUTO");
+      }
+    }
+    return transportMode;
   }
 
   private String getAddress(JSONObject obj) {
