@@ -103,13 +103,13 @@ declare namespace BluetoothlePlugin {
          * Connect to a Bluetooth LE device
          * @param connectSuccess The success callback that is passed with device object
          * @param connectError   The callback that will be triggered when the connect operation fails
-         * @param params         The address/identifier
          *
+         * @param params         connection params
          */
         connect(
             connectSuccess: (status: DeviceInfo) => void,
             connectError: (error: Error) => void,
-            params: { address: string, autoConnect?: boolean }): void;
+            params: ConnectionParams): void;
 
         /**
          * Reconnect to a previously connected Bluetooth device
@@ -617,6 +617,36 @@ declare namespace BluetoothlePlugin {
         callbackType?: BluetoothCallbackType,
         /** True/false to show only connectable devices, rather than all devices ever seen, defaults to false (Windows)*/
         isConnectable?: boolean
+    }
+
+    interface ConnectionParams{
+        address: string;
+        autoConnect?: boolean;
+        /**
+         * Transport mode. Available from API 23 (Android).
+         * If none is specified the default behavior is TRANSPORT_AUTO
+         *
+         * Note: On Android 10, TRANSPORT_AUTO can lead to connection errors with Status code 133.
+         * In this case TRANSPORT_LE can be used.
+         */
+        transport?:  AndroidGattTransportMode;
+    }
+
+    enum AndroidGattTransportMode{
+        /**
+         * No preference of physical transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_AUTO = 0,
+
+        /**
+         * Prefer BR/EDR transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_BREDR = 1,
+
+        /**
+         * Prefer LE transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_LE = 2,
     }
 
     interface NotifyParams {
