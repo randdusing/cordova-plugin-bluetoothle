@@ -1,3 +1,6 @@
+## 6.1.0 - 2020-11-07
+- Allow specifying transport mode for Android
+
 ## 6.0.2 - 2020-10-10
 - Add name when advertising
 
