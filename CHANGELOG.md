@@ -1,3 +1,6 @@
+## 6.1.1 - 2020-12-04
+- Add ACCESS_BACKGROUND_LOCATION permission to fix issue with Android target SDK 29
+
 ## 6.1.0 - 2020-11-07
 - Allow specifying transport mode for Android
 
