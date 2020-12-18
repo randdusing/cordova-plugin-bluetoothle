@@ -541,6 +541,18 @@ declare namespace BluetoothlePlugin {
             params: NotifyParams): void;
 
         /**
+         * Set pin if required to pair with a device. Android support only.
+         * @param success   The success callback that is passed with device's status and sent value
+         * @param error     The callback that will be triggered when the bond operation fails
+         * @param params    The set pin params
+         *
+         */
+        setPin(
+            success: (result: { status:Status }) => void,
+            error: (error: Error) => void,
+            params: { address: string, pin:string }): void;
+
+        /**
          * Helper function to convert a base64 encoded string from a characteristic or descriptor value into a uint8Array object
          * @param  value Encoded string which need t be encoded
          * @return       uint8Array object
