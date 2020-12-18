@@ -62,6 +62,7 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [requestPermission](#requestpermission)
   - [isLocationEnabled](#islocationenabled)
   - [requestLocation](#requestlocation)
+  - [setPin](#setPin)
 - [Peripheral Life Cycle](#peripheral-life-cycle)
   - [Initilization](#initilization)
   - [Notifications](#notifications)
@@ -245,6 +246,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.stopAdvertising](#stopadvertising)
 * [bluetoothle.respond](#respond)
 * [bluetoothle.notify](#notify)
+* [bluetoothle.setPin](#setPin) (Android)
 * [bluetoothle.encodedStringToBytes](#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString](#bytestoencodedstring)
 * [bluetoothle.stringToBytes](#stringtobytes)
@@ -286,6 +288,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * isNotConnected - Device isn't connected (Don't call discover or any read/write operations)
 * isDisconnected - Device is disconnected (Don't call disconnect)
 * isBonded - Operation is unsupported. (Is the device Android?)
+* setPin - Operation is unsupported. (Is the device Android?)
 
 For example:
 ```javascript
@@ -1559,7 +1562,32 @@ bluetoothle.isBonded(isBondedSuccess, isBondedError, params);
 }
 ```
 
+### setPin ###
+Set PIN if required by the pairing process. Android support only.
 
+```javascript
+bluetoothle.setPin(success, error, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+* pin = Pairing PIN code
+
+```javascript
+{
+  "address": "5A:94:4B:38:B3:FD",
+  "pin": "1234"
+}
+```
+
+##### Success #####
+* status => string
+
+```javascript
+{
+  "status": "pinSet",
+}
+```
 
 ### wasConnected ###
 Determine whether the device was connected, or error if not initialized.
