@@ -129,6 +129,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyDiscoveredState = "discoveredState";
   private final String keyConnectionPriority = "connectionPriority";
   private final String keyMtu = "mtu";
+  private final String keyPin = "pin";
 
   //Write Types
   private final String writeTypeNoResponse = "noResponse";
@@ -421,6 +422,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
       respondAction(args, callbackContext);
     } else if ("notify".equals(action)) {
       notifyAction(args, callbackContext);
+    } else if ("setPin".equals(action)) {
+      setPinAction(args, callbackContext);
     } else {
       return false;
     }
@@ -2767,6 +2770,66 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
   }
 
+  private void setPinAction(JSONArray args, CallbackContext callbackContext) {
+    Log.d("BLE","set pin");
+    if (mPairingRequestReceiver!=null) {
+      cordova.getActivity().unregisterReceiver(mPairingRequestReceiver);
+    }
+
+    if (isNotInitialized(callbackContext, true)) {
+      return;
+    }
+
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      return;
+    }
+    
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      return;
+    }
+
+    String pin = getPin(obj);
+    if (pin==null) {
+      return;
+    }
+    
+    Log.d("BLE","set pin "  + address  + " " + pin);
+    JSONObject returnObj = new JSONObject();
+    try {
+      mPairingRequestReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+          Log.d("BLE", "on receive");
+          String action = intent.getAction();
+          if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(action)) {
+            BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if(bluetoothDevice.getAddress().equalsIgnoreCase(address)){
+              int type = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
+              if (type == BluetoothDevice.PAIRING_VARIANT_PIN) {
+                bluetoothDevice.setPin(pin.getBytes());
+                abortBroadcast();
+              }
+            }
+          }
+        }
+      };
+      IntentFilter intentFilter = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
+      intentFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+      cordova.getActivity().registerReceiver(mPairingRequestReceiver, intentFilter);
+      addProperty(returnObj, keyStatus, "pinSet");
+      callbackContext.success(returnObj);
+    } catch (Exception e) {
+      Log.d("BLE","exception " + e.getMessage());
+      addProperty(returnObj, keyError, "setPin");
+      addProperty(returnObj, keyMessage, "Failed to set pin");
+      callbackContext.error(returnObj);
+    }
+    return;
+
+  }
+
   @Override
   public void onDestroy() {
     super.onDestroy();
@@ -2776,6 +2839,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
     if (isBondReceiverRegistered) {
       cordova.getActivity().unregisterReceiver(mBondReceiver);
+    }
+    if(mPairingRequestReceiver!=null){
+      cordova.getActivity().unregisterReceiver(mPairingRequestReceiver);
     }
   }
 
@@ -2888,6 +2954,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
       }
     }
   };
+  
+  private BroadcastReceiver mPairingRequestReceiver;
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -3901,6 +3969,12 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     return permissionsObject;
+  }
+
+  private String getPin(JSONObject obj) {
+    //Get the pin string from arguments
+    String pin = obj.optString(keyPin, null);
+    return pin;
   }
 
   //Bluetooth callback for connecting, discovering, reading and writing
