@@ -1,3 +1,6 @@
+## 6.2.0 - 2020-12-23
+- Add #setPin() method for Android
+
 ## 6.1.1 - 2020-12-04
 - Add ACCESS_BACKGROUND_LOCATION permission to fix issue with Android target SDK 29
 
