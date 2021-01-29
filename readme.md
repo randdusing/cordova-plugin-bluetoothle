@@ -1,12 +1,103 @@
 # Cordova Bluetooth LE Plugin
 This plugin allows you to interact with Bluetooth LE devices on Android, iOS, and Windows.
 
+## Table of contents
+
+- [Requirements](#requirements)
+- [Limitations / Issues](#limitations--issues)
+- [Upgrade 2.x to 3.x](#upgrade-2x-to-3x)
+- [Upgrade 3.x to 4.x](#upgrade-3x-to-4x)
+- [To Do](#to-do)
+- [Using AngularJS](#using-angularjs)
+- [Installation](#installation)
+- [Debugging](#debugging)
+- [Installation Quirks (Android)](#installation-quirks-android)
+- [Background Modes (iOS)](#background-modes-ios)
+- [Usage Description (iOS)](#usage-description-ios)
+- [Discovery Quirks (iOS vs Android)](#discovery-quirks-ios-vs-android)
+- [Queuing (Android)](#queuing-android)
+- [UUIDs](#uuids)
+- [Advertisement Data / MAC Address](#advertisement-data--mac-address)
+- [Emulator](#emulator)
+- [Methods](#methods)
+- [Errors](#errors)
+- [Permissions (Android)](#permissions-android)
+- [Properties](#properties)
+- [Central Life Cycle](#central-life-cycle)
+  - [initialize](#initialize)
+  - [enable](#enable)
+  - [disable](#disable)
+  - [getAdapterInfo](#getadapterinfo)
+  - [startScan](#startscan)
+  - [stopScan](#stopscan)
+  - [retrieveConnected](#retrieveconnected)
+  - [bond](#bond)
+  - [unbond](#unbond)
+  - [connect](#connect)
+  - [reconnect](#reconnect)
+  - [disconnect](#disconnect)
+  - [close](#close)
+  - [discover](#discover)
+  - [services](#services)
+  - [characteristics](#characteristics)
+  - [descriptors](#descriptors)
+  - [read](#read)
+  - [subscribe](#subscribe)
+  - [unsubscribe](#unsubscribe)
+  - [write](#write)
+  - [writeQ](#writeq)
+  - [readDescriptor](#readdescriptor)
+  - [writeDescriptor](#writedescriptor)
+  - [rssi](#rssi)
+  - [mtu](#mtu)
+  - [requestConnectionPriority](#requestconnectionpriority)
+  - [isInitialized](#isinitialized)
+  - [isEnabled](#isenabled)
+  - [isScanning](#isscanning)
+  - [isBonded](#isbonded)
+  - [wasConnected](#wasconnected)
+  - [isConnected](#isconnected)
+  - [isDiscovered](#isdiscovered)
+  - [hasPermission](#haspermission)
+  - [requestPermission](#requestpermission)
+  - [isLocationEnabled](#islocationenabled)
+  - [requestLocation](#requestlocation)
+  - [setPin](#setPin)
+- [Peripheral Life Cycle](#peripheral-life-cycle)
+  - [Initilization](#initilization)
+  - [Notifications](#notifications)
+  - [Descriptors](#descriptors)
+  - [initializePeripheral](#initializeperipheral)
+  - [addService](#addservice)
+  - [removeService](#removeservice)
+  - [removeAllServices](#removeallservices)
+  - [startAdvertising](#startadvertising)
+  - [stopAdvertising](#stopadvertising)
+  - [isAdvertising](#isadvertising)
+  - [respond](#respond)
+  - [notify](#notify)
+  - [encodedStringToBytes](#encodedstringtobytes)
+  - [bytesToEncodedString](#bytestoencodedstring)
+  - [stringToBytes](#stringtobytes)
+  - [bytesToString](#bytestostring)
+- [Example](#example)
+- [Data Parsing Example](#data-parsing-example)
+- [Sample: Discover and interact with Bluetooth LE devices](#sample-discover-and-interact-with-bluetooth-le-devices)
+- [Initialize the Bluetooth adapter](#initialize-the-bluetooth-adapter)
+- [Scan for devices](#scan-for-devices)
+- [Connect to a device](#connect-to-a-device)
+- [Get device services](#get-device-services)
+  - [Get services on an Android device](#get-services-on-an-android-device)
+  - [Get services on a Windows device](#get-services-on-a-windows-device)
+- [Show services and characteristics in an app page](#show-services-and-characteristics-in-an-app-page)
+- [More information](#more-information)
+- [License](#license)
 
 ## Requirements ##
 
 * Cordova 5.0.0 or higher
 * Android 4.3 or higher, Android Cordova library 5.0.0 or higher, target Android API 23 or higher
-* iOS 7 or higher
+* iOS 10 or higher
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
 * Windows 10 UWP
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
@@ -155,6 +246,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.stopAdvertising](#stopadvertising)
 * [bluetoothle.respond](#respond)
 * [bluetoothle.notify](#notify)
+* [bluetoothle.setPin](#setPin) (Android)
 * [bluetoothle.encodedStringToBytes](#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString](#bytestoencodedstring)
 * [bluetoothle.stringToBytes](#stringtobytes)
@@ -196,6 +288,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * isNotConnected - Device isn't connected (Don't call discover or any read/write operations)
 * isDisconnected - Device is disconnected (Don't call disconnect)
 * isBonded - Operation is unsupported. (Is the device Android?)
+* setPin - Operation is unsupported. (Is the device Android?)
 
 For example:
 ```javascript
@@ -524,7 +617,7 @@ bluetoothle.connect(connectSuccess, connectError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * autoConnect = Automatically connect as soon as the remote device becomes available (Android)
-
+* transport = Mode of transport - Auto = 0, Prefer BR/EDR = 1, Prefer LE = 2, (Android API 23+)
 ```javascript
 {
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
@@ -1191,11 +1284,12 @@ var string = bluetoothle.bytesToString(bytes); //This should equal Write Hello W
 
 
 ### writeQ ###
-Write Quick / Queue, use this method to quickly execute write without response commands when writing more than 20 bytes at a time. The data will automatically be split up into 20 bytes packets. On iOS, these packets are written immediately since iOS uses queues. You probably won't see much of a performance increase using writeQ. On Android, a queue isn't used internally. Instead another call shouldn't be made until onCharacteristicWrite is called. This could be done at the Javascript layer, but the Javascript to plugin "bridge" must be crossed twice, which leads to some significant slow downs when milliseconds make a difference. For even better write throughput, use requestConnectionPriority('high') as well. Note, no callback will occur on write without response on iOS.
+Write Quick / Queue, use this method to quickly execute write without response commands when writing more than 20 bytes at a time. The data will automatically be split up into 20 bytes packets by default or you can increase that by setting `chunkSize`. On iOS, these packets are written immediately since iOS uses queues. You probably won't see much of a performance increase using writeQ unless you use `type="noResponse"` and set `chunkSize` higher than 20. On Android, a queue isn't used internally. Instead another call shouldn't be made until onCharacteristicWrite is called. This could be done at the Javascript layer, but the Javascript to plugin "bridge" must be crossed twice, which leads to some significant slow downs when milliseconds make a difference. For even better write throughput, use requestConnectionPriority('high') and mtu(SAME_VALUE_AS_CHUNK_SIZE_PARAM) as well.
 
 Warnings
 * This is experimental. Test heavily before using in any production code.
-* iOS won't see much performance gain, but Android should.
+* To see a performance gain you should use this in combination with requestConnectionPriority('high') and mtu(`MTU_VALUE`) and then calling this method with `type="noResponse"` and set `chunkSize` to `MTU_VALUE`.
+* Only supported on iOS11+.
 * Only supports one call at a time. Don't execute back to back, use on multiple devices, or multiple characteristics.
 
 ```javascript
@@ -1203,7 +1297,12 @@ bluetoothle.writeQ(writeSuccess, writeError, params);
 ```
 
 ##### Params #####
-See write() above.
+* address = The address/identifier provided by the scan's return object
+* service = The service's UUID
+* characteristic = The characteristic's UUID
+* value = Base64 encoded string
+* type = Set to "noResponse" to enable write without response, all other values will write normally.
+* chunkSize = Define the size of packets. This should be according to MTU value
 
 ##### Success #####
 See write() above.
@@ -1463,7 +1562,32 @@ bluetoothle.isBonded(isBondedSuccess, isBondedError, params);
 }
 ```
 
+### setPin ###
+Set PIN if required by the pairing process. Android support only.
 
+```javascript
+bluetoothle.setPin(success, error, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+* pin = Pairing PIN code
+
+```javascript
+{
+  "address": "5A:94:4B:38:B3:FD",
+  "pin": "1234"
+}
+```
+
+##### Success #####
+* status => string
+
+```javascript
+{
+  "status": "pinSet",
+}
+```
 
 ### wasConnected ###
 Determine whether the device was connected, or error if not initialized.
@@ -1916,7 +2040,7 @@ bluetoothle.isAdvertising(success, error);
 
 
 ### respond ###
-Respond to a read or write request
+Respond to a read or write request. On Android, a device address is required
 
 ```javascript
 bluetoothle.respond(success, error, params);
@@ -1948,7 +2072,7 @@ var params = {
 
 
 ### notify ###
-Update a value for a subscription. Currently all subscribed devices will receive update. Device specific updates will be added in the future. If ```sent``` equals false in the return value, you must wait for the ```peripheralManagerIsReadyToUpdateSubscribers``` event before sending more updates.
+Update a value for a subscription. Currently all subscribed devices will receive updates on iOS. Device specific updates will be added in the future. On Android, a device address is required. If ```sent``` equals false in the return value, you must wait for the ```peripheralManagerIsReadyToUpdateSubscribers``` event before sending more updates.
 
 ```javascript
 bluetoothle.notify(success, error, params);

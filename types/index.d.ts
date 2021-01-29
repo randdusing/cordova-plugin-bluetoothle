@@ -103,13 +103,13 @@ declare namespace BluetoothlePlugin {
          * Connect to a Bluetooth LE device
          * @param connectSuccess The success callback that is passed with device object
          * @param connectError   The callback that will be triggered when the connect operation fails
-         * @param params         The address/identifier
          *
+         * @param params         connection params
          */
         connect(
             connectSuccess: (status: DeviceInfo) => void,
             connectError: (error: Error) => void,
-            params: { address: string, autoConnect?: boolean }): void;
+            params: ConnectionParams): void;
 
         /**
          * Reconnect to a previously connected Bluetooth device
@@ -265,7 +265,7 @@ declare namespace BluetoothlePlugin {
         writeQ(
             writeSuccess: (result: OperationResult) => void,
             writeError: (error: Error) => void,
-            params: WriteCharacteristicParams): void;
+            params: WriteQCharacteristicParams): void;
 
         /**
          * Read a particular characterist's descriptor
@@ -511,7 +511,7 @@ declare namespace BluetoothlePlugin {
          *
          */
         isAdvertising(
-            success: (result: { status: boolean }) => void,
+            success: (result: { isAdvertising: boolean }) => void,
             error: (error: Error) => void): void;
 
         /**
@@ -539,6 +539,18 @@ declare namespace BluetoothlePlugin {
             success: (result: { status: Status, sent: boolean }) => void,
             error: (error: Error) => void,
             params: NotifyParams): void;
+
+        /**
+         * Set pin if required to pair with a device. Android support only.
+         * @param success   The success callback that is passed with device's status and sent value
+         * @param error     The callback that will be triggered when the bond operation fails
+         * @param params    The set pin params
+         *
+         */
+        setPin(
+            success: (result: { status:Status }) => void,
+            error: (error: Error) => void,
+            params: { address: string, pin:string }): void;
 
         /**
          * Helper function to convert a base64 encoded string from a characteristic or descriptor value into a uint8Array object
@@ -577,7 +589,7 @@ declare namespace BluetoothlePlugin {
         | "rssi" | "mtu" | "connectionPriorityRequested" |"enabled" | "disabled"
         | "readRequested" | "writeRequested" | "mtuChanged" | "notifyReady" | "notifySent"
         | "serviceAdded" | "serviceRemoved" | "allServicesRemoved" | "advertisingStarted"
-        | "advertisingStopped" | "responded" | "notified";
+        | "advertisingStopped" | "responded" | "notified" | "notificationSent";
 
     /** Avaialable connection priorities */
     type ConnectionPriority = "low" | "balanced" | "high";
@@ -614,7 +626,39 @@ declare namespace BluetoothlePlugin {
         /** Defaults to One Advertisement. Available from API23 (Android) */
         matchNum?: BluetoothMatchNum,
         /** Defaults to All Matches. Available from API21 / API 23. (Android) */
-        callbackType?: BluetoothCallbackType
+        callbackType?: BluetoothCallbackType,
+        /** True/false to show only connectable devices, rather than all devices ever seen, defaults to false (Windows)*/
+        isConnectable?: boolean
+    }
+
+    interface ConnectionParams{
+        address: string;
+        autoConnect?: boolean;
+        /**
+         * Transport mode. Available from API 23 (Android).
+         * If none is specified the default behavior is TRANSPORT_AUTO
+         *
+         * Note: On Android 10, TRANSPORT_AUTO can lead to connection errors with Status code 133.
+         * In this case TRANSPORT_LE can be used.
+         */
+        transport?:  AndroidGattTransportMode;
+    }
+
+    enum AndroidGattTransportMode{
+        /**
+         * No preference of physical transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_AUTO = 0,
+
+        /**
+         * Prefer BR/EDR transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_BREDR = 1,
+
+        /**
+         * Prefer LE transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_LE = 2,
     }
 
     interface NotifyParams {
@@ -655,6 +699,11 @@ declare namespace BluetoothlePlugin {
         value: string,
         /* Set to "noResponse" to enable write without response, all other values will write normally. */
         type?: string
+    }
+
+    interface WriteQCharacteristicParams extends WriteCharacteristicParams {
+        /* Define the size of packets. This should be according to MTU value */
+        chunkSize?: number
     }
 
     interface WriteDescriptorParams extends DescriptorParams {
@@ -812,7 +861,7 @@ declare namespace BluetoothlePlugin {
             writeEncryptionRequired?: boolean
         }
     }
-    
+
     interface Descriptor {
         uuid: string;
     }
