@@ -667,7 +667,9 @@ declare namespace BluetoothlePlugin {
         /** Characteristic's UUID */
         characteristic: string,
         /** Base64 encoded string, number or string */
-        value: string
+        value: string,
+        /** Android only: address of the device the notification should be sent to. */
+        address?: string
     }
 
     interface RespondParams {

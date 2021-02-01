@@ -1,3 +1,4 @@
+
 # Cordova Bluetooth LE Plugin
 This plugin allows you to interact with Bluetooth LE devices on Android, iOS, and Windows.
 
@@ -2084,6 +2085,7 @@ var params = {
   "service":"1234",
   "characteristic":"ABCD",
   "value":"U3Vic2NyaWJlIEhlbGxvIFdvcmxk" //Subscribe Hello World
+  // "address": "5163F1E0-5341-AF9B-9F67-613E15EC83F7" // only on android
 };
 ```
 
