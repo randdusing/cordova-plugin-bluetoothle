@@ -1,3 +1,6 @@
+## 6.2.1 - 2021-02-05
+- Update types for NotifyParams
+
 ## 6.2.0 - 2020-12-23
 - Add #setPin() method for Android
 
