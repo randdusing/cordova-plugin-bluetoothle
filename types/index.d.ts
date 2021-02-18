@@ -435,6 +435,19 @@ declare namespace BluetoothlePlugin {
             requestLocationError: (error: Error) => void): void;
 
         /**
+         * Retrieve paired Bluetooth LE devices based on their address. Wraps the iOS method CBCentralManager.retrievePeripheralsWithIdentifiers.
+         * iOS support only. Will return an error if used on Android.
+         * @param success The success callback that is passed an array of device objects
+         * @param error   The callback that will be triggered when the operation fails
+         * @param params  An array of service IDs to filter the retrieval by. If no service IDs are specified, no devices will be returned.
+         *
+         */
+        retrievePeripheralsByAddress(
+            success: (devices: DeviceInfo[]) => void,
+            error: (error: Error) => void,
+            params?: { addresses?: string[] }): void;
+
+        /**
          * Initialize Bluetooth on the device. Must be called before anything else.
          * Callback will continuously be used whenever Bluetooth is enabled or disabled.
          * @param success   The success callback that is passed with InitializeResult object
