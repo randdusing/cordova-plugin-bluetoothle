@@ -292,6 +292,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * isDisconnected - Device is disconnected (Don't call disconnect)
 * isBonded - Operation is unsupported. (Is the device Android?)
 * setPin - Operation is unsupported. (Is the device Android?)
+* retrievePeripheralsByAddress - Operation is unsupported (Is the device iOS?)
 
 For example:
 ```javascript
