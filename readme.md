@@ -240,6 +240,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.requestPermission](#requestpermission) (Android 6+)
 * [bluetoothle.isLocationEnabled](#islocationenabled) (Android 6+)
 * [bluetoothle.requestLocation](#requestlocation) (Android 6+)
+* [bluetoothle.retrievePeripheralsByAddress](#retrievePeripheralsByAddress) (iOS)
 * [bluetoothle.initializePeripheral](#initializeperipheral)
 * [bluetoothle.addService](#addservice)
 * [bluetoothle.removeService](#removeservice)
