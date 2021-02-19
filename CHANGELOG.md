@@ -1,3 +1,6 @@
+## 6.3.0 - 2021-02-19
+- Add #retrievePeripheralsByAddress() for iOS and OSX
+
 ## 6.2.2 - 2021-02-19
 - Remove ACCESS_BACKGROUND_LOCATION permission. Revert changes from v6.1.1. This should be added manually if background permissions are actually needed
 
