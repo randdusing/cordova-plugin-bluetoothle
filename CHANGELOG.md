@@ -1,3 +1,6 @@
+## 6.2.2 - 2021-02-19
+- Remove ACCESS_BACKGROUND_LOCATION permission. Revert changes from v6.1.1. This should be added manually if background permissions are actually needed
+
 ## 6.2.1 - 2021-02-05
 - Update types for NotifyParams
 
