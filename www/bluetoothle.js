@@ -114,6 +114,9 @@ var bluetoothle = {
   requestLocation: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "requestLocation", []);
   },
+  retrievePeripheralsByAddress: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "retrievePeripheralsByAddress", [params])
+  },
   initializePeripheral: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "initializePeripheral", [params]);
   },

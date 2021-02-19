@@ -213,6 +213,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String errorDescriptor = "descriptor";
   private final String errorRequestConnectionPriority = "requestConnectPriority";
   private final String errorMtu = "mtu";
+  private final String errorRetrievePeripheralsByAddress = "retrievePeripheralsByAddress";
 
   //Error Messages
   //Initialization
@@ -424,6 +425,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
       notifyAction(args, callbackContext);
     } else if ("setPin".equals(action)) {
       setPinAction(args, callbackContext);
+    } else if ("retrievePeripheralsByAddress".equals(action)) {
+      JSONObject returnObj = new JSONObject();
+      addProperty(returnObj, keyError, errorRetrievePeripheralsByAddress);
+      addProperty(returnObj, keyMessage, logOperationUnsupported);
+      callbackContext.error(returnObj);
     } else {
       return false;
     }

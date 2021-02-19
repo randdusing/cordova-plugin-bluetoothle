@@ -64,6 +64,7 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [isLocationEnabled](#islocationenabled)
   - [requestLocation](#requestlocation)
   - [setPin](#setPin)
+  - [retrievePeripheralsByAddress](#retrievePeripheralsByAddress)
 - [Peripheral Life Cycle](#peripheral-life-cycle)
   - [Initilization](#initilization)
   - [Notifications](#notifications)
@@ -239,6 +240,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.requestPermission](#requestpermission) (Android 6+)
 * [bluetoothle.isLocationEnabled](#islocationenabled) (Android 6+)
 * [bluetoothle.requestLocation](#requestlocation) (Android 6+)
+* [bluetoothle.retrievePeripheralsByAddress](#retrievePeripheralsByAddress) (iOS)
 * [bluetoothle.initializePeripheral](#initializeperipheral)
 * [bluetoothle.addService](#addservice)
 * [bluetoothle.removeService](#removeservice)
@@ -290,6 +292,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * isDisconnected - Device is disconnected (Don't call disconnect)
 * isBonded - Operation is unsupported. (Is the device Android?)
 * setPin - Operation is unsupported. (Is the device Android?)
+* retrievePeripheralsByAddress - Operation is unsupported (Is the device iOS?)
 
 For example:
 ```javascript
@@ -1745,6 +1748,38 @@ bluetoothle.requestLocation(requestLocationSuccess, requestLocationError);
 {
   "requestLocation": true
 }
+```
+
+
+
+### retrievePeripheralsByAddress ###
+Retrieve paired Bluetooth LE devices based on their address. Wraps the iOS method [CBCentralManager.retrievePeripheralsWithIdentifiers](https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1519127-retrieveperipheralswithidentifie?language=objc). iOS support only. Will return an error if used on Android.
+
+```javascript
+bluetoothle.retrievePeripheralsByAddress(success, error, params);
+```
+
+##### Params #####
+* addresses = An arrays of addresses/identifiers to lookup devices by. If no addresses are specified, no devices will be returned
+
+```javascript
+{
+  "addresses": ["ECC037FD-72AE-AFC5-9213-CA785B3B5C63"]
+}
+```
+
+##### Success #####
+Returns an array of device objects:
+* name = the device's display name
+* address = the device's address / identifier for connecting to the object
+
+```javascript
+[
+  {
+    "name": "Polar H7 3B321015",
+    "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+  }
+]
 ```
 
 
