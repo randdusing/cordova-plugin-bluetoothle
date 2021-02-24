@@ -1,4 +1,4 @@
-declare namespace BluetoothlePlugin {
+export namespace BluetoothlePlugin {
     interface Bluetoothle {
         /**
          * Initialize Bluetooth on the device
