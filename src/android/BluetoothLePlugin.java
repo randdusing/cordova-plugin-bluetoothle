@@ -1239,7 +1239,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
     for (BluetoothDevice device : devices) {
-      if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE) {
+      if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE && device.getType() != BluetoothDevice.DEVICE_TYPE_DUAL) {
         continue;
       }
 
