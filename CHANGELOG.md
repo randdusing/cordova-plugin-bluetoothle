@@ -1,3 +1,6 @@
+## 6.3.1 - 2021-04-07
+- Fix #retrieveConnected() for Android, Dual Type devices are no longer filtered out. [\#559](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/559)
+
 ## 6.3.0 - 2021-02-19
 - Add #retrievePeripheralsByAddress() for iOS and OSX
 
