@@ -1878,6 +1878,15 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return false;
     }
 
+    result = bluetoothGatt.setCharacteristicNotification(characteristic, true);
+
+    if (!result) {
+      addProperty(returnObj, keyError, errorSubscription);
+      addProperty(returnObj, keyMessage, logSubscribeFail);
+      callbackContext.error(returnObj);
+      return false;
+    }
+
     AddCallback(characteristicUuid, connection, operationSubscribe, callbackContext);
 
     //Write the descriptor value
@@ -1967,6 +1976,15 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (!result) {
       addProperty(returnObj, keyError, errorWriteDescriptor);
       addProperty(returnObj, keyMessage, logWriteDescriptorValueNotSet);
+      callbackContext.error(returnObj);
+      return false;
+    }
+
+    result = bluetoothGatt.setCharacteristicNotification(characteristic, false);
+
+    if (!result) {
+      addProperty(returnObj, keyError, errorSubscription);
+      addProperty(returnObj, keyMessage, logSubscribeFail);
       callbackContext.error(returnObj);
       return false;
     }
