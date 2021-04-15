@@ -98,7 +98,7 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 ## Requirements ##
 
 * Cordova 5.0.0 or higher
-* Android 4.3 or higher, Android Cordova library 5.0.0 or higher, target Android API 23 or higher
+* Android Cordova library 5.0.0 or higher, target Android API 23/Platform 6.0 or higher (support for older Android versions should use versions 2.4.0 or below)
 * iOS 10 or higher
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
 * Windows 10 UWP
