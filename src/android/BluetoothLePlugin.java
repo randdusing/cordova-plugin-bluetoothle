@@ -1844,7 +1844,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     addCharacteristic(returnObj, characteristic);
 
-    CallbackContext checkExisting = GetCallback(characteristicUuid, connection, operationSubscribe);
+    SequentialCallbackContext checkExisting = GetSequentialCallbackContext(characteristicUuid, connection, operationSubscribe);
     if (checkExisting != null) {
       addProperty(returnObj, keyError, errorSubscription);
       addProperty(returnObj, keyMessage, logSubscribeAlready);
@@ -1878,7 +1878,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return false;
     }
 
-    AddCallback(characteristicUuid, connection, operationSubscribe, callbackContext);
+    AddSequentialCallbackContext(characteristicUuid, connection, operationSubscribe, callbackContext);
 
     //Write the descriptor value
     result = bluetoothGatt.writeDescriptor(descriptor);
@@ -1952,7 +1952,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     addCharacteristic(returnObj, characteristic);
 
-    CallbackContext checkExisting = GetCallback(characteristicUuid, connection, operationSubscribe);
+    SequentialCallbackContext checkExisting = GetSequentialCallbackContext(characteristicUuid, connection, operationSubscribe);
     if (checkExisting == null) {
       addProperty(returnObj, keyError, errorSubscription);
       addProperty(returnObj, keyMessage, logUnsubscribeAlready);
@@ -3283,6 +3283,23 @@ public class BluetoothLePlugin extends CordovaPlugin {
     return (CallbackContext) characteristicCallbacks.get(operationType);
   }
 
+  private void AddSequentialCallbackContext(UUID characteristicUuid, HashMap<Object, Object> connection, String operationType, CallbackContext callbackContext) {
+    HashMap<Object, Object> characteristicCallbacks = EnsureCallback(characteristicUuid, connection);
+
+    characteristicCallbacks.put(operationType, new SequentialCallbackContext(callbackContext));
+  }
+
+  private SequentialCallbackContext GetSequentialCallbackContext(UUID characteristicUuid, HashMap<Object, Object> connection, String operationType) {
+    HashMap<Object, Object> characteristicCallbacks = (HashMap<Object, Object>) connection.get(characteristicUuid);
+
+    if (characteristicCallbacks == null) {
+      return null;
+    }
+
+    //This may return null
+    return (SequentialCallbackContext) characteristicCallbacks.get(operationType);
+  }
+
   private CallbackContext[] GetCallbacks(HashMap<Object, Object> connection) {
     ArrayList<CallbackContext> callbacks = new ArrayList<CallbackContext>();
 
@@ -3324,7 +3341,12 @@ public class BluetoothLePlugin extends CordovaPlugin {
         continue;
       }
 
-      CallbackContext callback = (CallbackContext) lower.get(key);
+      CallbackContext callback;
+      if (key.equals(operationSubscribe)) {
+        callback = ((SequentialCallbackContext) lower.get(key)).getContext();
+      } else {
+        callback = (CallbackContext) lower.get(key);
+      }
 
       if (callback == null) {
         continue;
@@ -4175,7 +4197,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       UUID characteristicUuid = characteristic.getUuid();
 
-      CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationSubscribe);
+      SequentialCallbackContext callbackContext = GetSequentialCallbackContext(characteristicUuid, connection, operationSubscribe);
 
       //If no callback, just return
       if (callbackContext == null) {
@@ -4192,9 +4214,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addPropertyBytes(returnObj, keyValue, characteristic.getValue());
 
       //Return the characteristic value
-      PluginResult result = new PluginResult(PluginResult.Status.OK, returnObj);
-      result.setKeepCallback(true);
-      callbackContext.sendPluginResult(result);
+      callbackContext.sendSequentialResult(returnObj);
     }
 
     @Override
@@ -4365,7 +4385,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
           callbackContext.success(returnObj);
         } else {
-          CallbackContext callbackContext = GetCallback(characteristicUuid, connection, operationSubscribe);
+          SequentialCallbackContext callbackContext = GetSequentialCallbackContext(characteristicUuid, connection, operationSubscribe);
 
           //If no callback, just return
           if (callbackContext == null) {
@@ -4376,7 +4396,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
           PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
           pluginResult.setKeepCallback(true);
-          callbackContext.sendPluginResult(pluginResult);
+          callbackContext.getContext().sendPluginResult(pluginResult);
         }
 
         return;
