@@ -592,6 +592,20 @@ declare namespace BluetoothlePlugin {
          * @return          Encoded string
          */
         bytesToString(value: Uint8Array): string;
+
+        /**
+         * Helper function to convert string to base64.
+         * @param  value    string
+         * @return          base64 string
+         */
+        encodeUnicode(value: string): string;
+
+        /**
+         * Helper function to convert bytes to a string.
+         * @param  value    base64 string
+         * @return          string
+         */
+        decodeUnicode(value: string): string;
     }
 
     /* Available status of device */
