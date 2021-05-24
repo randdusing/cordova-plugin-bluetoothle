@@ -2256,6 +2256,9 @@ NSString *const operationWrite = @"write";
   if (callback == nil) {
     return;
   }
+  
+  //Reset writeQIsRunning flag since we have no way of knowing if one was interupted
+  writeQIsRunning = false;
 
   //Return disconnected connection information
   NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
