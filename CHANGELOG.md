@@ -1,3 +1,7 @@
+## 6.4.0 - 2021-06-08
+- Fix issue with writeQ when peripheral disconnects [\#690](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/690)
+- Add JavaScript helper methods for encoding and decoding Unicode strings
+
 ## 6.3.1 - 2021-04-07
 - Fix #retrieveConnected() for Android, Dual Type devices are no longer filtered out. [\#559](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/559)
 
