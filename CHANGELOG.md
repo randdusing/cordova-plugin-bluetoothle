@@ -1,3 +1,6 @@
+## 6.4.1 - 2021-06-08
+- Ensure Android subscriptions are returned in order [\#419](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/419)
+
 ## 6.4.0 - 2021-06-08
 - Fix issue with writeQ when peripheral disconnects [\#690](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/690)
 - Add JavaScript helper methods for encoding and decoding Unicode strings
