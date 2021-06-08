@@ -82,6 +82,8 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [bytesToEncodedString](#bytestoencodedstring)
   - [stringToBytes](#stringtobytes)
   - [bytesToString](#bytestostring)
+  - [encodeUnicode](#encodeunicode)
+  - [decodeUnicode](#decodeunicode)
 - [Example](#example)
 - [Data Parsing Example](#data-parsing-example)
 - [Sample: Discover and interact with Bluetooth LE devices](#sample-discover-and-interact-with-bluetooth-le-devices)
@@ -254,6 +256,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.bytesToEncodedString](#bytestoencodedstring)
 * [bluetoothle.stringToBytes](#stringtobytes)
 * [bluetoothle.bytesToString](#bytestostring)
+* [bluetoothle.encodeUnicode](#encodeunicode)
+* [bluetoothle.decodeUnicode](#decodeunicode)
 
 
 
@@ -1271,6 +1275,8 @@ To write without response, set type to "noResponse". Any other value will defaul
 var string = "Write Hello World";
 var bytes = bluetoothle.stringToBytes(string);
 var encodedString = bluetoothle.bytesToEncodedString(bytes);
+// if your code includes special characters you should use the encodeUnicode helper function
+var encodedUnicodeString = bluetoothle.encodeUnicode(string);
 
 //Note, this example doesn't actually work since it's read only characteristic
 {"value":"V3JpdGUgSGVsbG8gV29ybGQ=","service":"180F","characteristic":"2A19","type":"noResponse","address":"ABC123"}
@@ -1283,6 +1289,9 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.encodedString
 var returnObj = {"status":"written","service":"180F","characteristic":"2A19","value":"V3JpdGUgSGVsbG8gV29ybGQ=","address":"ABC123"}
 var bytes = bluetoothle.encodedStringToBytes(returnObj.value);
 var string = bluetoothle.bytesToString(bytes); //This should equal Write Hello World
+
+// if your code includes special characters you should use the decodeUnicode helper function
+var string = bluetoothle.decodeUnicode(returnObj.value);
 ```
 
 
@@ -2241,6 +2250,20 @@ if (obj.status == "subscribedResult")
       }
   }
 }
+```
+
+### encodeUnicode ###
+Helper function to convert unicode string to base64 encoded string. This function can be used to encode special characters such as emojis.
+
+```javascript
+bluetoothle.encodeUnicode(string);
+```
+
+### decodeUnicode ###
+Helper function to convert a base64 encoded string to unicode string. This function also decodes special characters such as emojis.
+
+```javascript
+bluetoothle.decodeUnicode(string);
 ```
 
 ## Sample: Discover and interact with Bluetooth LE devices ##
