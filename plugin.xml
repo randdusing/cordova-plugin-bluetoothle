@@ -20,6 +20,7 @@
     </config-file>
     <source-file src="src/android/BluetoothLePlugin.java" target-dir="src/com/randdusing/bluetoothle" />
     <source-file src="src/android/Operation.java" target-dir="src/com/randdusing/bluetoothle" />
+    <source-file src="src/android/SequentialCallbackContext.java" target-dir="src/com/randdusing/bluetoothle" />
     <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-permission android:name="android.permission.BLUETOOTH"/>
       <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
