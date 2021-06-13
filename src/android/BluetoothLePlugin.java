@@ -747,10 +747,14 @@ public class BluetoothLePlugin extends CordovaPlugin {
       dataBuilder.addManufacturerData(manufacturerId, manufacturerSpecificData);
     }
 
-    //dataBuilder.addServiceData();
     UUID uuid = getUUID(obj.optString("service", null));
     if (uuid != null) {
-      dataBuilder.addServiceUuid(new ParcelUuid(uuid));
+      byte[] serviceData = getPropertyBytes(obj, "serviceData");
+      if (serviceData != null) {
+        dataBuilder.addServiceData(new ParcelUuid(uuid), serviceData);
+      } else {
+        dataBuilder.addServiceUuid(new ParcelUuid(uuid));
+      }
     }
 
     dataBuilder.setIncludeDeviceName(obj.optBoolean("includeDeviceName", true));
