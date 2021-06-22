@@ -1,3 +1,7 @@
+## 6.5.0 - 2021-06-21
+- Operations are queued per device connection rather than globally on Android
+- Use service data if available on Android
+
 ## 6.4.1 - 2021-06-08
 - Ensure Android subscriptions are returned in order [\#419](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/419)
 
