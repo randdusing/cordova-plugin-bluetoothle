@@ -625,7 +625,9 @@ declare namespace BluetoothlePlugin {
         /** The address/identifier provided by the scan's return object */
         address: string,
         /** The service's ID */
-        service: string
+        service: string,
+        /** When dealing with multiple services with the same UUID, this index will determine which service will be used */
+        serviceIndex?: number
     }
 
     interface InitPeripheralParams {
@@ -714,8 +716,10 @@ declare namespace BluetoothlePlugin {
     }
 
     interface DescriptorParams extends Params {
-        /** The characteristic's ID */
-        characteristic: string
+      /** The characteristic's ID */
+      characteristic: string;
+      /** When dealing with multiple chracteristics with the same UUID, this index will determine which chracteristic will be used */
+      characteristicIndex?: number;
     }
 
     interface OperationDescriptorParams  extends DescriptorParams {
@@ -917,8 +921,12 @@ declare namespace BluetoothlePlugin {
     interface OperationResult extends DeviceInfo {
         /** Characteristic UUID */
         characteristic: string,
+        /** When dealing with multiple chracteristics with the same UUID, this index will determine which characteristic it is */
+        characteristicIndex: number,
         /** Service's UUID */
         service: string,
+        /** When dealing with multiple services with the same UUID, this index will determine which service it is */
+        serviceIndex: number,
         /** Base64 encoded string of bytes */
         value: string
     }

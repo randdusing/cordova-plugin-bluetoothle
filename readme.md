@@ -1142,7 +1142,9 @@ bluetoothle.read(readSuccess, readError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
@@ -1180,7 +1182,9 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
@@ -1201,8 +1205,10 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 {
   "status": "subscribed",
   "characteristic": "2a37",
+  "characteristicIndex": 0,
   "name": "Polar H7 3B321015",
   "service": "180d",
+  "serviceIndex": 0,
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
 }
 
@@ -1210,8 +1216,10 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
   "status": "subscribedResult",
   "value": "U3Vic2NyaWJlIEhlbGxvIFdvcmxk", //Subscribe Hello World
   "characteristic": "2a37",
+  "characteristicIndex": 0,
   "name": "Polar H7 3B321015",
   "service": "180d",
+  "serviceIndex": 0,
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
 }
 ```
@@ -1228,7 +1236,9 @@ bluetoothle.unsubscribe(unsubscribeSuccess, unsubscribeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
@@ -1265,7 +1275,9 @@ bluetoothle.write(writeSuccess, writeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 * value = Base64 encoded string
 * type = Set to "noResponse" to enable write without response, all other values will write normally.
 
@@ -1312,7 +1324,9 @@ bluetoothle.writeQ(writeSuccess, writeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 * value = Base64 encoded string
 * type = Set to "noResponse" to enable write without response, all other values will write normally.
 * chunkSize = Define the size of packets. This should be according to MTU value
