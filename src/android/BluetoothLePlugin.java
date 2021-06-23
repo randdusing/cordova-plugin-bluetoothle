@@ -3132,25 +3132,35 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private BluetoothGattService getService(BluetoothGatt bluetoothGatt, JSONObject obj) {
     UUID uuid = getUUID(obj.optString("service", null));
 
-    BluetoothGattService service = bluetoothGatt.getService(uuid);
-
-    if (service == null) {
-      return null;
+    int serviceIndex = obj.optInt("serviceIndex", 0);
+    int found = 0;
+    List<BluetoothGattService> services = bluetoothGatt.getServices();
+    for (BluetoothGattService service : services) {
+      if (service.getUuid().equals(uuid) && serviceIndex == found) {
+        return service;
+      } else if (service.getUuid().equals(uuid) && serviceIndex != found) {
+        found++;
+      }
     }
 
-    return service;
+    return null;
   }
 
   private BluetoothGattCharacteristic getCharacteristic(JSONObject obj, BluetoothGattService service) {
     UUID uuid = getUUID(obj.optString("characteristic", null));
 
-    BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuid);
-
-    if (characteristic == null) {
-      return null;
+    int characteristicIndex = obj.optInt("characteristicIndex", 0);
+    int found = 0;
+    List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+    for (BluetoothGattCharacteristic characteristic : characteristics) {
+      if (characteristic.getUuid().equals(uuid) && characteristicIndex == found) {
+        return characteristic;
+      } else if (characteristic.getUuid().equals(uuid) && characteristicIndex != found) {
+        found++;
+      }
     }
 
-    return characteristic;
+    return null;
   }
 
   private BluetoothGattDescriptor getDescriptor(JSONObject obj, BluetoothGattCharacteristic characteristic) {
@@ -4203,6 +4213,29 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
       addProperty(returnObj, keyStatus, statusSubscribedResult);
       addPropertyBytes(returnObj, keyValue, characteristic.getValue());
+
+      int serviceIndex = 0;
+      BluetoothGattService serviceFromCharacteristic = characteristic.getService();
+
+      for (BluetoothGattService service : gatt.getServices()) {
+        if (service.equals(serviceFromCharacteristic)) {
+          break;
+        } else if(service.getUuid().equals(serviceFromCharacteristic.getUuid())) {
+          serviceIndex++;
+        }
+      }
+
+      int characteristicIndex = 0;
+      for (BluetoothGattCharacteristic characteristicFromService : serviceFromCharacteristic.getCharacteristics()) {
+        if (characteristicFromService.equals(characteristic)) {
+          break;
+        } else if (characteristicFromService.getUuid().equals(characteristic.getUuid())) {
+          characteristicIndex++;
+        }
+      }
+
+      addProperty(returnObj, "serviceIndex", serviceIndex);
+      addProperty(returnObj, "characteristicIndex", characteristicIndex);
 
       //Return the characteristic value
       callbackContext.sendSequentialResult(returnObj);
