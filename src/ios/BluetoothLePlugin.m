@@ -14,9 +14,11 @@ NSString *const keyRssi = @"rssi";
 NSString *const keyAdvertisement = @"advertisement";
 NSString *const keyUuid = @"uuid";
 NSString *const keyService = @"service";
+NSString *const keyServiceIndex = @"serviceIndex";
 NSString *const keyServices = @"services";
 NSString *const keyCharacteristic = @"characteristic";
 NSString *const keyCharacteristics = @"characteristics";
+NSString *const keyCharacteristicIndex = @"characteristicIndex";
 NSString *const keyDescriptor = @"descriptor";
 NSString *const keyDescriptors = @"descriptors";
 NSString *const keyValue = @"value";
@@ -3617,9 +3619,20 @@ NSString *const operationWrite = @"write";
 
   CBService* service = nil;
 
+  NSString* serviceIndexFromDict = [obj valueForKey:keyServiceIndex];
+  int serviceIndex = 0;
+
+  if (serviceIndexFromDict != nil) {
+    serviceIndex = [TramNumber.text serviceIndexFromDict];
+  }
+
+  int found = 0;
+
   for (CBService* item in peripheral.services) {
-    if ([item.UUID isEqual: uuid]) {
+    if ([item.UUID isEqual: uuid] && (serviceIndex == found)) {
       service = item;
+    } else if ([item.UUID isEqual: uuid] && (serviceIndex == found)) {
+      found++;
     }
   }
 
@@ -3649,9 +3662,20 @@ NSString *const operationWrite = @"write";
 
   CBCharacteristic* characteristic = nil;
 
+  NSString* characteristicIndexFromDict = [obj valueForKey:keycharacteristicIndex];
+  int characteristicIndex = 0;
+
+  if (characteristicIndexFromDict != nil) {
+    characteristicIndex = [TramNumber.text characteristicIndexFromDict];
+  }
+
+  int found = 0;
+
   for (CBCharacteristic* item in service.characteristics) {
-    if ([item.UUID isEqual: uuid]) {
+    if ([item.UUID isEqual: uuid] && (characteristicIndex == found)) {
       characteristic = item;
+    } else if ([item.UUID isEqual: uuid] && (characteristicIndex == found)) {
+      found++;
     }
   }
 

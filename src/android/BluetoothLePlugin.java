@@ -3132,25 +3132,57 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private BluetoothGattService getService(BluetoothGatt bluetoothGatt, JSONObject obj) {
     UUID uuid = getUUID(obj.optString("service", null));
 
-    BluetoothGattService service = bluetoothGatt.getService(uuid);
+    Integer serviceIndex = obj.optInt("serviceIndex", null);
+    if (serviceIndex !== null) {
+      int found = 0;
+      List<BluetoothGattService> services = bluetoothGatt.getServices();
+      for (BluetoothGattService service : services) {
+        if (service.getUUID().equals(uuid) && serviceIndex == found) {
+          return service;
+        } else if (service.getUUID().equals(uuid) && serviceIndex != found) {
+          found++;
+        }
+      }
 
-    if (service == null) {
       return null;
-    }
+    
+    } else {
+      BluetoothGattService service = bluetoothGatt.getService(uuid);
 
-    return service;
+      if (service == null) {
+        return null;
+      }
+
+      return service;
+    }
   }
 
   private BluetoothGattCharacteristic getCharacteristic(JSONObject obj, BluetoothGattService service) {
     UUID uuid = getUUID(obj.optString("characteristic", null));
 
-    BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuid);
+    Integer characteristicIndex = obj.optInt("characteristicIndex", null);
+    if (characteristicIndex !== null) {
+      int found = 0;
+      List<BluetoothGattCharacteristic> characteristics = bluetoothGatt.getCharacteristics();
+      for (BluetoothGattCharacteristic characteristic : characteristics) {
+        if (characteristic.getUUID().equals(uuid) && characteristicIndex == found) {
+          return service;
+        } else if (characteristic.getUUID().equals(uuid) && characteristicIndex != found) {
+          found++;
+        }
+      }
 
-    if (characteristic == null) {
       return null;
-    }
+    
+    } else {
+      BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuid);
 
-    return characteristic;
+      if (characteristic == null) {
+        return null;
+      }
+
+      return characteristic;
+    }
   }
 
   private BluetoothGattDescriptor getDescriptor(JSONObject obj, BluetoothGattCharacteristic characteristic) {
