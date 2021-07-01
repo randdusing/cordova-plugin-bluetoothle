@@ -1205,8 +1205,10 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 {
   "status": "subscribed",
   "characteristic": "2a37",
+  "characteristicIndex": 0,
   "name": "Polar H7 3B321015",
   "service": "180d",
+  "serviceIndex": 0,
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
 }
 
@@ -1214,8 +1216,10 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
   "status": "subscribedResult",
   "value": "U3Vic2NyaWJlIEhlbGxvIFdvcmxk", //Subscribe Hello World
   "characteristic": "2a37",
+  "characteristicIndex": 0,
   "name": "Polar H7 3B321015",
   "service": "180d",
+  "serviceIndex": 0,
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
 }
 ```
