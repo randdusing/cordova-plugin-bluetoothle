@@ -1235,7 +1235,8 @@ bluetoothle.unsubscribe(unsubscribeSuccess, unsubscribeError, params);
 
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
-* service = The service's UUID* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
+* service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
 * characteristicIndex = When dealing with multiple chracteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
