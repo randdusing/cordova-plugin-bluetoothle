@@ -3132,57 +3132,35 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private BluetoothGattService getService(BluetoothGatt bluetoothGatt, JSONObject obj) {
     UUID uuid = getUUID(obj.optString("service", null));
 
-    Integer serviceIndex = obj.optInt("serviceIndex", null);
-    if (serviceIndex !== null) {
-      int found = 0;
-      List<BluetoothGattService> services = bluetoothGatt.getServices();
-      for (BluetoothGattService service : services) {
-        if (service.getUUID().equals(uuid) && serviceIndex == found) {
-          return service;
-        } else if (service.getUUID().equals(uuid) && serviceIndex != found) {
-          found++;
-        }
+    int serviceIndex = obj.optInt("serviceIndex", 0);
+    int found = 0;
+    List<BluetoothGattService> services = bluetoothGatt.getServices();
+    for (BluetoothGattService service : services) {
+      if (service.getUuid().equals(uuid) && serviceIndex == found) {
+        return service;
+      } else if (service.getUuid().equals(uuid) && serviceIndex != found) {
+        found++;
       }
-
-      return null;
-    
-    } else {
-      BluetoothGattService service = bluetoothGatt.getService(uuid);
-
-      if (service == null) {
-        return null;
-      }
-
-      return service;
     }
+
+    return null;
   }
 
   private BluetoothGattCharacteristic getCharacteristic(JSONObject obj, BluetoothGattService service) {
     UUID uuid = getUUID(obj.optString("characteristic", null));
 
-    Integer characteristicIndex = obj.optInt("characteristicIndex", null);
-    if (characteristicIndex !== null) {
-      int found = 0;
-      List<BluetoothGattCharacteristic> characteristics = bluetoothGatt.getCharacteristics();
-      for (BluetoothGattCharacteristic characteristic : characteristics) {
-        if (characteristic.getUUID().equals(uuid) && characteristicIndex == found) {
-          return service;
-        } else if (characteristic.getUUID().equals(uuid) && characteristicIndex != found) {
-          found++;
-        }
+    int characteristicIndex = obj.optInt("characteristicIndex", 0);
+    int found = 0;
+    List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+    for (BluetoothGattCharacteristic characteristic : characteristics) {
+      if (characteristic.getUuid().equals(uuid) && characteristicIndex == found) {
+        return characteristic;
+      } else if (characteristic.getUuid().equals(uuid) && characteristicIndex != found) {
+        found++;
       }
-
-      return null;
-    
-    } else {
-      BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuid);
-
-      if (characteristic == null) {
-        return null;
-      }
-
-      return characteristic;
     }
+
+    return null;
   }
 
   private BluetoothGattDescriptor getDescriptor(JSONObject obj, BluetoothGattCharacteristic characteristic) {
@@ -4242,7 +4220,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       for (BluetoothGattService service : gatt.getServices()) {
         if (service.equals(serviceFromCharacteristic)) {
           break;
-        } else if(service.getUUID().equals(serviceFromCharacteristic.getUUID())) {
+        } else if(service.getUuid().equals(serviceFromCharacteristic.getUuid())) {
           serviceIndex++;
         }
       }
@@ -4251,7 +4229,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       for (BluetoothGattCharacteristic characteristicFromService : serviceFromCharacteristic.getCharacteristics()) {
         if (characteristicFromService.equals(characteristic)) {
           break;
-        } else if (characteristicFromService.getUUID().equals(characteristic.getUUID())) {
+        } else if (characteristicFromService.getUuid().equals(characteristic.getUuid())) {
           characteristicIndex++;
         }
       }
