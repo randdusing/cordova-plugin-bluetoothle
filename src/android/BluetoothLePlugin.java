@@ -4236,6 +4236,29 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyStatus, statusSubscribedResult);
       addPropertyBytes(returnObj, keyValue, characteristic.getValue());
 
+      int serviceIndex = 0;
+      BluetoothGattService serviceFromCharacteristic = characteristic.getService();
+
+      for (BluetoothGattService service : gatt.getServices()) {
+        if (service.equals(serviceFromCharacteristic)) {
+          break;
+        } else if(service.getUUID().equals(serviceFromCharacteristic.getUUID())) {
+          serviceIndex++;
+        }
+      }
+
+      int characteristicIndex = 0;
+      for (BluetoothGattCharacteristic characteristicFromService : serviceFromCharacteristic.getCharacteristics()) {
+        if (characteristicFromService.equals(characteristic)) {
+          break;
+        } else if (characteristicFromService.getUUID().equals(characteristic.getUUID())) {
+          characteristicIndex++;
+        }
+      }
+
+      addProperty(returnObj, "serviceIndex", serviceIndex);
+      addProperty(returnObj, "characteristicIndex", characteristicIndex);
+
       //Return the characteristic value
       callbackContext.sendSequentialResult(returnObj);
     }

@@ -2578,6 +2578,28 @@ NSString *const operationWrite = @"write";
   [self addDevice:peripheral :returnObj];
   [self addCharacteristic:characteristic :returnObj];
 
+  // find & set serviceIndex & characteristicIndex
+  int serviceIndex = 0;
+  for (CBService* item in peripheral.services) {
+    if ([item isEqual: characteristic.service]) {
+      break;
+    } else if ([item.UUID isEqual: characteristic.service.UUID]) {
+      serviceIndex++;
+    }
+  }
+
+  int characteristicIndex = 0;
+  for (CBCharacteristic* item in characteristic.service.characteristics) {
+    if ([item isEqual: characteristic]) {
+      break;
+    } else if ([item.UUID isEqual: characteristic.UUID]) {
+      characteristicIndex++;
+    }
+  }
+
+  [returnObj setValue:serviceIndex forKey:keyServiceIndex];
+  [returnObj setValue:characteristicIndex forKey:keyCharacteristicIndex];
+
   //If an error exists...
   if (error != nil) {
     //Get the callback based on whether subscription or read
