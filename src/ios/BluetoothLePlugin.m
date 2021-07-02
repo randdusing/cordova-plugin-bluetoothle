@@ -2597,8 +2597,8 @@ NSString *const operationWrite = @"write";
     }
   }
 
-  [returnObj setValue:serviceIndex forKey:keyServiceIndex];
-  [returnObj setValue:characteristicIndex forKey:keyCharacteristicIndex];
+  [returnObj setValue:@(serviceIndex) forKey:keyServiceIndex];
+  [returnObj setValue:@(characteristicIndex) forKey:keyCharacteristicIndex];
 
   //If an error exists...
   if (error != nil) {
@@ -3645,7 +3645,7 @@ NSString *const operationWrite = @"write";
   int serviceIndex = 0;
 
   if (serviceIndexFromDict != nil) {
-    serviceIndex = [TramNumber.text serviceIndexFromDict];
+    serviceIndex = [serviceIndexFromDict intValue];
   }
 
   int found = 0;
@@ -3684,11 +3684,11 @@ NSString *const operationWrite = @"write";
 
   CBCharacteristic* characteristic = nil;
 
-  NSString* characteristicIndexFromDict = [obj valueForKey:keycharacteristicIndex];
+  NSString* characteristicIndexFromDict = [obj valueForKey:keyCharacteristicIndex];
   int characteristicIndex = 0;
 
   if (characteristicIndexFromDict != nil) {
-    characteristicIndex = [TramNumber.text characteristicIndexFromDict];
+    characteristicIndex = [characteristicIndexFromDict intValue];
   }
 
   int found = 0;
