@@ -3653,7 +3653,7 @@ NSString *const operationWrite = @"write";
   for (CBService* item in peripheral.services) {
     if ([item.UUID isEqual: uuid] && (serviceIndex == found)) {
       service = item;
-    } else if ([item.UUID isEqual: uuid] && (serviceIndex == found)) {
+    } else if ([item.UUID isEqual: uuid] && (serviceIndex != found)) {
       found++;
     }
   }
@@ -3696,7 +3696,7 @@ NSString *const operationWrite = @"write";
   for (CBCharacteristic* item in service.characteristics) {
     if ([item.UUID isEqual: uuid] && (characteristicIndex == found)) {
       characteristic = item;
-    } else if ([item.UUID isEqual: uuid] && (characteristicIndex == found)) {
+    } else if ([item.UUID isEqual: uuid] && (characteristicIndex != found)) {
       found++;
     }
   }
