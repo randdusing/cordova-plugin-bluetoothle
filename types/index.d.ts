@@ -103,13 +103,13 @@ declare namespace BluetoothlePlugin {
          * Connect to a Bluetooth LE device
          * @param connectSuccess The success callback that is passed with device object
          * @param connectError   The callback that will be triggered when the connect operation fails
-         * @param params         The address/identifier
          *
+         * @param params         connection params
          */
         connect(
             connectSuccess: (status: DeviceInfo) => void,
             connectError: (error: Error) => void,
-            params: { address: string, autoConnect?: boolean }): void;
+            params: ConnectionParams): void;
 
         /**
          * Reconnect to a previously connected Bluetooth device
@@ -265,7 +265,7 @@ declare namespace BluetoothlePlugin {
         writeQ(
             writeSuccess: (result: OperationResult) => void,
             writeError: (error: Error) => void,
-            params: WriteCharacteristicParams): void;
+            params: WriteQCharacteristicParams): void;
 
         /**
          * Read a particular characterist's descriptor
@@ -435,6 +435,19 @@ declare namespace BluetoothlePlugin {
             requestLocationError: (error: Error) => void): void;
 
         /**
+         * Retrieve paired Bluetooth LE devices based on their address. Wraps the iOS method CBCentralManager.retrievePeripheralsWithIdentifiers.
+         * iOS support only. Will return an error if used on Android.
+         * @param success The success callback that is passed an array of device objects
+         * @param error   The callback that will be triggered when the operation fails
+         * @param params  An array of service IDs to filter the retrieval by. If no service IDs are specified, no devices will be returned.
+         *
+         */
+        retrievePeripheralsByAddress(
+            success: (devices: DeviceInfo[]) => void,
+            error: (error: Error) => void,
+            params?: { addresses?: string[] }): void;
+
+        /**
          * Initialize Bluetooth on the device. Must be called before anything else.
          * Callback will continuously be used whenever Bluetooth is enabled or disabled.
          * @param success   The success callback that is passed with InitializeResult object
@@ -541,6 +554,18 @@ declare namespace BluetoothlePlugin {
             params: NotifyParams): void;
 
         /**
+         * Set pin if required to pair with a device. Android support only.
+         * @param success   The success callback that is passed with device's status and sent value
+         * @param error     The callback that will be triggered when the bond operation fails
+         * @param params    The set pin params
+         *
+         */
+        setPin(
+            success: (result: { status:Status }) => void,
+            error: (error: Error) => void,
+            params: { address: string, pin:string }): void;
+
+        /**
          * Helper function to convert a base64 encoded string from a characteristic or descriptor value into a uint8Array object
          * @param  value Encoded string which need t be encoded
          * @return       uint8Array object
@@ -567,6 +592,20 @@ declare namespace BluetoothlePlugin {
          * @return          Encoded string
          */
         bytesToString(value: Uint8Array): string;
+
+        /**
+         * Helper function to convert string to base64.
+         * @param  value    string
+         * @return          base64 string
+         */
+        encodeUnicode(value: string): string;
+
+        /**
+         * Helper function to convert bytes to a string.
+         * @param  value    base64 string
+         * @return          string
+         */
+        decodeUnicode(value: string): string;
     }
 
     /* Available status of device */
@@ -577,7 +616,7 @@ declare namespace BluetoothlePlugin {
         | "rssi" | "mtu" | "connectionPriorityRequested" |"enabled" | "disabled"
         | "readRequested" | "writeRequested" | "mtuChanged" | "notifyReady" | "notifySent"
         | "serviceAdded" | "serviceRemoved" | "allServicesRemoved" | "advertisingStarted"
-        | "advertisingStopped" | "responded" | "notified";
+        | "advertisingStopped" | "responded" | "notified" | "notificationSent";
 
     /** Avaialable connection priorities */
     type ConnectionPriority = "low" | "balanced" | "high";
@@ -619,13 +658,45 @@ declare namespace BluetoothlePlugin {
         isConnectable?: boolean
     }
 
+    interface ConnectionParams{
+        address: string;
+        autoConnect?: boolean;
+        /**
+         * Transport mode. Available from API 23 (Android).
+         * If none is specified the default behavior is TRANSPORT_AUTO
+         *
+         * Note: On Android 10, TRANSPORT_AUTO can lead to connection errors with Status code 133.
+         * In this case TRANSPORT_LE can be used.
+         */
+        transport?:  AndroidGattTransportMode;
+    }
+
+    enum AndroidGattTransportMode{
+        /**
+         * No preference of physical transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_AUTO = 0,
+
+        /**
+         * Prefer BR/EDR transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_BREDR = 1,
+
+        /**
+         * Prefer LE transport for GATT connections to remote dual-mode devices
+         */
+        TRANSPORT_LE = 2,
+    }
+
     interface NotifyParams {
         /** Service's UUID */
         service: string,
         /** Characteristic's UUID */
         characteristic: string,
         /** Base64 encoded string, number or string */
-        value: string
+        value: string,
+        /** Android only: address of the device the notification should be sent to. */
+        address?: string
     }
 
     interface RespondParams {
@@ -657,6 +728,11 @@ declare namespace BluetoothlePlugin {
         value: string,
         /* Set to "noResponse" to enable write without response, all other values will write normally. */
         type?: string
+    }
+
+    interface WriteQCharacteristicParams extends WriteCharacteristicParams {
+        /* Define the size of packets. This should be according to MTU value */
+        chunkSize?: number
     }
 
     interface WriteDescriptorParams extends DescriptorParams {
@@ -814,7 +890,7 @@ declare namespace BluetoothlePlugin {
             writeEncryptionRequired?: boolean
         }
     }
-    
+
     interface Descriptor {
         uuid: string;
     }

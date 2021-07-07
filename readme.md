@@ -1,3 +1,4 @@
+
 # Cordova Bluetooth LE Plugin
 This plugin allows you to interact with Bluetooth LE devices on Android, iOS, and Windows.
 
@@ -62,6 +63,8 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [requestPermission](#requestpermission)
   - [isLocationEnabled](#islocationenabled)
   - [requestLocation](#requestlocation)
+  - [setPin](#setPin)
+  - [retrievePeripheralsByAddress](#retrievePeripheralsByAddress)
 - [Peripheral Life Cycle](#peripheral-life-cycle)
   - [Initilization](#initilization)
   - [Notifications](#notifications)
@@ -79,6 +82,8 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [bytesToEncodedString](#bytestoencodedstring)
   - [stringToBytes](#stringtobytes)
   - [bytesToString](#bytestostring)
+  - [encodeUnicode](#encodeunicode)
+  - [decodeUnicode](#decodeunicode)
 - [Example](#example)
 - [Data Parsing Example](#data-parsing-example)
 - [Sample: Discover and interact with Bluetooth LE devices](#sample-discover-and-interact-with-bluetooth-le-devices)
@@ -95,8 +100,8 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 ## Requirements ##
 
 * Cordova 5.0.0 or higher
-* Android 4.3 or higher, Android Cordova library 5.0.0 or higher, target Android API 23 or higher
-* iOS 7 or higher
+* Android Cordova library 5.0.0 or higher, target Android API 23/Platform 6.0 or higher (support for older Android versions should use versions 2.4.0 or below)
+* iOS 10 or higher
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
 * Windows 10 UWP
 * Device hardware must be certified for Bluetooth LE. i.e. Nexus 7 (2012) doesn't support Bluetooth LE even after upgrading to 4.3 (or higher) without a modification
@@ -237,6 +242,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.requestPermission](#requestpermission) (Android 6+)
 * [bluetoothle.isLocationEnabled](#islocationenabled) (Android 6+)
 * [bluetoothle.requestLocation](#requestlocation) (Android 6+)
+* [bluetoothle.retrievePeripheralsByAddress](#retrievePeripheralsByAddress) (iOS)
 * [bluetoothle.initializePeripheral](#initializeperipheral)
 * [bluetoothle.addService](#addservice)
 * [bluetoothle.removeService](#removeservice)
@@ -245,10 +251,13 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.stopAdvertising](#stopadvertising)
 * [bluetoothle.respond](#respond)
 * [bluetoothle.notify](#notify)
+* [bluetoothle.setPin](#setPin) (Android)
 * [bluetoothle.encodedStringToBytes](#encodedstringtobytes)
 * [bluetoothle.bytesToEncodedString](#bytestoencodedstring)
 * [bluetoothle.stringToBytes](#stringtobytes)
 * [bluetoothle.bytesToString](#bytestostring)
+* [bluetoothle.encodeUnicode](#encodeunicode)
+* [bluetoothle.decodeUnicode](#decodeunicode)
 
 
 
@@ -286,6 +295,8 @@ Whenever the error callback is executed, the return object will contain the erro
 * isNotConnected - Device isn't connected (Don't call discover or any read/write operations)
 * isDisconnected - Device is disconnected (Don't call disconnect)
 * isBonded - Operation is unsupported. (Is the device Android?)
+* setPin - Operation is unsupported. (Is the device Android?)
+* retrievePeripheralsByAddress - Operation is unsupported (Is the device iOS?)
 
 For example:
 ```javascript
@@ -614,7 +625,7 @@ bluetoothle.connect(connectSuccess, connectError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * autoConnect = Automatically connect as soon as the remote device becomes available (Android)
-
+* transport = Mode of transport - Auto = 0, Prefer BR/EDR = 1, Prefer LE = 2, (Android API 23+)
 ```javascript
 {
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
@@ -1264,6 +1275,8 @@ To write without response, set type to "noResponse". Any other value will defaul
 var string = "Write Hello World";
 var bytes = bluetoothle.stringToBytes(string);
 var encodedString = bluetoothle.bytesToEncodedString(bytes);
+// if your code includes special characters you should use the encodeUnicode helper function
+var encodedUnicodeString = bluetoothle.encodeUnicode(string);
 
 //Note, this example doesn't actually work since it's read only characteristic
 {"value":"V3JpdGUgSGVsbG8gV29ybGQ=","service":"180F","characteristic":"2A19","type":"noResponse","address":"ABC123"}
@@ -1276,16 +1289,20 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.encodedString
 var returnObj = {"status":"written","service":"180F","characteristic":"2A19","value":"V3JpdGUgSGVsbG8gV29ybGQ=","address":"ABC123"}
 var bytes = bluetoothle.encodedStringToBytes(returnObj.value);
 var string = bluetoothle.bytesToString(bytes); //This should equal Write Hello World
+
+// if your code includes special characters you should use the decodeUnicode helper function
+var string = bluetoothle.decodeUnicode(returnObj.value);
 ```
 
 
 
 ### writeQ ###
-Write Quick / Queue, use this method to quickly execute write without response commands when writing more than 20 bytes at a time. The data will automatically be split up into 20 bytes packets. On iOS, these packets are written immediately since iOS uses queues. You probably won't see much of a performance increase using writeQ. On Android, a queue isn't used internally. Instead another call shouldn't be made until onCharacteristicWrite is called. This could be done at the Javascript layer, but the Javascript to plugin "bridge" must be crossed twice, which leads to some significant slow downs when milliseconds make a difference. For even better write throughput, use requestConnectionPriority('high') as well. Note, no callback will occur on write without response on iOS.
+Write Quick / Queue, use this method to quickly execute write without response commands when writing more than 20 bytes at a time. The data will automatically be split up into 20 bytes packets by default or you can increase that by setting `chunkSize`. On iOS, these packets are written immediately since iOS uses queues. You probably won't see much of a performance increase using writeQ unless you use `type="noResponse"` and set `chunkSize` higher than 20. On Android, a queue isn't used internally. Instead another call shouldn't be made until onCharacteristicWrite is called. This could be done at the Javascript layer, but the Javascript to plugin "bridge" must be crossed twice, which leads to some significant slow downs when milliseconds make a difference. For even better write throughput, use requestConnectionPriority('high') and mtu(SAME_VALUE_AS_CHUNK_SIZE_PARAM) as well.
 
 Warnings
 * This is experimental. Test heavily before using in any production code.
-* iOS won't see much performance gain, but Android should.
+* To see a performance gain you should use this in combination with requestConnectionPriority('high') and mtu(`MTU_VALUE`) and then calling this method with `type="noResponse"` and set `chunkSize` to `MTU_VALUE`.
+* Only supported on iOS11+.
 * Only supports one call at a time. Don't execute back to back, use on multiple devices, or multiple characteristics.
 
 ```javascript
@@ -1293,7 +1310,12 @@ bluetoothle.writeQ(writeSuccess, writeError, params);
 ```
 
 ##### Params #####
-See write() above.
+* address = The address/identifier provided by the scan's return object
+* service = The service's UUID
+* characteristic = The characteristic's UUID
+* value = Base64 encoded string
+* type = Set to "noResponse" to enable write without response, all other values will write normally.
+* chunkSize = Define the size of packets. This should be according to MTU value
 
 ##### Success #####
 See write() above.
@@ -1553,7 +1575,32 @@ bluetoothle.isBonded(isBondedSuccess, isBondedError, params);
 }
 ```
 
+### setPin ###
+Set PIN if required by the pairing process. Android support only.
 
+```javascript
+bluetoothle.setPin(success, error, params);
+```
+
+#### Params ####
+* address = The address/identifier provided by the scan's return object
+* pin = Pairing PIN code
+
+```javascript
+{
+  "address": "5A:94:4B:38:B3:FD",
+  "pin": "1234"
+}
+```
+
+##### Success #####
+* status => string
+
+```javascript
+{
+  "status": "pinSet",
+}
+```
 
 ### wasConnected ###
 Determine whether the device was connected, or error if not initialized.
@@ -1710,6 +1757,38 @@ bluetoothle.requestLocation(requestLocationSuccess, requestLocationError);
 {
   "requestLocation": true
 }
+```
+
+
+
+### retrievePeripheralsByAddress ###
+Retrieve paired Bluetooth LE devices based on their address. Wraps the iOS method [CBCentralManager.retrievePeripheralsWithIdentifiers](https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1519127-retrieveperipheralswithidentifie?language=objc). iOS support only. Will return an error if used on Android.
+
+```javascript
+bluetoothle.retrievePeripheralsByAddress(success, error, params);
+```
+
+##### Params #####
+* addresses = An arrays of addresses/identifiers to lookup devices by. If no addresses are specified, no devices will be returned
+
+```javascript
+{
+  "addresses": ["ECC037FD-72AE-AFC5-9213-CA785B3B5C63"]
+}
+```
+
+##### Success #####
+Returns an array of device objects:
+* name = the device's display name
+* address = the device's address / identifier for connecting to the object
+
+```javascript
+[
+  {
+    "name": "Polar H7 3B321015",
+    "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+  }
+]
 ```
 
 
@@ -2006,7 +2085,7 @@ bluetoothle.isAdvertising(success, error);
 
 
 ### respond ###
-Respond to a read or write request
+Respond to a read or write request. On Android, a device address is required
 
 ```javascript
 bluetoothle.respond(success, error, params);
@@ -2038,7 +2117,7 @@ var params = {
 
 
 ### notify ###
-Update a value for a subscription. Currently all subscribed devices will receive update. Device specific updates will be added in the future. If ```sent``` equals false in the return value, you must wait for the ```peripheralManagerIsReadyToUpdateSubscribers``` event before sending more updates.
+Update a value for a subscription. Currently all subscribed devices will receive updates on iOS. Device specific updates will be added in the future. On Android, a device address is required. If ```sent``` equals false in the return value, you must wait for the ```peripheralManagerIsReadyToUpdateSubscribers``` event before sending more updates.
 
 ```javascript
 bluetoothle.notify(success, error, params);
@@ -2050,6 +2129,7 @@ var params = {
   "service":"1234",
   "characteristic":"ABCD",
   "value":"U3Vic2NyaWJlIEhlbGxvIFdvcmxk" //Subscribe Hello World
+  // "address": "5163F1E0-5341-AF9B-9F67-613E15EC83F7" // only on android
 };
 ```
 
@@ -2170,6 +2250,20 @@ if (obj.status == "subscribedResult")
       }
   }
 }
+```
+
+### encodeUnicode ###
+Helper function to convert unicode string to base64 encoded string. This function can be used to encode special characters such as emojis.
+
+```javascript
+bluetoothle.encodeUnicode(string);
+```
+
+### decodeUnicode ###
+Helper function to convert a base64 encoded string to unicode string. This function also decodes special characters such as emojis.
+
+```javascript
+bluetoothle.decodeUnicode(string);
 ```
 
 ## Sample: Discover and interact with Bluetooth LE devices ##

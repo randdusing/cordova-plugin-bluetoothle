@@ -1,3 +1,80 @@
+## 6.5.0 - 2021-06-21
+- Operations are queued per device connection rather than globally on Android
+- Use service data if available on Android
+
+## 6.4.1 - 2021-06-08
+- Ensure Android subscriptions are returned in order [\#419](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/419)
+
+## 6.4.0 - 2021-06-08
+- Fix issue with writeQ when peripheral disconnects [\#690](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/690)
+- Add JavaScript helper methods for encoding and decoding Unicode strings
+
+## 6.3.1 - 2021-04-07
+- Fix #retrieveConnected() for Android, Dual Type devices are no longer filtered out. [\#559](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/559)
+
+## 6.3.0 - 2021-02-19
+- Add #retrievePeripheralsByAddress() for iOS and OSX
+
+## 6.2.2 - 2021-02-19
+- Remove ACCESS_BACKGROUND_LOCATION permission. Revert changes from v6.1.1. This should be added manually if background permissions are actually needed
+
+## 6.2.1 - 2021-02-05
+- Update types for NotifyParams
+
+## 6.2.0 - 2020-12-23
+- Add #setPin() method for Android
+
+## 6.1.1 - 2020-12-04
+- Add ACCESS_BACKGROUND_LOCATION permission to fix issue with Android target SDK 29
+
+## 6.1.0 - 2020-11-07
+- Allow specifying transport mode for Android
+
+## 6.0.2 - 2020-10-10
+- Add name when advertising
+
+## 6.0.1 - 2020-09-19
+- Force re-discovery when clearCache => true. [\#634](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/634)
+
+## 6.0.0 - 2020-08-19
+- Fix ordering issue with notifications
+- Potential breaking change - Verify #subscribe() behavior closely!
+
+## 5.0.2 - 2020-08-05
+- Update cordovaDependencies to allow install [\#632](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/632)
+
+## 5.0.1 - 2020-07-31
+- Reset isAdvertising flag when Bluetooth resets [\#302](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/302)
+
+## 5.0.0 - 2020-07-21
+- Improves writeQ performance [\#617](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/617)
+- Potentially breaking change, thus the version bump:
+  - iOS 10 required
+  - writeQ returns a success callback even with iOS's noResponse type. Ignore callback to keep existing behavior
+  - Review writeQ section of [readme](https://github.com/randdusing/cordova-plugin-bluetoothle#writeq)
+
+## 4.5.14 - 2020-06-25
+- Fix NPE in Android [\#615](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/615)
+
+## 4.5.13 - 2020-06-16
+- Use fine location permissions to fix scanning in Android 10 [\#579](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/579)
+
+## 4.5.12 - 2020-06-03
+- Update types
+
+## 4.5.11 - 2020-05-20
+- Reinitialize gatt server when Bluetooth resets [\#302](https://github.com/randdusing/BluetoothLE/issues/302)
+
+## 4.5.10 - 2020-04-10
+- Remove unnecessary check when advertising
+
+## 4.5.9 - 2020-03-13
+- Add null check when disabling scan on newer Android versions
+- Update docs
+
+## 4.5.8 - 2020-03-08
+- Improve connection reliability on Android
+
 ## 4.5.7 - 2020-02-11
 - Stop scan when Bluetooth is disabled on Android v6+
 
