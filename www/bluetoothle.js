@@ -1,3 +1,4 @@
+"use strict";
 var bluetoothleName = "BluetoothLePlugin";
 var bluetoothle = {
   _newReorderer: function(successCallback) {
@@ -15,7 +16,7 @@ var bluetoothle = {
      */
     if (sequence == null) {
       this.callback(obj);
-      return;  
+      return;
     }
 
     if (sequence != this.nextExpected) console.warn("Received out of order: expected " + this.nextExpected +" got " + sequence);
@@ -49,7 +50,7 @@ var bluetoothle = {
   },
   getAdapterInfo: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "getAdapterInfo", []);
-  },  
+  },
   startScan: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]);
   },
