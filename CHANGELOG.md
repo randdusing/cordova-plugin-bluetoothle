@@ -1,3 +1,6 @@
+## 6.5.1 - 2021-07-08
+- Make JavaScript compatible with Android 5.1
+
 ## 6.5.0 - 2021-06-21
 - Operations are queued per device connection rather than globally on Android
 - Use service data if available on Android
