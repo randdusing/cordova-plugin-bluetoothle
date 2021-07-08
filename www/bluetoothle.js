@@ -1,3 +1,4 @@
+"use strict";
 var bluetoothleName = "BluetoothLePlugin";
 var bluetoothle = {
   _newReorderer: function(successCallback) {
@@ -15,7 +16,7 @@ var bluetoothle = {
      */
     if (sequence == null) {
       this.callback(obj);
-      return;  
+      return;
     }
 
     if (sequence != this.nextExpected) console.warn("Received out of order: expected " + this.nextExpected +" got " + sequence);
@@ -49,7 +50,7 @@ var bluetoothle = {
   },
   getAdapterInfo: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "getAdapterInfo", []);
-  },  
+  },
   startScan: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]);
   },
@@ -209,13 +210,13 @@ var bluetoothle = {
     return String.fromCharCode.apply(null, new Uint16Array(bytes));
   },
   encodeUnicode: function(str) {
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
       return String.fromCharCode(parseInt(p1, 16))
     }))
   },
   decodeUnicode: function(str) {
     // Going backwards: from byte stream, to percent-encoding, to original string.
-    return decodeURIComponent(atob(str).split('').map((c) => {
+    return decodeURIComponent(atob(str).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
   },
