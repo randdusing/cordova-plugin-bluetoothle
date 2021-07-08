@@ -3639,8 +3639,6 @@ NSString *const operationWrite = @"write";
     return nil;
   }
 
-  CBService* service = nil;
-
   NSString* serviceIndexFromDict = [obj valueForKey:keyServiceIndex];
   int serviceIndex = 0;
 
@@ -3649,16 +3647,15 @@ NSString *const operationWrite = @"write";
   }
 
   int found = 0;
-
   for (CBService* item in peripheral.services) {
     if ([item.UUID isEqual: uuid] && (serviceIndex == found)) {
-      service = item;
+      return item;
     } else if ([item.UUID isEqual: uuid] && (serviceIndex != found)) {
       found++;
     }
   }
-
-  return service;
+    
+    return nil;
 }
 
 -(CBCharacteristic*) getCharacteristic:(NSDictionary *) obj forService:(CBService*) service {
@@ -3682,8 +3679,6 @@ NSString *const operationWrite = @"write";
     return nil;
   }
 
-  CBCharacteristic* characteristic = nil;
-
   NSString* characteristicIndexFromDict = [obj valueForKey:keyCharacteristicIndex];
   int characteristicIndex = 0;
 
@@ -3692,16 +3687,15 @@ NSString *const operationWrite = @"write";
   }
 
   int found = 0;
-
   for (CBCharacteristic* item in service.characteristics) {
     if ([item.UUID isEqual: uuid] && (characteristicIndex == found)) {
-      characteristic = item;
+      return item;
     } else if ([item.UUID isEqual: uuid] && (characteristicIndex != found)) {
       found++;
     }
   }
-
-  return characteristic;
+    
+    return nil;
 }
 
 -(CBDescriptor*) getDescriptor:(NSDictionary *) obj forCharacteristic:(CBCharacteristic*) characteristic {
