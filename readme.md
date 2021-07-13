@@ -1144,7 +1144,7 @@ bluetoothle.read(readSuccess, readError, params);
 * service = The service's UUID
 * serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
-* characteristicIndex = When dealing with multiple chracteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
@@ -1184,7 +1184,7 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 * service = The service's UUID
 * serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
-* characteristicIndex = When dealing with multiple chracteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
