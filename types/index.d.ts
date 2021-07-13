@@ -719,7 +719,7 @@ declare namespace BluetoothlePlugin {
       /** The characteristic's ID */
       characteristic: string;
       /** When dealing with multiple chracteristics with the same UUID, this index will determine which chracteristic will be used */
-      characteristicIndex: number;
+      characteristicIndex?: number;
     }
 
     interface OperationDescriptorParams  extends DescriptorParams {
@@ -1002,4 +1002,5 @@ interface Window {
     bluetoothle: BluetoothlePlugin.Bluetoothle
 }
 
+declare module '@bastiaanver/cordova-plugin-bluetoothle';
 declare var bluetoothle: BluetoothlePlugin.Bluetoothle;
