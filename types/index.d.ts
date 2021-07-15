@@ -1002,5 +1002,4 @@ interface Window {
     bluetoothle: BluetoothlePlugin.Bluetoothle
 }
 
-declare module '@bastiaanver/cordova-plugin-bluetoothle';
 declare var bluetoothle: BluetoothlePlugin.Bluetoothle;
