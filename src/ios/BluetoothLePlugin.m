@@ -14,9 +14,11 @@ NSString *const keyRssi = @"rssi";
 NSString *const keyAdvertisement = @"advertisement";
 NSString *const keyUuid = @"uuid";
 NSString *const keyService = @"service";
+NSString *const keyServiceIndex = @"serviceIndex";
 NSString *const keyServices = @"services";
 NSString *const keyCharacteristic = @"characteristic";
 NSString *const keyCharacteristics = @"characteristics";
+NSString *const keyCharacteristicIndex = @"characteristicIndex";
 NSString *const keyDescriptor = @"descriptor";
 NSString *const keyDescriptors = @"descriptors";
 NSString *const keyValue = @"value";
@@ -2576,6 +2578,28 @@ NSString *const operationWrite = @"write";
   [self addDevice:peripheral :returnObj];
   [self addCharacteristic:characteristic :returnObj];
 
+  // find & set serviceIndex & characteristicIndex
+  int serviceIndex = 0;
+  for (CBService* item in peripheral.services) {
+    if ([item isEqual: characteristic.service]) {
+      break;
+    } else if ([item.UUID isEqual: characteristic.service.UUID]) {
+      serviceIndex++;
+    }
+  }
+
+  int characteristicIndex = 0;
+  for (CBCharacteristic* item in characteristic.service.characteristics) {
+    if ([item isEqual: characteristic]) {
+      break;
+    } else if ([item.UUID isEqual: characteristic.UUID]) {
+      characteristicIndex++;
+    }
+  }
+
+  [returnObj setValue:@(serviceIndex) forKey:keyServiceIndex];
+  [returnObj setValue:@(characteristicIndex) forKey:keyCharacteristicIndex];
+
   //If an error exists...
   if (error != nil) {
     //Get the callback based on whether subscription or read
@@ -3615,15 +3639,23 @@ NSString *const operationWrite = @"write";
     return nil;
   }
 
-  CBService* service = nil;
+  NSString* serviceIndexFromDict = [obj valueForKey:keyServiceIndex];
+  int serviceIndex = 0;
 
-  for (CBService* item in peripheral.services) {
-    if ([item.UUID isEqual: uuid]) {
-      service = item;
-    }
+  if (serviceIndexFromDict != nil) {
+    serviceIndex = [serviceIndexFromDict intValue];
   }
 
-  return service;
+  int found = 0;
+  for (CBService* item in peripheral.services) {
+    if ([item.UUID isEqual: uuid] && (serviceIndex == found)) {
+      return item;
+    } else if ([item.UUID isEqual: uuid] && (serviceIndex != found)) {
+      found++;
+    }
+  }
+    
+    return nil;
 }
 
 -(CBCharacteristic*) getCharacteristic:(NSDictionary *) obj forService:(CBService*) service {
@@ -3647,15 +3679,23 @@ NSString *const operationWrite = @"write";
     return nil;
   }
 
-  CBCharacteristic* characteristic = nil;
+  NSString* characteristicIndexFromDict = [obj valueForKey:keyCharacteristicIndex];
+  int characteristicIndex = 0;
 
-  for (CBCharacteristic* item in service.characteristics) {
-    if ([item.UUID isEqual: uuid]) {
-      characteristic = item;
-    }
+  if (characteristicIndexFromDict != nil) {
+    characteristicIndex = [characteristicIndexFromDict intValue];
   }
 
-  return characteristic;
+  int found = 0;
+  for (CBCharacteristic* item in service.characteristics) {
+    if ([item.UUID isEqual: uuid] && (characteristicIndex == found)) {
+      return item;
+    } else if ([item.UUID isEqual: uuid] && (characteristicIndex != found)) {
+      found++;
+    }
+  }
+    
+    return nil;
 }
 
 -(CBDescriptor*) getDescriptor:(NSDictionary *) obj forCharacteristic:(CBCharacteristic*) characteristic {
