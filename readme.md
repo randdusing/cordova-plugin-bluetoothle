@@ -181,7 +181,14 @@ Discovery works differently between Android and iOS. In Android, a single functi
 
 
 ## Queuing (Android) ##
-Read, write, subscribe, unsubscribe, readDescriptor and writeDescriptor queueing has been added to the master branch and will be part of the 4.1.0 release. If you'd like to try it out, install the plugin directly from GitHub using: ```cordova plugin https://github.com/randdusing/cordova-plugin-bluetoothle```
+On Android, the plugin automatically queues the following operations:
+* read
+* write
+* subscribe
+* unsubscribe
+* readDescriptor
+* writeDescriptor
+* notify
 
 
 ## UUIDs ##
@@ -1809,7 +1816,7 @@ Initialization works slightly different between Android and iOS. On iOS, you don
 
 
 ### Notifications ###
-Notifications work slightly differently between Android and iOS. On Android, you should wait for the ```notificationSent``` event before calling notify() again. On iOS, you need to check the notify() callback for the sent property. If the sent property is set to false, you should wait until receiving the ```peripheralManagerIsReadyToUpdateSubscribers``` event to resend the notification. In future versions, I hope to standardize the functionality between platforms.
+Notifications work slightly differently between Android and iOS. Queueing for notifications is currently only implemented on Android. On Android, the notify() success callback will always include ```sent: true```. On iOS, if the sent property is set to false, you should wait until receiving the ```peripheralManagerIsReadyToUpdateSubscribers``` event to resend the notification. In future versions, I hope to standardize the functionality between platforms.
 
 
 ### Descriptors ###
@@ -1845,7 +1852,7 @@ bluetoothle.initializePeripheral(success, error, params);
 * status => subscribed = Subscription started request, use notify() to send new data
 * status => unsubscribed = Subscription ended request, stop sending data
 * status => notificationReady = Resume sending subscription updates (iOS)
-* status => notificationSent = Notification has been sent (Android)
+* status => notificationSent = Notification has been sent (Android) [DEPRECATED: Use notify() callback instead]
 * status => connected = A device has connected
 * status => disconnected = A device has disconnected
 * status => mtuChanged = MTU has changed for device
