@@ -985,8 +985,12 @@ declare namespace BluetoothlePlugin {
     }
 
     interface Error {
-        code: number,
-        message: string
+        error: string,
+        message: string,
+        /** Optional service which is involved with the error */
+        service?: string,
+        /** Optional characteristic which is involved with the error */
+        characteristic?: string,
     }
 }
 
