@@ -1,3 +1,8 @@
+## 6.6.0 - 2021-07-27
+- Support multiple services with the same UUID
+- Fixed TypeScript types, support Closure Compiler
+- Support Android notification queueing
+
 ## 6.5.1 - 2021-07-08
 - Make JavaScript compatible with Android 5.1
 
