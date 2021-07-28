@@ -89,6 +89,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
   //Quick Writes
   private LinkedList<byte[]> queueQuick = new LinkedList<byte[]>();
 
+  //Peripheral queue
+  private LinkedList<Operation> peripheralQueue = new LinkedList<Operation>();
+
   //Object keys
   private final String keyStatus = "status";
   private final String keyError = "error";
@@ -127,6 +130,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyConnectionPriority = "connectionPriority";
   private final String keyMtu = "mtu";
   private final String keyPin = "pin";
+  private final String keySent = "sent";
   private final String keyQueue = "queue";
 
   //Write Types
@@ -155,6 +159,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String statusRssi = "rssi";
   private final String statusConnectionPriorityRequested = "connectionPriorityRequested";
   private final String statusMtu = "mtu";
+  private final String statusNotified = "notified";
 
   //Properties
   private final String propertyBroadcast = "broadcast";
@@ -212,6 +217,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String errorRequestConnectionPriority = "requestConnectPriority";
   private final String errorMtu = "mtu";
   private final String errorRetrievePeripheralsByAddress = "retrievePeripheralsByAddress";
+  private final String errorNotify = "notify";
 
   //Error Messages
   //Initialization
@@ -414,7 +420,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
     } else if ("respond".equals(action)) {
       respondAction(args, callbackContext);
     } else if ("notify".equals(action)) {
-      notifyAction(args, callbackContext);
+      Operation operation = new Operation("notify", args, callbackContext);
+      peripheralQueue.add(operation);
+      peripheralQueueStart();
     } else if ("setPin".equals(action)) {
       setPinAction(args, callbackContext);
     } else if ("retrievePeripheralsByAddress".equals(action)) {
@@ -822,15 +830,18 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
   }
 
-  private void notifyAction(JSONArray args, CallbackContext callbackContext) {
+  private boolean notifyAction(Operation operation) {
+    JSONArray args = operation.args;
+    CallbackContext callbackContext = operation.callbackContext;
+
     JSONObject obj = getArgsObject(args);
     if (isNotArgsObject(obj, callbackContext)) {
-      return;
+      return false;
     }
 
     String address = getAddress(obj);
     if (isNotAddress(address, callbackContext)) {
-      return;
+      return false;
     }
     BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
 
@@ -841,6 +852,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, "error", "service");
       addProperty(returnObj, "message", "Service not found");
       callbackContext.error(returnObj);
+      return false;
     }
 
     UUID characteristicUuid = getUUID(obj.optString("characteristic", null));
@@ -850,6 +862,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, "error", "characteristic");
       addProperty(returnObj, "message", "Characteristic not found");
       callbackContext.error(returnObj);
+      return false;
     }
 
     byte[] value = getPropertyBytes(obj, "value");
@@ -859,6 +872,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, "error", "respond");
       addProperty(returnObj, "message", "Failed to set value");
       callbackContext.error(returnObj);
+      return false;
     }
 
     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(clientConfigurationDescriptorUuid);
@@ -869,14 +883,16 @@ public class BluetoothLePlugin extends CordovaPlugin {
       isIndicate = true;
     }
 
-    //Wait for onNotificationSent event
     boolean result = gattServer.notifyCharacteristicChanged(device, characteristic, isIndicate);
     if (!result) {
       JSONObject returnObj = new JSONObject();
       addProperty(returnObj, "error", "notify");
       addProperty(returnObj, "message", "Failed to notify");
       callbackContext.error(returnObj);
+      return false;
     }
+
+    return true;
   }
 
   public void hasPermissionAction(CallbackContext callbackContext) {
@@ -3243,6 +3259,38 @@ public class BluetoothLePlugin extends CordovaPlugin {
     queueNext(connection);
   }
 
+  private void peripheralQueueStart() {
+    if (peripheralQueue.size() > 1) {
+      return;
+    }
+
+    peripheralQueueNext();
+  }
+
+  private void peripheralQueueNext() {
+    Operation operation = peripheralQueue.peek();
+
+    boolean result = notifyAction(operation);
+
+    if (!result) {
+      peripheralQueueRemove();
+    }
+  }
+
+  private void peripheralQueueRemove() {
+    if (peripheralQueue.size() == 0) {
+      return;
+    }
+
+    peripheralQueue.poll();
+
+    if (peripheralQueue.size() == 0) {
+      return;
+    }
+
+    peripheralQueueNext();
+  }
+
   private HashMap<Object, Object> EnsureCallback(UUID characteristicUuid, HashMap<Object, Object> connection) {
     HashMap<Object, Object> characteristicCallbacks = (HashMap<Object, Object>) connection.get(characteristicUuid);
 
@@ -4630,6 +4678,36 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     public void onNotificationSent(BluetoothDevice device, int status) {
+      Operation operation = peripheralQueue.peek();
+
+      JSONArray args = operation.args;
+      CallbackContext callbackContext = operation.callbackContext;
+
+      peripheralQueueRemove();
+
+      //If no callback, just return
+      if (callbackContext == null) {
+        return;
+      }
+
+      JSONObject obj = getArgsObject(args);
+
+      JSONObject returnObj = new JSONObject();
+
+      addDevice(returnObj, device);
+
+      //If successfully notified, return value
+      if (status == BluetoothGatt.GATT_SUCCESS) {
+        addProperty(returnObj, keyStatus, statusNotified);
+        addProperty(returnObj, keySent, true);
+        callbackContext.success(returnObj);
+      } else {
+        //Else it failed
+        addProperty(returnObj, keyError, errorNotify);
+        callbackContext.error(returnObj);
+      }
+
+      //TODO: Remove code below (kept for backward compatibility)
       if (initPeripheralCallback == null) {
         return;
       }
