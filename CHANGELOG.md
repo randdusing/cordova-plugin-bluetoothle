@@ -1,3 +1,6 @@
+## 6.6.1 - 2021-07-29
+- Revert support Android notification queueing
+
 ## 6.6.0 - 2021-07-27
 - Support multiple services with the same UUID
 - Fixed TypeScript types, support Closure Compiler
