@@ -1542,12 +1542,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
     connection.put(keyState, BluetoothProfile.STATE_CONNECTING);
     //connection.put(keyDiscoveredState, STATE_UNDISCOVERED); //Devices stays discovered even if disconnected (but not closed)
     connection.put(operationConnect, callbackContext);
-    
-    //Queue may had become null
-    if (connection.get(keyQueue) == null) {
-      LinkedList<Operation> queue = new LinkedList<Operation>();
-      connection.put(keyQueue, queue);
-    }
   }
 
   private void disconnectAction(JSONArray args, CallbackContext callbackContext) {
