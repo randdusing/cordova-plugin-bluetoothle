@@ -33,6 +33,9 @@
       <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
       <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     </config-file>
+    <framework src="no.nordicsemi.android:dfu:1.11.0" />
+    <framework src="androidx.annotation:annotation:1.1.0" />
+    <framework src="androidx.core:core:1.6.0" />
   </platform>
   <platform name="ios">
     <config-file target="config.xml" parent="/*">
