@@ -52,6 +52,10 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
+import capacitor.android.plugins.R;
+import no.nordicsemi.android.dfu.DfuServiceController;
+import no.nordicsemi.android.dfu.DfuServiceInitiator;
+
 @SuppressWarnings("unchecked")
 
 public class BluetoothLePlugin extends CordovaPlugin {
@@ -320,6 +324,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
       stopScanAction(callbackContext);
     } else if ("retrieveConnected".equals(action)) {
       retrieveConnectedAction(args, callbackContext);
+    } else if ("upgradeFirmware".equals(action)) {
+      upgradeFirmwareAction(args, callbackContext);
     } else if ("bond".equals(action)) {
       bondAction(args, callbackContext);
     } else if ("unbond".equals(action)) {
@@ -1282,6 +1288,50 @@ public class BluetoothLePlugin extends CordovaPlugin {
     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, returnArray);
     pluginResult.setKeepCallback(true);
     callbackContext.sendPluginResult(pluginResult);
+  }
+
+  private void upgradeFirmwareAction(JSONArray args, CallbackContext callbackContext) {
+    Log.d("BLE", "UPGRADE_FIRMWARE" );
+    if (isNotInitialized(callbackContext, true)) {
+      Log.d("BLE", "NOT INITIALIZED" );
+      return;
+    }
+    JSONObject obj = getArgsObject(args);
+    if (isNotArgsObject(obj, callbackContext)) {
+      Log.d("BLE", "BAD REQUEST" );
+      return;
+    }
+    String address = getAddress(obj);
+    if (isNotAddress(address, callbackContext)) {
+      Log.d("BLE", "NOT ADDRESS" );
+      return;
+    }
+    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+    if (device == null) {
+      Log.d("BLE", "DEVICE NOT FOUND" );
+      JSONObject returnObj = new JSONObject();
+      addProperty(returnObj, keyError, errorBond);
+      addProperty(returnObj, keyMessage, logNoDevice);
+      addProperty(returnObj, keyAddress, address);
+      callbackContext.error(returnObj);
+      return;
+    }
+    final DfuServiceInitiator starter = new DfuServiceInitiator(device.getAddress())
+            .setDeviceName(device.getName())
+            .setKeepBond(true);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      DfuServiceInitiator.createDfuNotificationChannel(cordova.getActivity());
+    }
+    starter.setPrepareDataObjectDelay(300L);
+    Log.d("BLE", "STARTING UPGRADE");
+    starter.setZip(R.raw.app53);
+    final DfuServiceController controller = starter.start(cordova.getActivity(), DfuService.class);
+    // You may use the controller to pause, resume or abort the DFU process.
+
+    Log.d("BLE", "UPGRADE STARTED");
+    JSONObject returnObj = new JSONObject();
+    addDevice(returnObj, device);
+    callbackContext.success(returnObj);
   }
 
   private void bondAction(JSONArray args, CallbackContext callbackContext) {
