@@ -1,3 +1,4 @@
+
 # Cordova Bluetooth LE Plugin
 This plugin allows you to interact with Bluetooth LE devices on Android, iOS, and Windows.
 
@@ -63,6 +64,7 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [isLocationEnabled](#islocationenabled)
   - [requestLocation](#requestlocation)
   - [setPin](#setPin)
+  - [retrievePeripheralsByAddress](#retrievePeripheralsByAddress)
 - [Peripheral Life Cycle](#peripheral-life-cycle)
   - [Initilization](#initilization)
   - [Notifications](#notifications)
@@ -80,6 +82,8 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [bytesToEncodedString](#bytestoencodedstring)
   - [stringToBytes](#stringtobytes)
   - [bytesToString](#bytestostring)
+  - [encodeUnicode](#encodeunicode)
+  - [decodeUnicode](#decodeunicode)
 - [Example](#example)
 - [Data Parsing Example](#data-parsing-example)
 - [Sample: Discover and interact with Bluetooth LE devices](#sample-discover-and-interact-with-bluetooth-le-devices)
@@ -96,7 +100,7 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
 ## Requirements ##
 
 * Cordova 5.0.0 or higher
-* Android 4.3 or higher, Android Cordova library 5.0.0 or higher, target Android API 23 or higher
+* Android Cordova library 5.0.0 or higher, target Android API 23/Platform 6.0 or higher (support for older Android versions should use versions 2.4.0 or below)
 * iOS 10 or higher
 * Windows Phone 8.1 (Tested on Nokia Lumia 630)
 * Windows 10 UWP
@@ -238,6 +242,7 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.requestPermission](#requestpermission) (Android 6+)
 * [bluetoothle.isLocationEnabled](#islocationenabled) (Android 6+)
 * [bluetoothle.requestLocation](#requestlocation) (Android 6+)
+* [bluetoothle.retrievePeripheralsByAddress](#retrievePeripheralsByAddress) (iOS)
 * [bluetoothle.initializePeripheral](#initializeperipheral)
 * [bluetoothle.addService](#addservice)
 * [bluetoothle.removeService](#removeservice)
@@ -251,6 +256,8 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.bytesToEncodedString](#bytestoencodedstring)
 * [bluetoothle.stringToBytes](#stringtobytes)
 * [bluetoothle.bytesToString](#bytestostring)
+* [bluetoothle.encodeUnicode](#encodeunicode)
+* [bluetoothle.decodeUnicode](#decodeunicode)
 
 
 
@@ -289,6 +296,7 @@ Whenever the error callback is executed, the return object will contain the erro
 * isDisconnected - Device is disconnected (Don't call disconnect)
 * isBonded - Operation is unsupported. (Is the device Android?)
 * setPin - Operation is unsupported. (Is the device Android?)
+* retrievePeripheralsByAddress - Operation is unsupported (Is the device iOS?)
 
 For example:
 ```javascript
@@ -1134,7 +1142,9 @@ bluetoothle.read(readSuccess, readError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
@@ -1172,7 +1182,9 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
@@ -1193,8 +1205,10 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
 {
   "status": "subscribed",
   "characteristic": "2a37",
+  "characteristicIndex": 0,
   "name": "Polar H7 3B321015",
   "service": "180d",
+  "serviceIndex": 0,
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
 }
 
@@ -1202,8 +1216,10 @@ bluetoothle.subscribe(subscribeSuccess, subscribeError, params);
   "status": "subscribedResult",
   "value": "U3Vic2NyaWJlIEhlbGxvIFdvcmxk", //Subscribe Hello World
   "characteristic": "2a37",
+  "characteristicIndex": 0,
   "name": "Polar H7 3B321015",
   "service": "180d",
+  "serviceIndex": 0,
   "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
 }
 ```
@@ -1220,7 +1236,9 @@ bluetoothle.unsubscribe(unsubscribeSuccess, unsubscribeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 
 ```javascript
 {
@@ -1257,7 +1275,9 @@ bluetoothle.write(writeSuccess, writeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 * value = Base64 encoded string
 * type = Set to "noResponse" to enable write without response, all other values will write normally.
 
@@ -1267,6 +1287,8 @@ To write without response, set type to "noResponse". Any other value will defaul
 var string = "Write Hello World";
 var bytes = bluetoothle.stringToBytes(string);
 var encodedString = bluetoothle.bytesToEncodedString(bytes);
+// if your code includes special characters you should use the encodeUnicode helper function
+var encodedUnicodeString = bluetoothle.encodeUnicode(string);
 
 //Note, this example doesn't actually work since it's read only characteristic
 {"value":"V3JpdGUgSGVsbG8gV29ybGQ=","service":"180F","characteristic":"2A19","type":"noResponse","address":"ABC123"}
@@ -1279,6 +1301,9 @@ Value is a base64 encoded string of written bytes. Use bluetoothle.encodedString
 var returnObj = {"status":"written","service":"180F","characteristic":"2A19","value":"V3JpdGUgSGVsbG8gV29ybGQ=","address":"ABC123"}
 var bytes = bluetoothle.encodedStringToBytes(returnObj.value);
 var string = bluetoothle.bytesToString(bytes); //This should equal Write Hello World
+
+// if your code includes special characters you should use the decodeUnicode helper function
+var string = bluetoothle.decodeUnicode(returnObj.value);
 ```
 
 
@@ -1299,7 +1324,9 @@ bluetoothle.writeQ(writeSuccess, writeError, params);
 ##### Params #####
 * address = The address/identifier provided by the scan's return object
 * service = The service's UUID
+* serviceIndex = When dealing with multiple services with the same UUID, this index will determine which service will be used (OPTIONAL)
 * characteristic = The characteristic's UUID
+* characteristicIndex = When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used (OPTIONAL)
 * value = Base64 encoded string
 * type = Set to "noResponse" to enable write without response, all other values will write normally.
 * chunkSize = Define the size of packets. This should be according to MTU value
@@ -1748,6 +1775,38 @@ bluetoothle.requestLocation(requestLocationSuccess, requestLocationError);
 
 
 
+### retrievePeripheralsByAddress ###
+Retrieve paired Bluetooth LE devices based on their address. Wraps the iOS method [CBCentralManager.retrievePeripheralsWithIdentifiers](https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1519127-retrieveperipheralswithidentifie?language=objc). iOS support only. Will return an error if used on Android.
+
+```javascript
+bluetoothle.retrievePeripheralsByAddress(success, error, params);
+```
+
+##### Params #####
+* addresses = An arrays of addresses/identifiers to lookup devices by. If no addresses are specified, no devices will be returned
+
+```javascript
+{
+  "addresses": ["ECC037FD-72AE-AFC5-9213-CA785B3B5C63"]
+}
+```
+
+##### Success #####
+Returns an array of device objects:
+* name = the device's display name
+* address = the device's address / identifier for connecting to the object
+
+```javascript
+[
+  {
+    "name": "Polar H7 3B321015",
+    "address": "ECC037FD-72AE-AFC5-9213-CA785B3B5C63"
+  }
+]
+```
+
+
+
 ## Peripheral Life Cycle ##
 
 1. initializePeripheral
@@ -2084,6 +2143,7 @@ var params = {
   "service":"1234",
   "characteristic":"ABCD",
   "value":"U3Vic2NyaWJlIEhlbGxvIFdvcmxk" //Subscribe Hello World
+  // "address": "5163F1E0-5341-AF9B-9F67-613E15EC83F7" // only on android
 };
 ```
 
@@ -2204,6 +2264,20 @@ if (obj.status == "subscribedResult")
       }
   }
 }
+```
+
+### encodeUnicode ###
+Helper function to convert unicode string to base64 encoded string. This function can be used to encode special characters such as emojis.
+
+```javascript
+bluetoothle.encodeUnicode(string);
+```
+
+### decodeUnicode ###
+Helper function to convert a base64 encoded string to unicode string. This function also decodes special characters such as emojis.
+
+```javascript
+bluetoothle.decodeUnicode(string);
 ```
 
 ## Sample: Discover and interact with Bluetooth LE devices ##

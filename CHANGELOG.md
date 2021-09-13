@@ -1,3 +1,40 @@
+## 6.6.1 - 2021-07-29
+- Revert support Android notification queueing
+
+## 6.6.0 - 2021-07-27
+- Support multiple services with the same UUID
+- Fixed TypeScript types, support Closure Compiler
+- Support Android notification queueing
+
+## 6.5.1 - 2021-07-08
+- Make JavaScript compatible with Android 5.1
+
+## 6.5.0 - 2021-06-21
+- Operations are queued per device connection rather than globally on Android
+- Use service data if available on Android
+
+## 6.4.1 - 2021-06-08
+- Ensure Android subscriptions are returned in order [\#419](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/419)
+
+## 6.4.0 - 2021-06-08
+- Fix issue with writeQ when peripheral disconnects [\#690](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/690)
+- Add JavaScript helper methods for encoding and decoding Unicode strings
+
+## 6.3.1 - 2021-04-07
+- Fix #retrieveConnected() for Android, Dual Type devices are no longer filtered out. [\#559](https://github.com/randdusing/cordova-plugin-bluetoothle/issues/559)
+
+## 6.3.0 - 2021-02-19
+- Add #retrievePeripheralsByAddress() for iOS and OSX
+
+## 6.2.2 - 2021-02-19
+- Remove ACCESS_BACKGROUND_LOCATION permission. Revert changes from v6.1.1. This should be added manually if background permissions are actually needed
+
+## 6.2.1 - 2021-02-05
+- Update types for NotifyParams
+
+## 6.2.0 - 2020-12-23
+- Add #setPin() method for Android
+
 ## 6.1.1 - 2020-12-04
 - Add ACCESS_BACKGROUND_LOCATION permission to fix issue with Android target SDK 29
 

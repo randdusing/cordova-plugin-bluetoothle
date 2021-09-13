@@ -435,6 +435,19 @@ declare namespace BluetoothlePlugin {
             requestLocationError: (error: Error) => void): void;
 
         /**
+         * Retrieve paired Bluetooth LE devices based on their address. Wraps the iOS method CBCentralManager.retrievePeripheralsWithIdentifiers.
+         * iOS support only. Will return an error if used on Android.
+         * @param success The success callback that is passed an array of device objects
+         * @param error   The callback that will be triggered when the operation fails
+         * @param params  An array of service IDs to filter the retrieval by. If no service IDs are specified, no devices will be returned.
+         *
+         */
+        retrievePeripheralsByAddress(
+            success: (devices: DeviceInfo[]) => void,
+            error: (error: Error) => void,
+            params?: { addresses?: string[] }): void;
+
+        /**
          * Initialize Bluetooth on the device. Must be called before anything else.
          * Callback will continuously be used whenever Bluetooth is enabled or disabled.
          * @param success   The success callback that is passed with InitializeResult object
@@ -579,6 +592,20 @@ declare namespace BluetoothlePlugin {
          * @return          Encoded string
          */
         bytesToString(value: Uint8Array): string;
+
+        /**
+         * Helper function to convert string to base64.
+         * @param  value    string
+         * @return          base64 string
+         */
+        encodeUnicode(value: string): string;
+
+        /**
+         * Helper function to convert bytes to a string.
+         * @param  value    base64 string
+         * @return          string
+         */
+        decodeUnicode(value: string): string;
     }
 
     /* Available status of device */
@@ -598,7 +625,9 @@ declare namespace BluetoothlePlugin {
         /** The address/identifier provided by the scan's return object */
         address: string,
         /** The service's ID */
-        service: string
+        service: string,
+        /** When dealing with multiple services with the same UUID, this index will determine which service will be used */
+        serviceIndex?: number
     }
 
     interface InitPeripheralParams {
@@ -667,7 +696,9 @@ declare namespace BluetoothlePlugin {
         /** Characteristic's UUID */
         characteristic: string,
         /** Base64 encoded string, number or string */
-        value: string
+        value: string,
+        /** Android only: address of the device the notification should be sent to. */
+        address?: string
     }
 
     interface RespondParams {
@@ -685,8 +716,10 @@ declare namespace BluetoothlePlugin {
     }
 
     interface DescriptorParams extends Params {
-        /** The characteristic's ID */
-        characteristic: string
+      /** The characteristic's ID */
+      characteristic: string;
+      /** When dealing with multiple characteristics with the same UUID, this index will determine which chracteristic will be used */
+      characteristicIndex?: number;
     }
 
     interface OperationDescriptorParams  extends DescriptorParams {
@@ -888,8 +921,12 @@ declare namespace BluetoothlePlugin {
     interface OperationResult extends DeviceInfo {
         /** Characteristic UUID */
         characteristic: string,
+        /** When dealing with multiple characteristics with the same UUID, this index will determine which characteristic it is */
+        characteristicIndex: number,
         /** Service's UUID */
         service: string,
+        /** When dealing with multiple services with the same UUID, this index will determine which service it is */
+        serviceIndex: number,
         /** Base64 encoded string of bytes */
         value: string
     }
@@ -956,8 +993,12 @@ declare namespace BluetoothlePlugin {
     }
 
     interface Error {
-        code: number,
-        message: string
+        error: string,
+        message: string,
+        /** Optional service which is involved with the error */
+        service?: string,
+        /** Optional characteristic which is involved with the error */
+        characteristic?: string,
     }
 }
 

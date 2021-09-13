@@ -1,5 +1,44 @@
+"use strict";
 var bluetoothleName = "BluetoothLePlugin";
 var bluetoothle = {
+  _newReorderer: function(successCallback) {
+    let context = {
+      callback: successCallback,
+      onHold: {},
+      nextExpected: 0,
+    };
+    return bluetoothle._reorderCallback.bind(context);
+  },
+  _reorderCallback: function(obj, sequence) {
+    /**
+     * If there is not a sequence number present, just pass the callback through
+     * without reordering it.
+     */
+    if (sequence == null) {
+      this.callback(obj);
+      return;
+    }
+
+    if (sequence != this.nextExpected) console.warn("Received out of order: expected " + this.nextExpected +" got " + sequence);
+
+    this.onHold[sequence] = obj;
+
+    bluetoothle._tryDispatchInOrder.bind(this)();
+  },
+  _tryDispatchInOrder: function() {
+    while (this.nextExpected in this.onHold) {
+      try {
+        let value = this.onHold[this.nextExpected];
+        delete this.onHold[this.nextExpected];
+
+        this.nextExpected += 1;
+
+        this.callback(value);
+      } catch (err) {
+        console.error("Error in callback in Reorderer", err);
+      }
+    }
+  },
   initialize: function(successCallback, params) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "initialize", [params]);
   },
@@ -11,7 +50,7 @@ var bluetoothle = {
   },
   getAdapterInfo: function(successCallback) {
     cordova.exec(successCallback, successCallback, bluetoothleName, "getAdapterInfo", []);
-  },  
+  },
   startScan: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "startScan", [params]);
   },
@@ -55,7 +94,7 @@ var bluetoothle = {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "read", [params]);
   },
   subscribe: function(successCallback, errorCallback, params) {
-    cordova.exec(successCallback, errorCallback, bluetoothleName, "subscribe", [params]);
+    cordova.exec(bluetoothle._newReorderer(successCallback), errorCallback, bluetoothleName, "subscribe", [params]);
   },
   unsubscribe: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "unsubscribe", [params]);
@@ -114,6 +153,9 @@ var bluetoothle = {
   requestLocation: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "requestLocation", []);
   },
+  retrievePeripheralsByAddress: function(successCallback, errorCallback, params) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "retrievePeripheralsByAddress", [params])
+  },
   initializePeripheral: function(successCallback, errorCallback, params) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "initializePeripheral", [params]);
   },
@@ -166,6 +208,17 @@ var bluetoothle = {
   },
   bytesToString: function(bytes) {
     return String.fromCharCode.apply(null, new Uint16Array(bytes));
+  },
+  encodeUnicode: function(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+      return String.fromCharCode(parseInt(p1, 16))
+    }))
+  },
+  decodeUnicode: function(str) {
+    // Going backwards: from byte stream, to percent-encoding, to original string.
+    return decodeURIComponent(atob(str).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
   },
   bytesToHex: function(bytes) {
     var string = [];

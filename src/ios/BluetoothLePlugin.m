@@ -8,14 +8,17 @@ NSString *const keyStatusReceiver = @"statusReceiver";
 NSString *const keyMessage = @"message";
 NSString *const keyName = @"name";
 NSString *const keyAddress = @"address";
+NSString *const keyAddresses = @"addresses";
 NSString *const keyProperties = @"properties";
 NSString *const keyRssi = @"rssi";
 NSString *const keyAdvertisement = @"advertisement";
 NSString *const keyUuid = @"uuid";
 NSString *const keyService = @"service";
+NSString *const keyServiceIndex = @"serviceIndex";
 NSString *const keyServices = @"services";
 NSString *const keyCharacteristic = @"characteristic";
 NSString *const keyCharacteristics = @"characteristics";
+NSString *const keyCharacteristicIndex = @"characteristicIndex";
 NSString *const keyDescriptor = @"descriptor";
 NSString *const keyDescriptors = @"descriptors";
 NSString *const keyValue = @"value";
@@ -825,6 +828,43 @@ NSString *const operationWrite = @"write";
 
   //Get connected connections with specified services
   NSArray* peripherals = [centralManager retrieveConnectedPeripheralsWithServices:serviceUuids];
+
+  //Array to store returned peripherals
+  NSMutableArray* peripheralsOut = [[NSMutableArray alloc] init];
+
+  //Create an object from each peripheral containing connection ID and name, and add to array
+  for (CBPeripheral* peripheral in peripherals) {
+    NSMutableDictionary* peripheralOut = [NSMutableDictionary dictionary];
+    [self addDevice:peripheral :peripheralOut];
+    [peripheralsOut addObject:peripheralOut];
+  }
+
+  //Return the array
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:peripheralsOut];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)retrievePeripheralsByAddress:(CDVInvokedUrlCommand *)command {
+  //Ensure Bluetooth is enabled
+  if ([self isNotInitialized:command]) {
+    return;
+  }
+
+  //Get an array of addresses to filter by
+  NSDictionary *obj = [self getArgsObject:command.arguments];
+  NSMutableArray* addresses = nil;
+  if (obj != nil) {
+    addresses = [self getAddresses:obj forType:keyAddresses];
+  }
+
+  //retrievePeripheralsWithIdentifiers doesn't like nil UUID array
+  if (addresses == nil) {
+    addresses = [NSMutableArray array];
+  }
+
+  //Get paired peripherals with specified addresses/identifiers
+  NSArray* peripherals = [centralManager retrievePeripheralsWithIdentifiers:addresses];
 
   //Array to store returned peripherals
   NSMutableArray* peripheralsOut = [[NSMutableArray alloc] init];
@@ -2218,6 +2258,9 @@ NSString *const operationWrite = @"write";
   if (callback == nil) {
     return;
   }
+  
+  //Reset writeQIsRunning flag since we have no way of knowing if one was interupted
+  writeQIsRunning = false;
 
   //Return disconnected connection information
   NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
@@ -2534,6 +2577,28 @@ NSString *const operationWrite = @"write";
 
   [self addDevice:peripheral :returnObj];
   [self addCharacteristic:characteristic :returnObj];
+
+  // find & set serviceIndex & characteristicIndex
+  int serviceIndex = 0;
+  for (CBService* item in peripheral.services) {
+    if ([item isEqual: characteristic.service]) {
+      break;
+    } else if ([item.UUID isEqual: characteristic.service.UUID]) {
+      serviceIndex++;
+    }
+  }
+
+  int characteristicIndex = 0;
+  for (CBCharacteristic* item in characteristic.service.characteristics) {
+    if ([item isEqual: characteristic]) {
+      break;
+    } else if ([item.UUID isEqual: characteristic.UUID]) {
+      characteristicIndex++;
+    }
+  }
+
+  [returnObj setValue:@(serviceIndex) forKey:keyServiceIndex];
+  [returnObj setValue:@(characteristicIndex) forKey:keyCharacteristicIndex];
 
   //If an error exists...
   if (error != nil) {
@@ -3450,6 +3515,38 @@ NSString *const operationWrite = @"write";
   return [[NSUUID UUID] initWithUUIDString:addressString];
 }
 
+-(NSMutableArray*) getAddresses:(NSDictionary *) dictionary forType:(NSString*) type {
+  NSMutableArray* addresses = [[NSMutableArray alloc] init];
+
+  NSArray* addressStrings = [dictionary valueForKey:type];
+
+  if (addressStrings == nil) {
+    return nil;
+  }
+
+  if (![addressStrings isKindOfClass:[NSArray class]]) {
+    return nil;
+  }
+
+  for (NSString* addressString in addressStrings) {
+    if (![addressString isKindOfClass:[NSString class]]) {
+      continue;
+    }
+
+    NSUUID* address = [[NSUUID UUID] initWithUUIDString:addressString];
+
+    if (address != nil) {
+      [addresses addObject:address];
+    }
+  }
+
+  if (addresses.count == 0) {
+    return nil;
+  }
+
+  return addresses;
+}
+
 -(NSNumber*) getRequest:(NSDictionary *)obj {
   NSNumber* request = [obj valueForKey:keyRequest];
 
@@ -3542,15 +3639,23 @@ NSString *const operationWrite = @"write";
     return nil;
   }
 
-  CBService* service = nil;
+  NSString* serviceIndexFromDict = [obj valueForKey:keyServiceIndex];
+  int serviceIndex = 0;
 
-  for (CBService* item in peripheral.services) {
-    if ([item.UUID isEqual: uuid]) {
-      service = item;
-    }
+  if (serviceIndexFromDict != nil) {
+    serviceIndex = [serviceIndexFromDict intValue];
   }
 
-  return service;
+  int found = 0;
+  for (CBService* item in peripheral.services) {
+    if ([item.UUID isEqual: uuid] && (serviceIndex == found)) {
+      return item;
+    } else if ([item.UUID isEqual: uuid] && (serviceIndex != found)) {
+      found++;
+    }
+  }
+    
+    return nil;
 }
 
 -(CBCharacteristic*) getCharacteristic:(NSDictionary *) obj forService:(CBService*) service {
@@ -3574,15 +3679,23 @@ NSString *const operationWrite = @"write";
     return nil;
   }
 
-  CBCharacteristic* characteristic = nil;
+  NSString* characteristicIndexFromDict = [obj valueForKey:keyCharacteristicIndex];
+  int characteristicIndex = 0;
 
-  for (CBCharacteristic* item in service.characteristics) {
-    if ([item.UUID isEqual: uuid]) {
-      characteristic = item;
-    }
+  if (characteristicIndexFromDict != nil) {
+    characteristicIndex = [characteristicIndexFromDict intValue];
   }
 
-  return characteristic;
+  int found = 0;
+  for (CBCharacteristic* item in service.characteristics) {
+    if ([item.UUID isEqual: uuid] && (characteristicIndex == found)) {
+      return item;
+    } else if ([item.UUID isEqual: uuid] && (characteristicIndex != found)) {
+      found++;
+    }
+  }
+    
+    return nil;
 }
 
 -(CBDescriptor*) getDescriptor:(NSDictionary *) obj forCharacteristic:(CBCharacteristic*) characteristic {

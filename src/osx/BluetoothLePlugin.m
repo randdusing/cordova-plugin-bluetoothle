@@ -8,6 +8,7 @@ NSString *const keyStatusReceiver = @"statusReceiver";
 NSString *const keyMessage = @"message";
 NSString *const keyName = @"name";
 NSString *const keyAddress = @"address";
+NSString *const keyAddresses = @"addresses";
 NSString *const keyProperties = @"properties";
 NSString *const keyRssi = @"rssi";
 NSString *const keyAdvertisement = @"advertisement";
@@ -818,6 +819,43 @@ NSString *const operationWrite = @"write";
 
   //Get connected connections with specified services
   NSArray* peripherals = [centralManager retrieveConnectedPeripheralsWithServices:serviceUuids];
+
+  //Array to store returned peripherals
+  NSMutableArray* peripheralsOut = [[NSMutableArray alloc] init];
+
+  //Create an object from each peripheral containing connection ID and name, and add to array
+  for (CBPeripheral* peripheral in peripherals) {
+    NSMutableDictionary* peripheralOut = [NSMutableDictionary dictionary];
+    [self addDevice:peripheral :peripheralOut];
+    [peripheralsOut addObject:peripheralOut];
+  }
+
+  //Return the array
+  CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:peripheralsOut];
+  [pluginResult setKeepCallbackAsBool:false];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)retrievePeripheralsByAddress:(CDVInvokedUrlCommand *)command {
+  //Ensure Bluetooth is enabled
+  if ([self isNotInitialized:command]) {
+    return;
+  }
+
+  //Get an array of addresses to filter by
+  NSDictionary *obj = [self getArgsObject:command.arguments];
+  NSMutableArray* addresses = nil;
+  if (obj != nil) {
+    addresses = [self getAddresses:obj forType:keyAddresses];
+  }
+
+  //retrievePeripheralsWithIdentifiers doesn't like nil UUID array
+  if (addresses == nil) {
+    addresses = [NSMutableArray array];
+  }
+
+  //Get paired peripherals with specified addresses/identifiers
+  NSArray* peripherals = [centralManager retrievePeripheralsWithIdentifiers:addresses];
 
   //Array to store returned peripherals
   NSMutableArray* peripheralsOut = [[NSMutableArray alloc] init];
@@ -3417,6 +3455,38 @@ NSString *const operationWrite = @"write";
   }
 
   return [[NSUUID UUID] initWithUUIDString:addressString];
+}
+
+-(NSMutableArray*) getAddresses:(NSDictionary *) dictionary forType:(NSString*) type {
+  NSMutableArray* addresses = [[NSMutableArray alloc] init];
+
+  NSArray* addressStrings = [dictionary valueForKey:type];
+
+  if (addressStrings == nil) {
+    return nil;
+  }
+
+  if (![addressStrings isKindOfClass:[NSArray class]]) {
+    return nil;
+  }
+
+  for (NSString* addressString in addressStrings) {
+    if (![addressString isKindOfClass:[NSString class]]) {
+      continue;
+    }
+
+    NSUUID* address = [[NSUUID UUID] initWithUUIDString:addressString];
+
+    if (address != nil) {
+      [addresses addObject:address];
+    }
+  }
+
+  if (addresses.count == 0) {
+    return nil;
+  }
+
+  return addresses;
 }
 
 -(NSNumber*) getRequest:(NSDictionary *)obj {

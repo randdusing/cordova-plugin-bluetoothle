@@ -62,6 +62,7 @@
 - (void)requestPermission:(CDVInvokedUrlCommand *)command;
 - (void)isLocationEnabled:(CDVInvokedUrlCommand *)command;
 - (void)requestLocation:(CDVInvokedUrlCommand *)command;
+- (void)retrievePeripheralsByAddress:(CDVInvokedUrlCommand *)command;
 
 - (void)initializePeripheral:(CDVInvokedUrlCommand *)command;
 - (void)addService:(CDVInvokedUrlCommand *)command;
