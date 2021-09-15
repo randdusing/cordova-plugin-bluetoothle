@@ -23,15 +23,23 @@
     <source-file src="src/android/SequentialCallbackContext.java" target-dir="src/com/randdusing/bluetoothle" />
     <source-file src="src/android/DfuService.java" target-dir="src/com/randdusing/bluetoothle" />
     <source-file src="src/android/NotificationActivity.java" target-dir="src/com/randdusing/bluetoothle" />
+    <source-file src="src/android/FirmwareUpgradeDownloadedReceiver.java" target-dir="src/com/randdusing/bluetoothle" />
     <config-file target="AndroidManifest.xml" parent="/manifest">
       <application>
           <activity android:name="com.randdusing.bluetoothle.NotificationActivity" />
           <service android:name="com.randdusing.bluetoothle.DfuService" />
+          <receiver android:name="com.randdusing.bluetoothle.FirmwareUpgradeDownloadedReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
+            </intent-filter>
+        </receiver>
       </application>
       <uses-permission android:name="android.permission.BLUETOOTH"/>
       <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
       <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
       <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     </config-file>
     <framework src="no.nordicsemi.android:dfu:1.11.0" />
     <framework src="androidx.annotation:annotation:1.1.0" />

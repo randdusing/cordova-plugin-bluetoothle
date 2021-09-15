@@ -6,11 +6,14 @@ import org.apache.cordova.PluginResult;
 
 import android.Manifest;
 
+import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.ParcelUuid;
 import android.provider.Settings;
 import android.util.Base64;
@@ -38,6 +41,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanCallback;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -51,10 +55,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.util.Log;
-
-import capacitor.android.plugins.R;
-import no.nordicsemi.android.dfu.DfuServiceController;
-import no.nordicsemi.android.dfu.DfuServiceInitiator;
 
 @SuppressWarnings("unchecked")
 
@@ -1316,22 +1316,28 @@ public class BluetoothLePlugin extends CordovaPlugin {
       callbackContext.error(returnObj);
       return;
     }
-    final DfuServiceInitiator starter = new DfuServiceInitiator(device.getAddress())
-            .setDeviceName(device.getName())
-            .setKeepBond(true);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      DfuServiceInitiator.createDfuNotificationChannel(cordova.getActivity());
-    }
-    starter.setPrepareDataObjectDelay(300L);
-    Log.d("BLE", "STARTING UPGRADE");
-    starter.setZip(R.raw.app53);
-    final DfuServiceController controller = starter.start(cordova.getActivity(), DfuService.class);
-    // You may use the controller to pause, resume or abort the DFU process.
 
-    Log.d("BLE", "UPGRADE STARTED");
+    String fileUrl = "https://seltronhomestatic.blob.core.windows.net/firmwares/SELTRON_RT2M_Application-v0.0.1.zip";
+    String fileName = "fw.zip";
+    DownloadManager dlManager = (DownloadManager) cordova.getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+    Uri uri = Uri.parse(fileUrl);
+
     JSONObject returnObj = new JSONObject();
     addDevice(returnObj, device);
-    callbackContext.success(returnObj);
+
+    DownloadManager.Request request = new DownloadManager.Request(uri);
+    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+            .setTitle("Firmware upgrade")
+            .setDescription("Downloading file for firmware upgrade.")
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+
+    FirmwareUpgradeDownloadedReceiver.device = device;
+    FirmwareUpgradeDownloadedReceiver.cordova = cordova;
+    FirmwareUpgradeDownloadedReceiver.callbackContext = callbackContext;
+    FirmwareUpgradeDownloadedReceiver.returnObj = returnObj;
+    FirmwareUpgradeDownloadedReceiver.fileDownloadRef = dlManager.enqueue(request);
+    FirmwareUpgradeDownloadedReceiver.localFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator +
+            fileName;
   }
 
   private void bondAction(JSONArray args, CallbackContext callbackContext) {
