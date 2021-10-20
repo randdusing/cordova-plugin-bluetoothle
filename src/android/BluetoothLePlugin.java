@@ -1316,9 +1316,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
       callbackContext.error(returnObj);
       return;
     }
-
-    String fileUrl = "https://seltronhomestatic.blob.core.windows.net/firmwares/SELTRON_RT2M_Application-v0.0.1.zip";
-    String fileName = "fw.zip";
+    String fileUrl = obj.optString("fileUrl");
+    String[] fileNameParts = fileUrl.split("/");
+    String fileName = fileNameParts[fileNameParts.length - 1];
+    Log.d("BLE", "FILE URL " + fileUrl );
+    Log.d("BLE", "FILE " + fileName );
     DownloadManager dlManager = (DownloadManager) cordova.getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
     Uri uri = Uri.parse(fileUrl);
 
