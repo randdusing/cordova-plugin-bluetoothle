@@ -1320,26 +1320,33 @@ public class BluetoothLePlugin extends CordovaPlugin {
     String[] fileNameParts = fileUrl.split("/");
     String fileName = fileNameParts[fileNameParts.length - 1];
     Log.d("BLE", "FILE URL " + fileUrl );
-    Log.d("BLE", "FILE " + fileName );
     DownloadManager dlManager = (DownloadManager) cordova.getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
     Uri uri = Uri.parse(fileUrl);
 
     JSONObject returnObj = new JSONObject();
     addDevice(returnObj, device);
 
+    FirmwareUpgradeDownloadedReceiver.device = device;
+    FirmwareUpgradeDownloadedReceiver.cordova = cordova;
+    FirmwareUpgradeDownloadedReceiver.callbackContext = callbackContext;
+    FirmwareUpgradeDownloadedReceiver.returnObj = returnObj;
+    FirmwareUpgradeDownloadedReceiver.localFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator +
+            fileName;
+
+    File file = new File(FirmwareUpgradeDownloadedReceiver.localFilePath);
+    if(file.exists()){
+      Log.d("BLE", fileName + " exists -> deleting");
+      file.delete();
+    } else {
+      Log.d("BLE", fileName + " does not exist");
+    }
+    
     DownloadManager.Request request = new DownloadManager.Request(uri);
     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             .setTitle("Firmware upgrade")
             .setDescription("Downloading file for firmware upgrade.")
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
-
-    FirmwareUpgradeDownloadedReceiver.device = device;
-    FirmwareUpgradeDownloadedReceiver.cordova = cordova;
-    FirmwareUpgradeDownloadedReceiver.callbackContext = callbackContext;
-    FirmwareUpgradeDownloadedReceiver.returnObj = returnObj;
     FirmwareUpgradeDownloadedReceiver.fileDownloadRef = dlManager.enqueue(request);
-    FirmwareUpgradeDownloadedReceiver.localFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator +
-            fileName;
   }
 
   private void bondAction(JSONArray args, CallbackContext callbackContext) {

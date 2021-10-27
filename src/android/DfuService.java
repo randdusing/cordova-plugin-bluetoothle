@@ -44,6 +44,6 @@ public class DfuService extends DfuBaseService {
     @Override
     protected void updateForegroundNotification(@NonNull final NotificationCompat.Builder builder) {
         // Customize the foreground service notification here.
-        Log.d("BLE", "updateForegroundNotification");
+        Log.d("BLE", "update foreground notification");
     }
 }
