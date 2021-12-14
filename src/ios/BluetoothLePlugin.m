@@ -1,4 +1,5 @@
 #import "BluetoothLePlugin.h"
+@import iOSDFULibrary;
 
 //Object Keys
 NSString *const keyStatus = @"status";
@@ -1855,6 +1856,14 @@ NSString *const operationUpgradeFirmware = @"upgradeFirmware";
     return;
   }
 
+  NSURL *firmwareUrl = [NSURL URLWithString:@"https://seltronhomestatic.blob.core.windows.net/firmwares/SELTRON_RT2M_Application-v0.0.18.zip"];
+  DFUFirmware *selectedFirmware = [[DFUFirmware alloc] initWithUrlToZipFile:firmwareUrl];
+    
+  NSLog(@"absoluteURL = %@", [firmwareUrl absoluteURL]);
+    
+  // or
+  // DFUFirmware *selectedFirmware = [[DFUFirmware alloc] initWithUrlToBinOrHexFile:url urlToDatFile:dtUrl type:type];
+  
   NSNumber* result = @123;
   NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, @"result", nil];
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
