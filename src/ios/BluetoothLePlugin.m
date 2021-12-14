@@ -143,6 +143,7 @@ NSString *const operationRead = @"read";
 NSString *const operationSubscribe = @"subscribe";
 NSString *const operationUnsubscribe = @"unsubscribe";
 NSString *const operationWrite = @"write";
+NSString *const operationUpgradeFirmware = @"upgradeFirmware";
 
 @implementation BluetoothLePlugin
 
@@ -1819,6 +1820,45 @@ NSString *const operationWrite = @"write";
 
   //Try to read RSSI
   [peripheral readRSSI];
+}
+
+- (void)upgradeFirmware:(CDVInvokedUrlCommand *)command {
+
+  //Ensure Bluetooth is enabled
+  if ([self isNotInitialized:command]) {
+    return;
+  }
+
+  //Get the arguments
+  NSDictionary* obj = [self getArgsObject:command.arguments];
+  if ([self isNotArgsObject:obj :command]) {
+    return;
+  }
+
+  //Get the connection address
+  NSUUID* address = [self getAddress:obj];
+  if ([self isNotAddress:address :command]) {
+    return;
+  }
+
+  //If never connected or attempted connected, reconnect can't be used
+  NSMutableDictionary* connection = [self wasNeverConnected:address :command];
+  if (connection == nil) {
+    return;
+  }
+
+  //Get the peripheral
+  CBPeripheral* peripheral = [connection objectForKey:keyPeripheral];
+
+  //Ensure connection is connected
+  if ([self isNotConnected:peripheral :command]) {
+    return;
+  }
+
+  NSNumber* result = @123;
+  NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, @"result", nil];
+  CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)mtu:(CDVInvokedUrlCommand *)command {

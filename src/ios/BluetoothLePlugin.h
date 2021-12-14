@@ -49,6 +49,7 @@
 - (void)readDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)rssi:(CDVInvokedUrlCommand *)command;
+- (void)upgradeFirmware:(CDVInvokedUrlCommand *)command;
 - (void)mtu:(CDVInvokedUrlCommand *)command;
 - (void)requestConnectionPriority:(CDVInvokedUrlCommand *)command;
 - (void)isInitialized:(CDVInvokedUrlCommand *)command;
