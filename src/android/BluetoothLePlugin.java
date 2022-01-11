@@ -888,9 +888,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
   public void hasPermissionAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
-
     addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
-
     callbackContext.success(returnObj);
   }
 
@@ -902,9 +900,14 @@ public class BluetoothLePlugin extends CordovaPlugin {
       callbackContext.error(returnObj);
       return;
     }
-
     permissionsCallback = callbackContext;
-    cordova.requestPermission(this, REQUEST_ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION);
+    String[] permissions = {
+      Manifest.permission.ACCESS_COARSE_LOCATION,
+      Manifest.permission.ACCESS_FINE_LOCATION,
+      Manifest.permission.READ_EXTERNAL_STORAGE,
+      Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+    cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
   }
 
   public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
