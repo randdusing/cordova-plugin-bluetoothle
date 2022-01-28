@@ -316,6 +316,15 @@ var bluetoothle = {
       []
     );
   },
+  requestExternalStoragePermissions: function (successCallback, errorCallback) {
+    cordova.exec(
+      successCallback,
+      errorCallback,
+      bluetoothleName,
+      'requestExternalStoragePermissions',
+      []
+    );
+  },
   isLocationEnabled: function (successCallback, errorCallback) {
     cordova.exec(
       successCallback,
