@@ -916,7 +916,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   }
 
   public void requestExternalStoragePermissionsAction(CallbackContext callbackContext) {
-    Log.d("BLE", "requestExternalStoragePermissionsAction");
+    Log.d("BLEFW", "requestExternalStoragePermissionsAction");
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       JSONObject returnObj = new JSONObject();
       addProperty(returnObj, keyError, "requestPermission");
@@ -934,17 +934,17 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
   public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
       throws JSONException {
-    Log.d("BLE", "onRequestPermissionResult");
+    Log.d("BLEFW", "onRequestPermissionResult");
     if (permissionsCallback == null) {
       return;
     }
     JSONObject returnObj = new JSONObject();
     if (requestCode == REQUEST_EXTERNAL_STORAGE) {
-      Log.d("BLE", "onRequestPermissionResult external storage");
+      Log.d("BLEFW", "onRequestPermissionResult external storage");
       addProperty(returnObj, "readPermission", cordova.hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE));
       addProperty(returnObj, "writePermission", cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE));
     } else {
-      Log.d("BLE", "onRequestPermissionResult fine location");
+      Log.d("BLEFW", "onRequestPermissionResult fine location");
       addProperty(returnObj, "requestPermission", cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
     }
     permissionsCallback.success(returnObj);
@@ -1333,24 +1333,24 @@ public class BluetoothLePlugin extends CordovaPlugin {
   }
 
   private void upgradeFirmwareAction(JSONArray args, CallbackContext callbackContext) {
-    Log.d("BLE", "UPGRADE_FIRMWARE");
+    Log.d("BLEFW", "UPGRADE_FIRMWARE");
     if (isNotInitialized(callbackContext, true)) {
-      Log.d("BLE", "NOT INITIALIZED");
+      Log.d("BLEFW", "NOT INITIALIZED");
       return;
     }
     JSONObject obj = getArgsObject(args);
     if (isNotArgsObject(obj, callbackContext)) {
-      Log.d("BLE", "BAD REQUEST");
+      Log.d("BLEFW", "BAD REQUEST");
       return;
     }
     String address = getAddress(obj);
     if (isNotAddress(address, callbackContext)) {
-      Log.d("BLE", "NOT ADDRESS");
+      Log.d("BLEFW", "NOT ADDRESS");
       return;
     }
     BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
     if (device == null) {
-      Log.d("BLE", "DEVICE NOT FOUND");
+      Log.d("BLEFW", "DEVICE NOT FOUND");
       JSONObject returnObj = new JSONObject();
       addProperty(returnObj, keyError, errorBond);
       addProperty(returnObj, keyMessage, logNoDevice);
@@ -1362,7 +1362,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     String[] fileNameParts = fileUrl.split("/");
     String fileName = fileNameParts[fileNameParts.length - 1];
 
-    Log.d("BLE", "FILE URL " + fileUrl);
+    Log.d("BLEFW", "FILE URL " + fileUrl);
     DownloadManager dlManager = (DownloadManager) cordova.getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
 
     JSONObject returnObj = new JSONObject();
@@ -1525,7 +1525,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       Boolean returnValue = (Boolean) mi.invoke(device);
       result = returnValue.booleanValue();
     } catch (Exception e) {
-      Log.d("BLE", e.getMessage());
+      Log.d("BLEFW", e.getMessage());
     }
 
     if (!result) {
@@ -1810,7 +1810,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
         return bool;
       }
     } catch (Exception localException) {
-      Log.e("BLE", "An exception occured while refreshing device cache");
+      Log.e("BLEFW", "An exception occured while refreshing device cache");
     }
     return false;
   }
@@ -2848,7 +2848,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   }
 
   private void setPinAction(JSONArray args, CallbackContext callbackContext) {
-    Log.d("BLE", "set pin");
+    Log.d("BLEFW", "set pin");
     if (mPairingRequestReceiver != null) {
       cordova.getActivity().unregisterReceiver(mPairingRequestReceiver);
     }
@@ -2872,13 +2872,13 @@ public class BluetoothLePlugin extends CordovaPlugin {
       return;
     }
 
-    Log.d("BLE", "set pin " + address + " " + pin);
+    Log.d("BLEFW", "set pin " + address + " " + pin);
     JSONObject returnObj = new JSONObject();
     try {
       mPairingRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-          Log.d("BLE", "on receive");
+          Log.d("BLEFW", "on receive");
           String action = intent.getAction();
           if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(action)) {
             BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -2898,7 +2898,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       addProperty(returnObj, keyStatus, "pinSet");
       callbackContext.success(returnObj);
     } catch (Exception e) {
-      Log.d("BLE", "exception " + e.getMessage());
+      Log.d("BLEFW", "exception " + e.getMessage());
       addProperty(returnObj, keyError, "setPin");
       addProperty(returnObj, keyMessage, "Failed to set pin");
       callbackContext.error(returnObj);
@@ -3898,7 +3898,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       try {
         transportMode = obj.getInt("transport");
       } catch (JSONException e) {
-        Log.e("BLE",
+        Log.e("BLEFW",
             "An exception occurred while transport connection parameter, fall back to: BluetoothDevice.TRANSPORT_AUTO");
       }
     }
@@ -4804,7 +4804,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     // TODO implement this later
     public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
-      // Log.d("BLE", "execute write");
+      Log.d("BLEFW", "execute write");
     }
 
     public void onMtuChanged(BluetoothDevice device, int mtu) {

@@ -11,6 +11,7 @@ public class DfuService extends DfuBaseService {
 
     @Override
     protected Class<? extends Activity> getNotificationTarget() {
+        Log.d("BLE", "DfuService get notification target");
         /*
          * As a target activity the NotificationActivity is returned, not the MainActivity. This is because
          * the notification must create a new task:

@@ -17,8 +17,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 
+import no.nordicsemi.android.dfu.DfuProgressListener;
+import no.nordicsemi.android.dfu.DfuProgressListenerAdapter;
 import no.nordicsemi.android.dfu.DfuServiceController;
 import no.nordicsemi.android.dfu.DfuServiceInitiator;
+import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
 
 public class FirmwareUpgradeDownloadedReceiver extends BroadcastReceiver {
 
@@ -34,7 +37,7 @@ public class FirmwareUpgradeDownloadedReceiver extends BroadcastReceiver {
 
     public void onReceive(Context ctx, Intent intent) {
         String action = intent.getAction();
-        Log.d("BLE", "ON RECEIVE " + action);
+        Log.d("BLEFW", "ON RECEIVE " + action);
         if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
             long downloadedFileRef = intent.getLongExtra("extra_download_id", 0L);
             if (downloadedFileRef > 0 && device != null && cordova != null && callbackContext != null && returnObj != null && downloadManager != null && fileDownloadRef > 0 && fileDownloadRef == downloadedFileRef) {
@@ -62,19 +65,48 @@ public class FirmwareUpgradeDownloadedReceiver extends BroadcastReceiver {
                     starter.setPrepareDataObjectDelay(300L);
                     File file = new File(filePath);
                     if (file.exists()) {
-                        Log.d("BLE", "FILE EXISTS " + filePath);
+                        final DfuProgressListener dfuProgressListener = new DfuProgressListenerAdapter() {
+                            @Override
+                            public void onDfuCompleted(final String deviceAddress) {
+                                Log.d("BLEFW LISTENER", "ON COMPLETED ");
+                                if (callbackContext != null && returnObj != null) {
+                                    callbackContext.success(returnObj);
+                                    callbackContext = null;
+                                    returnObj = null;
+                                    DfuServiceListenerHelper.unregisterProgressListener(ctx, this);
+                                }
+                            }
+                            @Override
+                            public void onDfuAborted(final String deviceAddress) {
+                                Log.d("BLEFW LISTENER", "ON ABORTED ");
+                                if (callbackContext != null && returnObj != null) {
+                                    callbackContext.error("Firmware upgrade aborted");
+                                    callbackContext = null;
+                                    returnObj = null;
+                                    DfuServiceListenerHelper.unregisterProgressListener(ctx, this);
+                                }
+                            }
+                            @Override
+                            public void onError(final String deviceAddress, int error, int errorType, String message) {
+                                Log.d("BLEFW LISTENER", "ON ERROR ");
+                                if (callbackContext != null) {
+                                    callbackContext.error(message);
+                                    callbackContext = null;
+                                    returnObj = null;
+                                    DfuServiceListenerHelper.unregisterProgressListener(ctx, this);
+                                }
+                            }
+                        };
+                        Log.d("BLEFW", "FILE EXISTS " + filePath);
                         Uri firmwareUri = Uri.fromFile(file);
+                        DfuServiceListenerHelper.registerProgressListener(ctx, dfuProgressListener);
                         starter.setZip(firmwareUri);
-                        // final DfuServiceController controller = starter.start(cordova.getActivity(), DfuService.class);
                         starter.start(cordova.getActivity(), DfuService.class);
-                        Log.d("BLE", "UPGRADE STARTED");
-                        if (callbackContext != null && returnObj != null) {
-                            callbackContext.success(returnObj);
-                        }
+                        Log.d("BLEFW", "UPGRADE STARTED");
                         return;
                     }
                 }
-                Log.d("BLE", "FILE NOT FOUND " + filePath);
+                Log.d("BLEFW", "FILE NOT FOUND " + filePath);
                 if (callbackContext != null && returnObj != null) {
                     callbackContext.error("Firmware download failed");
                 }
