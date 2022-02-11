@@ -41,7 +41,14 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanCallback;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +63,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.util.Log;
+
+import no.nordicsemi.android.dfu.DfuProgressListener;
+import no.nordicsemi.android.dfu.DfuProgressListenerAdapter;
+import no.nordicsemi.android.dfu.DfuServiceInitiator;
+import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 @SuppressWarnings("unchecked")
 
@@ -1363,23 +1380,86 @@ public class BluetoothLePlugin extends CordovaPlugin {
     String fileName = fileNameParts[fileNameParts.length - 1];
 
     Log.d("BLEFW", "FILE URL " + fileUrl);
-    DownloadManager dlManager = (DownloadManager) cordova.getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
 
     JSONObject returnObj = new JSONObject();
     addDevice(returnObj, device);
+    downloadFirmwareFile(device, fileUrl, fileName, callbackContext, returnObj);
+  }
 
-    DownloadManager.Request request = new DownloadManager.Request(Uri.parse(fileUrl));
-    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-        .setTitle("Firmware upgrade")
-        .setDescription("Downloading file for firmware upgrade.")
-        .setVisibleInDownloadsUi(true)
-        .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
-    FirmwareUpgradeDownloadedReceiver.device = device;
-    FirmwareUpgradeDownloadedReceiver.cordova = cordova;
-    FirmwareUpgradeDownloadedReceiver.callbackContext = callbackContext;
-    FirmwareUpgradeDownloadedReceiver.returnObj = returnObj;
-    FirmwareUpgradeDownloadedReceiver.downloadManager = dlManager;
-    FirmwareUpgradeDownloadedReceiver.fileDownloadRef = dlManager.enqueue(request);
+  private void downloadFirmwareFile(BluetoothDevice device, String fileUrl, String fileName, final CallbackContext callbackContext, final JSONObject returnObject) {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder()
+            .url(fileUrl)
+            .build();
+    client.newCall(request).enqueue(new Callback() {
+      @Override
+      public void onFailure(Call call, IOException e) {
+        Log.d("BLEFW", "FILE DOWNLOAD FAILED");
+        callbackContext.error("Unable to download firmware file");
+      }
+      @Override
+      public void onResponse(Call call, Response response) throws IOException {
+        if (!response.isSuccessful()) {
+          Log.d("BLEFW", "FILE DOWNLOAD FAILED");
+          callbackContext.error("Unable to download firmware file");
+          return;
+        }
+        Log.d("BLEFW", "FILE DOWNLOAD SUCCESS");
+        Context ctx = cordova.getActivity();
+        File file = new File(ctx.getCacheDir(), fileName);
+        InputStream in = response.body().byteStream();
+        BufferedInputStream input = new BufferedInputStream(in);
+        OutputStream output = new FileOutputStream(file);
+        byte[] data = new byte[1024];
+        long total = 0;
+        int count = input.read(data);
+        while (count != -1) {
+          total += count;
+          output.write(data, 0, count);
+          count = input.read(data);
+        }
+        output.flush();
+        output.close();
+        input.close();
+        final DfuServiceInitiator starter = new DfuServiceInitiator(device.getAddress())
+                .setDeviceName(device.getName())
+                .setKeepBond(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+          DfuServiceInitiator.createDfuNotificationChannel(ctx);
+        }
+        starter.setPrepareDataObjectDelay(300L);
+        if (file.exists()) {
+          final DfuProgressListener dfuProgressListener = new DfuProgressListenerAdapter() {
+            @Override
+            public void onDfuCompleted(final String deviceAddress) {
+              Log.d("BLEFW LISTENER", "ON UPGRADE COMPLETED ");
+              callbackContext.success(returnObject);
+              DfuServiceListenerHelper.unregisterProgressListener(cordova.getActivity(), this);
+            }
+            @Override
+            public void onDfuAborted(final String deviceAddress) {
+              Log.d("BLEFW LISTENER", "ON UPGRADE ABORTED ");
+              callbackContext.error("Firmware upgrade aborted");
+              DfuServiceListenerHelper.unregisterProgressListener(ctx, this);
+            }
+            @Override
+            public void onError(final String deviceAddress, int error, int errorType, String message) {
+              Log.d("BLEFW LISTENER", "ON UPGRADE ERROR ");
+              callbackContext.error(message);
+              DfuServiceListenerHelper.unregisterProgressListener(ctx, this);
+            }
+          };
+          Log.d("BLEFW", "FILE EXISTS " + fileName);
+          Uri firmwareUri = Uri.fromFile(file);
+          DfuServiceListenerHelper.registerProgressListener(ctx, dfuProgressListener);
+          starter.setZip(firmwareUri);
+          starter.start(cordova.getActivity(), DfuService.class);
+          Log.d("BLEFW", "UPGRADE STARTED");
+        } else {
+          callbackContext.error("Firmware file not found");
+        }
+      }
+    });
   }
 
   private void bondAction(JSONArray args, CallbackContext callbackContext) {
