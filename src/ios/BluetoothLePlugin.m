@@ -1825,20 +1825,28 @@ NSString *const operationUpgradeFirmware = @"upgradeFirmware";
 
 - (void)upgradeFirmware:(CDVInvokedUrlCommand *)command {
     
+    NSMutableDictionary* errorReturnObj = [NSMutableDictionary dictionary];
+    [errorReturnObj setValue:@"Firmware upgrade failed" forKey:keyError];
+    CDVPluginResult *errorPluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:errorReturnObj];
+    [errorPluginResult setKeepCallbackAsBool:false];
+    
     //Ensure Bluetooth is enabled
     if ([self isNotInitialized:command]) {
+        [self.commandDelegate sendPluginResult:errorPluginResult callbackId:command.callbackId];
         return;
     }
     
     //Get the arguments
     NSDictionary* obj = [self getArgsObject:command.arguments];
     if ([self isNotArgsObject:obj :command]) {
+        [self.commandDelegate sendPluginResult:errorPluginResult callbackId:command.callbackId];
         return;
     }
     
     //Get the connection address
     NSUUID* address = [self getAddress:obj];
     if ([self isNotAddress:address :command]) {
+        [self.commandDelegate sendPluginResult:errorPluginResult callbackId:command.callbackId];
         return;
     }
     
@@ -1847,6 +1855,7 @@ NSString *const operationUpgradeFirmware = @"upgradeFirmware";
     //If never connected or attempted connected, reconnect can't be used
     NSMutableDictionary* connection = [self wasNeverConnected:address :command];
     if (connection == nil) {
+        [self.commandDelegate sendPluginResult:errorPluginResult callbackId:command.callbackId];
         return;
     }
     
@@ -1855,66 +1864,9 @@ NSString *const operationUpgradeFirmware = @"upgradeFirmware";
     
     //Ensure connection is connected
     if ([self isNotConnected:peripheral :command]) {
+        [self.commandDelegate sendPluginResult:errorPluginResult callbackId:command.callbackId];
         return;
     }
-    
-    /*
-     NSString *stringURL = @"https://www.seltronhome.com/assets/img/Vstopna/privarcuj.jpg";
-     NSURL  *url = [NSURL URLWithString:stringURL];
-     NSData *urlData = [NSData dataWithContentsOfURL:url];
-     if (urlData)
-     {
-     NSLog(@"BLE urlData = %@", [[NSString alloc] initWithData:urlData encoding:NSUTF8StringEncoding]);
-     NSArray  *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-     NSString  *documentsDirectory = [paths objectAtIndex:0];
-     NSString  *filePath = [NSString stringWithFormat:@"%@/%@", documentsDirectory,@"filename.png"];
-     [urlData writeToFile:filePath atomically:YES];
-     NSLog(@"BLE filePath = %@", filePath);
-     } else {
-     NSLog(@"BLE urlData = null");
-     }
-     */
-    /*
-     // Send a synchronous request
-     NSURLRequest * urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://www.seltronhome.com/assets/img/Vstopna/privarcuj.jpg"]];
-     NSURLResponse * response = nil;
-     NSError * error = nil;
-     NSData * data = [NSURLConnection sendSynchronousRequest:urlRequest
-     returningResponse:&response
-     error:&error];
-     NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-     
-     NSLog(@"BLE response status code: %ld", (long)[httpResponse statusCode]);
-     if (error == nil)    {
-     NSString *myString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-     NSLog(@"BLE content = %@", myString);
-     // Parse data here
-     } else {
-     NSLog(@"BLE error = %@", error.localizedDescription);
-     }
-     */
-    
-    /*
-     NSLog(@"BLE fileUrlString = %@", fileUrlString);
-     
-     NSURL *remoteFirmwareUrl = [NSURL URLWithString:fileUrlString];
-     
-     NSData *urlData = [NSData dataWithContentsOfURL:remoteFirmwareUrl];
-     
-     NSLog(@"BLE dataWithContentsOfURL");
-     
-     NSString *firmwarePath = [[NSString alloc] initWithString:[[[[NSBundle mainBundle]  resourcePath] stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"Documents"]];
-     
-     firmwarePath = [firmwarePath stringByAppendingPathComponent:@"fw.zip"];
-     
-     NSLog(@"BLE firmwarePath = %@", firmwarePath);
-     
-     [urlData writeToFile:firmwarePath atomically:YES];
-     
-     NSLog(@"BLE writeToFile");
-     
-     firmwarePath = [ @"file:///" stringByAppendingPathComponent:firmwarePath];
-     */
     
     NSURL  *url = [NSURL URLWithString:fileUrlString];
     NSData *urlData = [NSData dataWithContentsOfURL:url];
@@ -1932,32 +1884,23 @@ NSString *const operationUpgradeFirmware = @"upgradeFirmware";
             NSLog(@"BLE localFirmwarePath = %@", localFirmwarePath);
             NSLog(@"BLE localFirmwarePath = %@", [localFirmwareUrl absoluteURL]);
             DFUFirmware *selectedFirmware = [[DFUFirmware alloc] initWithUrlToZipFile:localFirmwareUrl];
-            
             DFUServiceInitiator *initiator =[[DFUServiceInitiator alloc]initWithQueue:dispatch_get_main_queue() delegateQueue:dispatch_get_main_queue() progressQueue:dispatch_get_main_queue() loggerQueue:dispatch_get_main_queue()];
-            
-            // DFUServiceInitiator *initiator = [[DFUServiceInitiator alloc] init];
+            firmwareUpgradeCallback = command.callbackId;
             
             [initiator withFirmware:selectedFirmware];
             // Optional:
             // initiator.forceDfu = YES/NO; // default NO
             // initiator.packetReceiptNotificationParameter = N; // default is 12
             // initiator.logger = self; // - to get log info
-            // initiator.delegate = self; // - to be informed about current state and errors
+            initiator.delegate = self; // - to be informed about current state and errors
             // initiator.progressDelegate = self; // - to show progress bar
             // initiator.peripheralSelector = ... // the default selector is used
             
             DFUServiceController *controller = [initiator startWithTarget: peripheral];
-            
+            return;
         }
-        
-    } else {
-        NSLog(@"BLE urlData = null");
     }
-    
-    NSNumber* result = @123;
-    NSDictionary* returnObj = [NSDictionary dictionaryWithObjectsAndKeys: result, @"result", nil];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self.commandDelegate sendPluginResult:errorPluginResult callbackId:command.callbackId];
 }
 
 - (void)mtu:(CDVInvokedUrlCommand *)command {
@@ -3947,4 +3890,42 @@ NSString *const operationUpgradeFirmware = @"upgradeFirmware";
     }
 }
 
+- (void)dfuStateDidChangeTo:(enum DFUState)state {
+    long longState = (long)state;
+    NSLog(@"DFU STATE DID CHANGE TO %ld", longState);
+    if(firmwareUpgradeCallback!=nil){
+        if(longState == DFUStateCompleted){
+            NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+            [returnObj setValue:@"success" forKey:keyStatus];
+            // [self addDevice:peripheral :returnObj];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnObj];
+            [pluginResult setKeepCallbackAsBool:false];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:firmwareUpgradeCallback];
+            firmwareUpgradeCallback = nil;
+        } else if(longState == DFUStateAborted){
+            NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+            [returnObj setValue:@"Firmware upgrade failed" forKey:keyError];
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+            [pluginResult setKeepCallbackAsBool:false];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:firmwareUpgradeCallback];
+            firmwareUpgradeCallback = nil;
+        }
+    }
+}
+
+- (void)dfuError:(enum DFUError)error didOccurWithMessage:(NSString * _Nonnull)message {
+    NSLog(@"DFU ERROR %@", message);
+    if(firmwareUpgradeCallback!=nil){
+        NSString *logMessage = [NSString stringWithFormat:@"%@ %@", @"Firmware upgrade failed", message];
+        NSMutableDictionary* returnObj = [NSMutableDictionary dictionary];
+        [returnObj setValue:logMessage forKey:keyError];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:returnObj];
+        [pluginResult setKeepCallbackAsBool:false];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:firmwareUpgradeCallback];
+        firmwareUpgradeCallback = nil;
+    }
+}
+
+
 @end
+ 

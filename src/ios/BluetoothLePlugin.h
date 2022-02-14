@@ -1,11 +1,13 @@
 #import <Cordova/CDV.h>
 #import <CoreBluetooth/CoreBluetooth.h>
+@import iOSDFULibrary;
 
-@interface BluetoothLePlugin : CDVPlugin <CBCentralManagerDelegate, CBPeripheralDelegate, CBPeripheralManagerDelegate> {
+@interface BluetoothLePlugin : CDVPlugin <CBCentralManagerDelegate, CBPeripheralDelegate, CBPeripheralManagerDelegate, DFUServiceDelegate> {
   CBCentralManager *centralManager;
   NSNumber* statusReceiver;
   NSString* initCallback;
   NSString* scanCallback;
+  NSString* firmwareUpgradeCallback;
   NSMutableDictionary* connections;
 
   CBPeripheralManager* peripheralManager;
