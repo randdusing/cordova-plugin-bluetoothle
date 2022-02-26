@@ -708,6 +708,8 @@ declare namespace BluetoothlePlugin {
         value: string,
         /** not documented */
         offset?: number
+        /** Android only: address of the device the response should be sent to. */
+        address?: string
     }
 
     interface CharacteristicParams extends Params {
