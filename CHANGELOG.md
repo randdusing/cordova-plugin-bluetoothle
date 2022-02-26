@@ -1,3 +1,6 @@
+## 6.6.2 - 2022-02-25
+- Update typings
+
 ## 6.6.1 - 2021-07-29
 - Revert support Android notification queueing
 
