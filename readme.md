@@ -61,6 +61,12 @@ This plugin allows you to interact with Bluetooth LE devices on Android, iOS, an
   - [isDiscovered](#isdiscovered)
   - [hasPermission](#haspermission)
   - [requestPermission](#requestpermission)
+  - [hasPermissionBtScan](#haspermissionBtScan)
+  - [requestPermissionBtScan](#requestpermissionBtScan)
+  - [hasPermissionBtConnect](#haspermissionBtConnect)
+  - [requestPermissionBtConnect](#requestpermissionBtConnect)
+  - [hasPermissionBtAdvertise](#haspermissionBtAdvertise)
+  - [requestPermissionBtAdvertise](#requestpermissionBtAdvertise)
   - [isLocationEnabled](#islocationenabled)
   - [requestLocation](#requestlocation)
   - [setPin](#setPin)
@@ -240,6 +246,12 @@ Neither Android nor iOS support Bluetooth on emulators, so you'll need to test o
 * [bluetoothle.isDiscovered](#isdiscovered)
 * [bluetoothle.hasPermission](#haspermission) (Android 6+)
 * [bluetoothle.requestPermission](#requestpermission) (Android 6+)
+* [bluetoothle.hasPermissionBtScan](#haspermissionBtScan) (Android 31+)
+* [bluetoothle.requestPermissionBtScan](#requestpermissionBtScan) (Android 31+)
+* [bluetoothle.hasPermissionBtConnect](#haspermissionBtConnect) (Android 31+)
+* [bluetoothle.requestPermissionBtConnect](#requestpermissionBtConnect) (Android 31+)
+* [bluetoothle.hasPermissionBtAdvertise](#haspermissionBtAdvertise) (Android 31+)
+* [bluetoothle.requestPermissionBtAdvertise](#requestpermissionBtAdvertise) (Android 31+)
 * [bluetoothle.isLocationEnabled](#islocationenabled) (Android 6+)
 * [bluetoothle.requestLocation](#requestlocation) (Android 6+)
 * [bluetoothle.retrievePeripheralsByAddress](#retrievePeripheralsByAddress) (iOS)
@@ -417,7 +429,7 @@ The successCallback contains the following properties:
 
 
 ### startScan ###
-Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions to find unpaired devices. Permissions can be requested by using the hasPermission and requestPermission functions. Android API >= 23 also requires location services to be enabled. Use ```isLocationEnabled``` to determine whether location services are enabled. If not enabled, use ```requestLocation``` to prompt the location services settings page.
+Scan for Bluetooth LE devices. Since scanning is expensive, stop as soon as possible. The Cordova app should use a timer to limit the scan interval. Also, Android uses an AND operator for filtering, while iOS uses an OR operator. Android API >= 23 requires ACCESS_COARSE_LOCATION permissions to find unpaired devices. Permissions can be requested by using the hasPermission and requestPermission functions. Android API >= 23 also requires location services to be enabled. Use ```isLocationEnabled``` to determine whether location services are enabled. If not enabled, use ```requestLocation``` to prompt the location services settings page. Android API >= 31 also requires BLUETOOTH_SCAN permissions to perform scanning. You can use ```hasPermissionBtScan``` to determine whether scanning permission is granted or use ```requestPermissionBtScan``` to prompt for it.
 
 ```javascript
 bluetoothle.startScan(startScanSuccess, startScanError, params);
@@ -616,7 +628,7 @@ bluetoothle.unbond(unbondSuccess, unbondError, params);
 
 
 ### connect ###
-Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting is never successful. Once a device is connected, it may disconnect without user intervention. The original connection callback will be called again and receive an object with status => disconnected. To reconnect to the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
+Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting is never successful. Once a device is connected, it may disconnect without user intervention. The original connection callback will be called again and receive an object with status => disconnected. To reconnect to the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect(). Android API >= 31 requires BLUETOOTH_CONNECT permissions to connect to devices. You can use ```hasPermissionBtConnect``` to determine whether connect permission is granted or use ```requestPermissionBtConnect``` to prompt for it.
 
 ```javascript
 bluetoothle.connect(connectSuccess, connectError, params);
@@ -1739,6 +1751,114 @@ bluetoothle.requestPermission(requestPermissionSuccess, requestPermissionError);
 
 
 
+### hasPermissionBtScan ###
+Determine whether Bluetooth scanning privileges are granted since scanning for unpaired devices requies it in Android API 31
+
+```javascript
+bluetoothle.hasPermissionBtScan(hasPermissionSuccess);
+```
+
+##### Success #####
+* status => hasPermission = true/false
+
+```javascript
+{
+  "hasPermission": true
+}
+```
+
+
+
+### requestPermissionBtScan ###
+Request Bluetooth scanning privileges since scanning for unpaired devices requires it in Android API 31. Will return an error if called on iOS or Android versions prior to 6.0.
+
+```javascript
+bluetoothle.requestPermissionBtScan(requestPermissionSuccess, requestPermissionError);
+```
+
+##### Success #####
+* status => requestPermission = true/false
+
+```javascript
+{
+  "requestPermission": true
+}
+```
+
+
+
+### hasPermissionBtConnect ###
+Determine whether Bluetooth connect privileges are granted since connecting to unpaired devices requies it in Android API 31
+
+```javascript
+bluetoothle.hasPermissionBtConnect(hasPermissionSuccess);
+```
+
+##### Success #####
+* status => hasPermission = true/false
+
+```javascript
+{
+  "hasPermission": true
+}
+```
+
+
+
+### requestPermissionBtConnect ###
+Request Bluetooth connect privileges since connecting to unpaired devices requires it in Android API 31. Will return an error if called on iOS or Android versions prior to 6.0.
+
+```javascript
+bluetoothle.requestPermissionBtConnect(requestPermissionSuccess, requestPermissionError);
+```
+
+##### Success #####
+* status => requestPermission = true/false
+
+```javascript
+{
+  "requestPermission": true
+}
+```
+
+
+
+### hasPermissionBtAdvertise ###
+Determine whether Bluetooth advertise privileges are granted since making the current device discoverable requies it in Android API 31
+
+```javascript
+bluetoothle.hasPermissionBtAdvertise(hasPermissionSuccess);
+```
+
+##### Success #####
+* status => hasPermission = true/false
+
+```javascript
+{
+  "hasPermission": true
+}
+```
+
+
+
+### requestPermissionBtAdvertise ###
+Request Bluetooth advertise privileges since making the current device discoverable requires it in Android API 31. Will return an error if called on iOS or Android versions prior to 6.0.
+
+```javascript
+bluetoothle.requestPermissionBtAdvertise(requestPermissionSuccess, requestPermissionError);
+```
+
+##### Success #####
+* status => requestPermission = true/false
+
+```javascript
+{
+  "requestPermission": true
+}
+```
+
+
+
 ### isLocationEnabled ###
 Determine if location services are enabled or not. Location Services are required to find devices in Android API 23.
 
@@ -2041,7 +2161,8 @@ bluetoothle.removeAllServices(success, error);
 
 ### startAdvertising ###
 Start advertising as a BLE device. Note: This needs to be improved so services can be used for both Android and iOS.
-On iOS, the advertising devices likes to rename itself back to the name of the device, i.e. Rand' iPhone
+On iOS, the advertising devices likes to rename itself back to the name of the device, i.e. Rand' iPhone.
+Android API >= 31 also requires BLUETOOTH_ADVERTISE permissions to perform advertising. You can use ```hasPermissionBtAdvertise``` to determine whether advertise permission is granted or use ```requestPermissionBtAdvertise``` to prompt for it.
 
 ```javascript
 bluetoothle.startAdvertising(success, error, params);
