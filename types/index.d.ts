@@ -414,6 +414,51 @@ declare namespace BluetoothlePlugin {
             success: (result: { requestPermission: boolean }) => void): void;
 
         /**
+         * Determine whether Bluetooth scan privileges are granted since scanning for unpaired devices requires it in Android API 31.
+         * @param success The success callback that is passed with has permission value
+         */
+         hasPermissionBtScan(
+            success: (result: { hasPermission: boolean }) => void): void;
+
+        /**
+         * Request Bluetooth scan privileges since scanning for unpaired devices requires it in Android API 31.
+         * Will return an error if called on iOS or Android versions prior to 6.0.
+         * @param success The success callback that is passed with request permission value
+         */
+        requestPermissionBtScan(
+            success: (result: { requestPermission: boolean }) => void): void;
+
+        /**
+         * Determine whether Bluetooth connect privileges are granted since connecting to devices requires it in Android API 31.
+         * @param success The success callback that is passed with has permission value
+         */
+         hasPermissionBtConnect(
+            success: (result: { hasPermission: boolean }) => void): void;
+
+        /**
+         * Request Bluetooth connect privileges since connecting to devices requires it in Android API 31.
+         * Will return an error if called on iOS or Android versions prior to 6.0.
+         * @param success The success callback that is passed with request permission value
+         */
+        requestPermissionBtConnect(
+            success: (result: { requestPermission: boolean }) => void): void;
+
+        /**
+         * Determine whether Bluetooth advertise privileges are granted since making the current device discoverable requires it in Android API 31.
+         * @param success The success callback that is passed with has permission value
+         */
+         hasPermissionBtAdvertise(
+            success: (result: { hasPermission: boolean }) => void): void;
+
+        /**
+         * Request Bluetooth advertise privileges since making the current device discoverable requires it in Android API 31.
+         * Will return an error if called on iOS or Android versions prior to 6.0.
+         * @param success The success callback that is passed with request permission value
+         */
+        requestPermissionBtAdvertise(
+            success: (result: { requestPermission: boolean }) => void): void;
+
+        /**
          * Determine if location services are enabled or not. Location Services are required to find devices in Android API 23
          * @param isLocationEnabledSuccess The success callback that is passed with isLocationEnabled value
          * @param isLocationEnabledError   The callback that will be triggered when isLocationEnabled operation fails
