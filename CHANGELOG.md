@@ -1,3 +1,6 @@
+## 6.7.0 - 2022-08-17
+- Add support for Android 12 permissions
+
 ## 6.6.2 - 2022-02-25
 - Update typings
 
