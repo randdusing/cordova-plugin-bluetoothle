@@ -281,6 +281,42 @@ BluetoothlePlugin.Bluetoothle.prototype.requestPermission = function (success) {
 
 
 /**
+ * @param {function(result:[object Object])} success
+ */
+BluetoothlePlugin.Bluetoothle.prototype.hasPermissionBtScan = function (success) { };
+
+
+ /**
+  * @param {function(result:[object Object])} success
+  */
+BluetoothlePlugin.Bluetoothle.prototype.requestPermissionBtScan = function (success) { };
+
+
+ /**
+ * @param {function(result:[object Object])} success
+ */
+BluetoothlePlugin.Bluetoothle.prototype.hasPermissionBtConnect = function (success) { };
+
+
+/**
+ * @param {function(result:[object Object])} success
+ */
+BluetoothlePlugin.Bluetoothle.prototype.requestPermissionBtConnect = function (success) { };
+
+
+/**
+ * @param {function(result:[object Object])} success
+ */
+BluetoothlePlugin.Bluetoothle.prototype.hasPermissionBtAdvertise = function (success) { };
+
+
+/**
+ * @param {function(result:[object Object])} success
+ */
+BluetoothlePlugin.Bluetoothle.prototype.requestPermissionBtAdvertise = function (success) { };
+
+  
+/**
  * @param {function(result:[object Object])} isLocationEnabledSuccess
  * @param {function(error:BluetoothlePlugin.Error)} isLocationEnabledError
  */

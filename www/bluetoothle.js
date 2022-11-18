@@ -307,14 +307,26 @@ var bluetoothle = {
       []
     );
   },
-  requestPermission: function (successCallback, errorCallback) {
-    cordova.exec(
-      successCallback,
-      errorCallback,
-      bluetoothleName,
-      'requestPermission',
-      []
-    );
+  hasPermissionBtScan: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermissionBtScan", []);
+  },
+  requestPermissionBtScan: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestPermissionBtScan", []);
+  },
+  hasPermissionBtConnect: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermissionBtConnect", []);
+  },
+  requestPermissionBtConnect: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestPermissionBtConnect", []);
+  },
+  hasPermissionBtAdvertise: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermissionBtAdvertise", []);
+  },
+  requestPermissionBtAdvertise: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "requestPermissionBtAdvertise", []);
+  },
+  isLocationEnabled: function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, bluetoothleName, "isLocationEnabled", []);
   },
   requestExternalStoragePermissions: function (successCallback, errorCallback) {
     cordova.exec(

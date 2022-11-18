@@ -1,3 +1,9 @@
+## 6.7.0 - 2022-08-17
+- Add support for Android 12 permissions
+
+## 6.6.2 - 2022-02-25
+- Update typings
+
 ## 6.6.1 - 2021-07-29
 - Revert support Android notification queueing
 
