@@ -37,7 +37,7 @@
       <activity android:name="com.randdusing.bluetoothle.NotificationActivity" />
       <service android:name="com.randdusing.bluetoothle.DfuService" />
     </config-file>
-    <framework src="no.nordicsemi.android:dfu:1.11.0" />
+    <framework src="no.nordicsemi.android:dfu:1.12.0" />
     <framework src="androidx.annotation:annotation:1.1.0" />
     <framework src="androidx.core:core:1.6.0" />
     <framework src="com.squareup.okhttp3:okhttp:4.9.3" />
