@@ -951,8 +951,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
       };
       cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
     } else {
-      String[] permissions = { Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_SCAN,
-          Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT };
+      String[] permissions = { 
+          Manifest.permission.BLUETOOTH_SCAN, 
+          Manifest.permission.BLUETOOTH_CONNECT
+      };
       cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
     }
   }
