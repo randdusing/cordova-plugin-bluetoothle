@@ -935,7 +935,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
       hasPermission = cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION);
     } else {
-      hasPermission = cordova.hasPermission(Manifest.permission.BLUETOOTH_SCAN)
+      hasPermission = cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+          && cordova.hasPermission(Manifest.permission.BLUETOOTH_SCAN)
           && cordova.hasPermission(Manifest.permission.BLUETOOTH_CONNECT);
     }
     addProperty(returnObj, "hasPermission", hasPermission);
@@ -951,9 +952,11 @@ public class BluetoothLePlugin extends CordovaPlugin {
       };
       cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
     } else {
-      String[] permissions = { 
-          Manifest.permission.BLUETOOTH_SCAN, 
-          Manifest.permission.BLUETOOTH_CONNECT
+      String[] permissions = {
+          Manifest.permission.BLUETOOTH_SCAN,
+          Manifest.permission.BLUETOOTH_CONNECT,
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          Manifest.permission.ACCESS_FINE_LOCATION
       };
       cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
     }
