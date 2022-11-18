@@ -307,6 +307,15 @@ var bluetoothle = {
       []
     );
   },
+  requestPermission: function (successCallback, errorCallback) {
+    cordova.exec(
+      successCallback,
+      errorCallback,
+      bluetoothleName,
+      'requestPermission',
+      []
+    );
+  },
   hasPermissionBtScan: function(successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, bluetoothleName, "hasPermissionBtScan", []);
   },

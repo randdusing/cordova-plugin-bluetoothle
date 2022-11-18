@@ -931,24 +931,29 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
   public void hasPermissionAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
+    boolean hasPermission;
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+      hasPermission = cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+    } else {
+      hasPermission = cordova.hasPermission(Manifest.permission.BLUETOOTH_SCAN)
+          && cordova.hasPermission(Manifest.permission.BLUETOOTH_CONNECT);
+    }
+    addProperty(returnObj, "hasPermission", hasPermission);
     callbackContext.success(returnObj);
   }
 
   public void requestPermissionAction(CallbackContext callbackContext) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      JSONObject returnObj = new JSONObject();
-      addProperty(returnObj, keyError, "requestPermission");
-      addProperty(returnObj, keyMessage, logOperationUnsupported);
-      callbackContext.error(returnObj);
-      return;
-    }
     permissionsCallback = callbackContext;
-    String[] permissions = {
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-    };
-    cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+      String[] permissions = {
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          Manifest.permission.ACCESS_FINE_LOCATION
+      };
+      cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
+    } else {
+      String[] permissions = { Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT };
+      cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
+    }
   }
 
   public void requestExternalStoragePermissionsAction(CallbackContext callbackContext) {
