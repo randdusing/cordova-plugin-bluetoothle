@@ -81,10 +81,10 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final int REQUEST_BT_ENABLE = 59627; /* Random integer */
   private final int REQUEST_ACCESS_FINE_LOCATION = 59628;
   private final int REQUEST_LOCATION_SOURCE_SETTINGS = 59629;
-  private final int REQUEST_EXTERNAL_STORAGE = 59630;
   private final int REQUEST_BLUETOOTH_SCAN = 59630;
   private final int REQUEST_BLUETOOTH_ADVERTISE = 59631;
   private final int REQUEST_BLUETOOTH_CONNECT = 59632;
+  private final int REQUEST_EXTERNAL_STORAGE = 59633;
   private BluetoothAdapter bluetoothAdapter;
   private boolean isReceiverRegistered = false;
   private boolean isBondReceiverRegistered = false;
@@ -951,7 +951,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
     cordova.requestPermissions(this, REQUEST_ACCESS_FINE_LOCATION, permissions);
   }
 
-  
   public void requestExternalStoragePermissionsAction(CallbackContext callbackContext) {
     Log.d("BLEFW", "requestExternalStoragePermissionsAction");
     permissionsCallback = callbackContext;
@@ -990,7 +989,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
    * BLUETOOTH_CONNECT
    */
 
-   public void hasPermissionBtConnectAction(CallbackContext callbackContext) {
+  public void hasPermissionBtConnectAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
     addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_CONNECT));
@@ -1015,7 +1014,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
    * BLUETOOTH_ADVERTISE
    */
 
-   public void hasPermissionBtAdvertiseAction(CallbackContext callbackContext) {
+  public void hasPermissionBtAdvertiseAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
     addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE));
@@ -1036,7 +1035,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
     cordova.requestPermission(this, REQUEST_BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_ADVERTISE);
   }
 
-  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
+      throws JSONException {
     if (permissionsCallback == null) {
       return;
     }
@@ -1057,6 +1057,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       case REQUEST_EXTERNAL_STORAGE:
         addProperty(returnObj, "readPermission", cordova.hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE));
         addProperty(returnObj, "writePermission", cordova.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE));
+        break;
       default:
         addProperty(returnObj, keyError, "requestPermission");
         addProperty(returnObj, keyMessage, logOperationUnsupported);
@@ -1485,17 +1486,19 @@ public class BluetoothLePlugin extends CordovaPlugin {
     downloadFirmwareFile(device, fileUrl, fileName, callbackContext, returnObj);
   }
 
-  private void downloadFirmwareFile(BluetoothDevice device, String fileUrl, String fileName, final CallbackContext callbackContext, final JSONObject returnObject) {
+  private void downloadFirmwareFile(BluetoothDevice device, String fileUrl, String fileName,
+      final CallbackContext callbackContext, final JSONObject returnObject) {
     OkHttpClient client = new OkHttpClient();
     Request request = new Request.Builder()
-            .url(fileUrl)
-            .build();
+        .url(fileUrl)
+        .build();
     client.newCall(request).enqueue(new Callback() {
       @Override
       public void onFailure(Call call, IOException e) {
         Log.d("BLEFW", "FILE DOWNLOAD FAILED");
         callbackContext.error("Unable to download firmware file");
       }
+
       @Override
       public void onResponse(Call call, Response response) throws IOException {
         if (!response.isSuccessful()) {
@@ -1521,8 +1524,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
         output.close();
         input.close();
         final DfuServiceInitiator starter = new DfuServiceInitiator(device.getAddress())
-                .setDeviceName(device.getName())
-                .setKeepBond(true);
+            .setDeviceName(device.getName())
+            .setKeepBond(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
           DfuServiceInitiator.createDfuNotificationChannel(ctx);
         }
@@ -1535,12 +1538,14 @@ public class BluetoothLePlugin extends CordovaPlugin {
               callbackContext.success(returnObject);
               DfuServiceListenerHelper.unregisterProgressListener(cordova.getActivity(), this);
             }
+
             @Override
             public void onDfuAborted(final String deviceAddress) {
               Log.d("BLEFW LISTENER", "ON UPGRADE ABORTED ");
               callbackContext.error("Firmware upgrade aborted");
               DfuServiceListenerHelper.unregisterProgressListener(ctx, this);
             }
+
             @Override
             public void onError(final String deviceAddress, int error, int errorType, String message) {
               Log.d("BLEFW LISTENER", "ON UPGRADE ERROR ");
