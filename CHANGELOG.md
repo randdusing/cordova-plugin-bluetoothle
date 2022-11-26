@@ -1,3 +1,6 @@
+## 6.7.1 - 2022-11-26
+- Add API level for Android 12 permissions
+
 ## 6.7.0 - 2022-08-17
 - Add support for Android 12 permissions
 
