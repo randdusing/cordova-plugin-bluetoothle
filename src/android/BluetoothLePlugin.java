@@ -788,7 +788,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     }
 
     advertiser.stopAdvertising(advertiseCallback);
-    
+
     if (isAdvertising) isAdvertising = false;
 
     JSONObject returnObj = new JSONObject();
@@ -926,7 +926,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   public void hasPermissionBtScanAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_SCAN));
+    addProperty(returnObj, "hasPermission", Build.VERSION.SDK_INT < Build.VERSION_CODES.S || cordova.hasPermission(Manifest.permission.BLUETOOTH_SCAN));
 
     callbackContext.success(returnObj);
   }
@@ -951,7 +951,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
    public void hasPermissionBtConnectAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_CONNECT));
+    addProperty(returnObj, "hasPermission", Build.VERSION.SDK_INT < Build.VERSION_CODES.S || cordova.hasPermission(Manifest.permission.BLUETOOTH_CONNECT));
 
     callbackContext.success(returnObj);
   }
@@ -2866,7 +2866,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (isNotArgsObject(obj, callbackContext)) {
       return;
     }
-    
+
     String address = getAddress(obj);
     if (isNotAddress(address, callbackContext)) {
       return;
@@ -2876,7 +2876,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
     if (pin==null) {
       return;
     }
-    
+
     Log.d("BLE","set pin "  + address  + " " + pin);
     JSONObject returnObj = new JSONObject();
     try {
@@ -2957,7 +2957,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
             // Reset isAdvertising when adapter is off (if STATE_TURNING_OFF doesn't trigger)
             if (isAdvertising) isAdvertising = false;
-            
+
             gattServer = null;
 
             pluginResult = new PluginResult(PluginResult.Status.OK, returnObj);
@@ -3036,7 +3036,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
       }
     }
   };
-  
+
   private BroadcastReceiver mPairingRequestReceiver;
 
   @Override
