@@ -979,7 +979,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   public void hasPermissionBtScanAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_SCAN));
+    addProperty(returnObj, "hasPermission", Build.VERSION.SDK_INT < Build.VERSION_CODES.S || cordova.hasPermission(Manifest.permission.BLUETOOTH_SCAN));
 
     callbackContext.success(returnObj);
   }
@@ -1003,7 +1003,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   public void hasPermissionBtConnectAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_CONNECT));
+    addProperty(returnObj, "hasPermission", Build.VERSION.SDK_INT < Build.VERSION_CODES.S || cordova.hasPermission(Manifest.permission.BLUETOOTH_CONNECT));
 
     callbackContext.success(returnObj);
   }
