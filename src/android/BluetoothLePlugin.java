@@ -3304,9 +3304,24 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     HashMap<Object, Object> connection = connections.get(address);
 
+    // When Connection is Valid
     if (connection != null) {
+      // Get operation Queue from connection
       LinkedList<Operation> queue = (LinkedList<Operation>) connection.get(keyQueue);
+
+      // When queue is not valid
+      if(queue == null) {
+        // Create dummy queue
+        queue = new LinkedList<>();
+
+        // Add dummy queue to connection
+        connection.put(keyQueue, queue);
+      }
+
+      // Add operation to queue
       queue.add(operation);
+
+      // Start Queue
       queueStart(connection);
     }
   }
