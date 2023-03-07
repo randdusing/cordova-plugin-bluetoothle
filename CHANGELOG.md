@@ -1,3 +1,6 @@
+## 6.7.3 - 2023-03-07
+- Fix NPE with queueAdd
+
 ## 6.7.2 - 2022-12-08
 - Final-ize variables to prevent build error
 
