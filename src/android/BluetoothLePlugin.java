@@ -976,8 +976,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
    public void hasPermissionBtAdvertiseAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE));
-
+    addProperty(returnObj, "hasPermission", Build.VERSION.SDK_INT < Build.VERSION_CODES.S || cordova.hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE));
+    
     callbackContext.success(returnObj);
   }
 
