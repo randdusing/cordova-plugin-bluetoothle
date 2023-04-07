@@ -1,3 +1,6 @@
+## 6.7.4 - 2023-04-07
+- Fix advertise permissions for Android 12
+
 ## 6.7.3 - 2023-03-07
 - Fix NPE with queueAdd
 
