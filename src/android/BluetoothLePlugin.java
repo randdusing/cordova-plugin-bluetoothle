@@ -4145,15 +4145,6 @@ public class BluetoothLePlugin extends CordovaPlugin {
         return;
       }
 
-      //Check for queued operations in progress on this device
-      if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-        LinkedList<Operation> queue = (LinkedList<Operation>) connection.get(keyQueue);
-        Operation operation = queue.peek();
-        if (operation != null) {
-          queueRemove(connection);
-        }
-      }
-
       CallbackContext callbackContext = (CallbackContext) connection.get(operationConnect);
 
       JSONObject returnObj = new JSONObject();
@@ -4167,6 +4158,9 @@ public class BluetoothLePlugin extends CordovaPlugin {
         connection.put(keyPeripheral, gatt);
         connection.put(keyState, BluetoothProfile.STATE_DISCONNECTED);
         connection.put(keyDiscoveredState, STATE_UNDISCOVERED);
+        
+        LinkedList<Operation> queue = new LinkedList<Operation>();
+        connection.put(keyQueue, queue);
 
         connections.put(device.getAddress(), connection);
 
