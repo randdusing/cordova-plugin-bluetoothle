@@ -1028,8 +1028,8 @@ public class BluetoothLePlugin extends CordovaPlugin {
   public void hasPermissionBtAdvertiseAction(CallbackContext callbackContext) {
     JSONObject returnObj = new JSONObject();
 
-    addProperty(returnObj, "hasPermission", cordova.hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE));
-
+    addProperty(returnObj, "hasPermission", Build.VERSION.SDK_INT < Build.VERSION_CODES.S || cordova.hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE));
+    
     callbackContext.success(returnObj);
   }
 
@@ -3503,13 +3503,24 @@ public class BluetoothLePlugin extends CordovaPlugin {
 
     HashMap<Object, Object> connection = connections.get(address);
 
+    // When Connection is Valid
     if (connection != null) {
+      // Get operation Queue from connection
       LinkedList<Operation> queue = (LinkedList<Operation>) connection.get(keyQueue);
-      if (queue == null) {
-        queue = new LinkedList<Operation>();
+
+      // When queue is not valid
+      if(queue == null) {
+        // Create dummy queue
+        queue = new LinkedList<>();
+
+        // Add dummy queue to connection
         connection.put(keyQueue, queue);
       }
+
+      // Add operation to queue
       queue.add(operation);
+
+      // Start Queue
       queueStart(connection);
     }
   }
