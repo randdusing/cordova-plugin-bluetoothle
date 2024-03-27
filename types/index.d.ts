@@ -703,6 +703,11 @@ declare namespace BluetoothlePlugin {
         callbackType?: BluetoothCallbackType,
         /** True/false to show only connectable devices, rather than all devices ever seen, defaults to false (Windows)*/
         isConnectable?: boolean
+        /** Used to set whether scanning is in "legacy" mode. In Bluetooth 5, a new scanning mode is introduced to support more 
+            functions and features, such as extended advertising, long data packets, etc. The "legacy" mode only supports 
+            traditional advertising data types and does not support Bluetooth 5's extended advertising.
+        */
+        isLegacy?:boolean
     }
 
     interface ConnectionParams{
