@@ -1288,13 +1288,13 @@ public class BluetoothLePlugin extends CordovaPlugin {
         } catch (java.lang.IllegalArgumentException e) {
         }
       }
-
-      
-		  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			  boolean isLegacy = obj.optBoolean(keyIsLegacy, true);
-			  scanSettings.setLegacy(isLegacy);
-		  }
-
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+	boolean isLegacy = obj.optBoolean(keyIsLegacy, false);
+	try {
+	  scanSettings.setLegacy(isLegacy);
+	} catch (IllegalArgumentException e) {
+	}
+      }
       //Start the scan with or without service UUIDs
       bluetoothAdapter.getBluetoothLeScanner().startScan(scanFilter, scanSettings.build(), scanCallback);
     }
