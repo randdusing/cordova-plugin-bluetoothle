@@ -105,6 +105,7 @@ public class BluetoothLePlugin extends CordovaPlugin {
   private final String keyMatchMode = "matchMode";
   private final String keyMatchNum = "matchNum";
   private final String keyCallbackType = "callbackType";
+  private final String keyIsLegacy = "isLegacy";
   private final String keyAdvertisement = "advertisement";
   private final String keyUuid = "uuid";
   private final String keyService = "service";
@@ -1287,6 +1288,12 @@ public class BluetoothLePlugin extends CordovaPlugin {
         } catch (java.lang.IllegalArgumentException e) {
         }
       }
+
+      
+		  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			  boolean isLegacy = obj.optBoolean(keyIsLegacy, true);
+			  scanSettings.setLegacy(isLegacy);
+		  }
 
       //Start the scan with or without service UUIDs
       bluetoothAdapter.getBluetoothLeScanner().startScan(scanFilter, scanSettings.build(), scanCallback);
